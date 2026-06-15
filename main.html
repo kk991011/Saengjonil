@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생존일지 — 내 일지</title>
+<style>
+  :root {
+    --main: #534AB7;
+    --main-dark: #3C3489;
+    --main-mid: #7F77DD;
+    --main-light: #EEEDFE;
+    --main-xlight: #F5F4FF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f5f4ff; min-height: 100vh; }
+
+  /* 헤더 */
+  .app-header { background: var(--main); padding: 0 16px; position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center;
+    justify-content: space-between; height: 52px; }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .header-logo { color: white; font-size: 16px; font-weight: 700; }
+  .user-info { display: flex; align-items: center; gap: 8px; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: #AFA9EC;
+    display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600;
+    color: #26215C; overflow: hidden; }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .user-name { color: white; font-size: 13px; font-weight: 500; }
+  .week-badge { background: rgba(255,255,255,.25); color: white; font-size: 10px;
+    padding: 2px 8px; border-radius: 10px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .nav-link { color: rgba(255,255,255,.85); font-size: 12px; text-decoration: none; }
+  .nav-link:hover { color: white; }
+  .logout-btn { background: none; border: none; cursor: pointer; color: rgba(255,255,255,.6);
+    font-size: 12px; font-family: inherit; }
+
+  /* 탭 네비게이션 */
+  .tab-nav { background: white; border-bottom: 1px solid #eee; position: sticky; top: 52px; z-index: 99; }
+  .tab-nav-inner { max-width: 720px; margin: 0 auto; display: flex; overflow-x: auto; }
+  .tab-nav::-webkit-scrollbar { display: none; }
+  .tab-btn { padding: 12px 16px; border: none; background: transparent; font-size: 13px;
+    color: #888; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent;
+    font-family: inherit; transition: color .15s; }
+  .tab-btn.active { color: var(--main); border-bottom-color: var(--main); font-weight: 500; }
+
+  /* 본문 */
+  .content { max-width: 720px; margin: 0 auto; padding: 16px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* 섹션 라벨 */
+  .sec-label { font-size: 11px; font-weight: 600; color: #aaa; letter-spacing: .06em;
+    text-transform: uppercase; margin: 20px 0 10px; }
+
+  /* 폼 */
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; font-weight: 500; color: #666; margin-bottom: 5px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 10px 14px; border: 1.5px solid #e8e8e8; border-radius: 10px;
+    font-size: 14px; color: #222; outline: none; transition: border-color .15s; font-family: inherit; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--main); }
+  .field textarea { height: 72px; resize: none; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* 루틴 행 */
+  .routine-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    background: #f8f8ff; border-radius: 10px; margin-bottom: 6px; cursor: pointer; transition: background .1s; }
+  .routine-row:hover { background: var(--main-xlight); }
+  .routine-row.checked { background: var(--main-xlight); }
+  .chk-box { width: 20px; height: 20px; border-radius: 5px; border: 2px solid var(--main-mid);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s; }
+  .chk-box.checked { background: var(--main-mid); border-color: var(--main-mid); }
+  .chk-box.checked::after { content: '✓'; color: white; font-size: 12px; font-weight: 700; }
+  .routine-info { flex: 1; }
+  .routine-name { font-size: 14px; font-weight: 500; color: #222; }
+  .routine-sub { font-size: 11px; color: #aaa; margin-top: 1px; }
+  .time-input { width: 70px; padding: 6px 8px; border: 1.5px solid #e8e8e8; border-radius: 8px;
+    font-size: 13px; text-align: center; outline: none; font-family: inherit; }
+  .time-input:focus { border-color: var(--main); }
+  .time-unit { font-size: 11px; color: #aaa; margin-left: 2px; }
+
+  /* 점수 선택 */
+  .score-row { display: flex; gap: 8px; margin-top: 6px; }
+  .score-btn { width: 40px; height: 36px; border-radius: 8px; border: 1.5px solid #e8e8e8;
+    background: white; cursor: pointer; font-size: 14px; font-weight: 500; color: #888;
+    transition: all .15s; font-family: inherit; }
+  .score-btn.selected { background: var(--main); border-color: var(--main); color: white; }
+
+  /* FA 버튼 */
+  .fa-row { display: flex; gap: 8px; margin-top: 6px; }
+  .fa-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid #e8e8e8;
+    background: white; cursor: pointer; font-size: 13px; font-weight: 500; color: #888;
+    font-family: inherit; transition: all .15s; }
+  .fa-btn.yes.selected { background: var(--main-light); border-color: var(--main-mid); color: var(--main-dark); }
+  .fa-btn.no.selected { background: #fff5f5; border-color: #fca5a5; color: #b91c1c; }
+
+  /* 집중 태그 */
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .focus-tag { padding: 6px 14px; border-radius: 20px; border: 1.5px solid #e8e8e8;
+    background: white; cursor: pointer; font-size: 12px; color: #888;
+    transition: all .15s; }
+  .focus-tag.selected { background: var(--main-light); border-color: var(--main-mid); color: var(--main-dark); font-weight: 500; }
+
+  /* 저장 버튼 */
+  .save-btn { width: 100%; padding: 14px; background: var(--main); color: white; border: none;
+    border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 16px;
+    font-family: inherit; transition: background .15s; }
+  .save-btn:hover { background: var(--main-dark); }
+  .save-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+  /* 통계 카드 */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .stat-card { background: white; border-radius: 12px; padding: 14px 16px; border: 1px solid #f0f0f0; }
+  .stat-label { font-size: 11px; color: #aaa; margin-bottom: 6px; }
+  .stat-value { font-size: 24px; font-weight: 700; color: var(--main); }
+  .stat-unit { font-size: 12px; color: #aaa; margin-left: 2px; }
+
+  /* 프로그레스바 */
+  .prog-row { margin-bottom: 12px; }
+  .prog-header { display: flex; justify-content: space-between; font-size: 13px;
+    color: #555; margin-bottom: 5px; }
+  .prog-pct { color: var(--main); font-weight: 600; }
+  .prog-track { height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 4px; background: var(--main); transition: width .4s; }
+
+  /* 기록 카드 */
+  .record-card { background: white; border-radius: 14px; padding: 16px; margin-bottom: 12px;
+    border: 1px solid #f0f0f0; }
+  .record-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .record-date { font-size: 14px; font-weight: 600; color: #222; }
+  .record-week { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .record-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+  .badge { font-size: 11px; padding: 3px 8px; border-radius: 6px; }
+  .badge-purple { background: var(--main-light); color: var(--main-dark); }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-gray { background: #f3f4f6; color: #6b7280; }
+  .record-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+  .record-item { font-size: 12px; color: #888; }
+  .record-item span { color: #333; font-weight: 500; }
+  .routine-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+  .rtag { font-size: 11px; padding: 2px 8px; border-radius: 6px; }
+  .rtag-done { background: var(--main-light); color: var(--main-dark); }
+  .rtag-miss { background: #f3f4f6; color: #9ca3af; }
+  .record-actions { display: flex; justify-content: flex-end; gap: 8px; }
+  .btn-sm { padding: 5px 12px; border-radius: 8px; border: 1px solid #e0e0e0;
+    background: white; cursor: pointer; font-size: 12px; font-family: inherit; }
+  .btn-sm-danger { color: #dc2626; border-color: #fecaca; }
+  .btn-sm-danger:hover { background: #fff5f5; }
+
+  /* 감사일기 */
+  .diary-card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 8px;
+    border: 1px solid #f0f0f0; }
+  .diary-date { font-size: 11px; color: #aaa; margin-bottom: 6px; }
+  .diary-text { font-size: 14px; color: #333; line-height: 1.6; }
+  .diary-today { border-color: var(--main-mid); background: var(--main-xlight); }
+  .diary-today .diary-text { color: var(--main-dark); }
+
+  /* 목표 아이템 */
+  .goal-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+    border: 1.5px solid #e8e8e8; border-radius: 10px; margin-bottom: 8px; }
+  .goal-item.done { background: #f9f9f9; }
+  .goal-item.done .goal-text { color: #aaa; text-decoration: line-through; }
+  .goal-text { flex: 1; font-size: 14px; color: #222; }
+  .goal-del { background: none; border: none; cursor: pointer; color: #ccc; font-size: 16px;
+    line-height: 1; padding: 0 4px; }
+  .goal-del:hover { color: #f87171; }
+  .goal-add-row { display: flex; gap: 8px; margin-top: 12px; }
+  .goal-add-row input { flex: 1; padding: 10px 14px; border: 1.5px solid #e8e8e8;
+    border-radius: 10px; font-size: 14px; font-family: inherit; outline: none; }
+  .goal-add-row input:focus { border-color: var(--main); }
+  .goal-add-btn { padding: 10px 18px; background: var(--main); color: white; border: none;
+    border-radius: 10px; cursor: pointer; font-size: 14px; font-family: inherit; }
+
+  /* 빈 상태 */
+  .empty-state { text-align: center; padding: 48px 20px; color: #bbb; }
+  .empty-state p { font-size: 14px; margin-top: 8px; }
+
+  /* 로딩 */
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--main-light);
+    border-top-color: var(--main); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 토스트 */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #222; color: white; padding: 12px 24px; border-radius: 24px;
+    font-size: 14px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 999; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
+  /* 프로필 모달 */
+  #profile-overlay { display: none; }
+  #profile-overlay.open { display: flex !important; }
+  .pm-group-option { border: 1.5px solid #e8e8e8; border-radius: 10px; padding: 10px 14px;
+    cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all .15s; }
+  .pm-group-option:hover { border-color: var(--main-mid); background: var(--main-xlight); }
+  .pm-group-option.selected { border-color: var(--main); background: var(--main-light); }
+  .pm-group-option .g-icon { width: 30px; height: 30px; border-radius: 8px; background: var(--main);
+    display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+  .pm-group-option .g-name { font-size: 13px; font-weight: 500; color: #222; }
+  .pm-group-option .g-count { font-size: 11px; color: #aaa; }
+  .pm-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; transition: transform .1s; flex-shrink: 0; }
+  .pm-swatch.on { border-color: #333; transform: scale(1.18); }
+
+  @media (max-width: 480px) {
+    .row2 { grid-template-columns: 1fr; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="header-logo">생존일지</span>
+      <div class="user-info">
+        <div class="avatar" id="avatar">?</div>
+        <span class="user-name" id="user-name">로딩 중...</span>
+        <span class="week-badge" id="week-badge">-주차</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <a href="compare.html" class="nav-link">함께 생존 →</a>
+      <button class="logout-btn" onclick="openProfile()" style="color:rgba(255,255,255,.85)">
+        <i class="ti ti-settings" style="font-size:16px;vertical-align:-2px" aria-hidden="true"></i>
+      </button>
+      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+    </div>
+  </div>
+</header>
+
+<!-- 탭 네비게이션 -->
+<nav class="tab-nav">
+  <div class="tab-nav-inner">
+    <button class="tab-btn active" onclick="switchTab('input', this)">오늘 입력</button>
+    <button class="tab-btn" onclick="switchTab('goal', this)">이번 주 목표</button>
+    <button class="tab-btn" onclick="switchTab('summary', this)">누적 요약</button>
+    <button class="tab-btn" onclick="switchTab('trend', this)">추이</button>
+    <button class="tab-btn" onclick="switchTab('records', this)">기록</button>
+    <button class="tab-btn" onclick="switchTab('diary', this)">감사일기</button>
+  </div>
+</nav>
+
+<!-- 본문 -->
+<main class="content">
+
+  <!-- ── 오늘 입력 ── -->
+  <div class="tab-panel active" id="tab-input">
+    <div class="row2">
+      <div class="field"><label>닉네임</label><input type="text" id="f-nickname" readonly></div>
+      <div class="field"><label>기록 날짜</label><input type="date" id="f-date"></div>
+    </div>
+
+    <div class="sec-label">매일 루틴</div>
+    <div class="routine-row" onclick="toggleRoutine(this, 'r-gyeong')">
+      <div class="chk-box" id="r-gyeong"></div>
+      <div class="routine-info">
+        <div class="routine-name">매십경</div>
+        <div class="routine-sub">자료 정독 / 오피니언 작성 / 댓글 작성</div>
+      </div>
+    </div>
+    <div class="routine-row" onclick="toggleRoutine(this, 'r-myeon')">
+      <div class="chk-box" id="r-myeon"></div>
+      <div class="routine-info">
+        <div class="routine-name">매십면</div>
+        <div class="routine-sub">해키픽 도출 / 녹음 / 본인 및 동료 피드백</div>
+      </div>
+    </div>
+    <div class="routine-row" onclick="toggleRoutine(this, 'r-dok')">
+      <div class="chk-box" id="r-dok"></div>
+      <div class="routine-info">
+        <div class="routine-name">매십독</div>
+        <div class="routine-sub">하루 10분 독서</div>
+      </div>
+    </div>
+    <div class="routine-row" onclick="toggleRoutine(this, 'r-un')">
+      <div class="chk-box" id="r-un"></div>
+      <div class="routine-info">
+        <div class="routine-name">매십운</div>
+        <div class="routine-sub">하루 10분 운동</div>
+      </div>
+    </div>
+    <div class="field" style="margin-top:10px">
+      <label>루틴 실행 시간 <span style="color:#aaa;font-weight:400">(분)</span></label>
+      <input type="number" id="f-routine-time" min="0" placeholder="예: 45">
+    </div>
+
+    <div class="sec-label">취준 활동</div>
+    <div class="row2">
+      <div class="field"><label>강의 수강 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-lecture" min="0" placeholder="0"></div>
+      <div class="field"><label>자소서 작성 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-jasoseo" min="0" placeholder="0"></div>
+      <div class="field"><label>필기 학습 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-pilgi" min="0" placeholder="0"></div>
+      <div class="field"><label>면접 대비 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-interview" min="0" placeholder="0"></div>
+    </div>
+    <div class="field"><label>지원 개수</label><input type="number" id="f-applications" min="0" placeholder="0"></div>
+
+    <div class="sec-label">오늘의 상태</div>
+    <div class="field">
+      <label>자존감 점수</label>
+      <div class="score-row" id="score-row">
+        <button class="score-btn" onclick="selectScore(this,1)">1</button>
+        <button class="score-btn" onclick="selectScore(this,2)">2</button>
+        <button class="score-btn" onclick="selectScore(this,3)">3</button>
+        <button class="score-btn" onclick="selectScore(this,4)">4</button>
+        <button class="score-btn" onclick="selectScore(this,5)">5</button>
+      </div>
+    </div>
+    <div class="field"><label>취업 확률 <span style="color:#aaa;font-weight:400">(%)</span></label><input type="number" id="f-prob" min="0" max="100" placeholder="예: 35"></div>
+    <div class="field">
+      <label>FA5050 / FR5050</label>
+      <div class="fa-row">
+        <button class="fa-btn yes" onclick="selectFA(true)">✓ 했어요</button>
+        <button class="fa-btn no" onclick="selectFA(false)">✗ 못 했어요</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>오늘 집중한 활동 <span style="color:#aaa;font-weight:400">(중복 선택 가능)</span></label>
+      <div class="tag-row">
+        <div class="focus-tag" onclick="toggleTag(this)">자소서</div>
+        <div class="focus-tag" onclick="toggleTag(this)">필기</div>
+        <div class="focus-tag" onclick="toggleTag(this)">면접</div>
+        <div class="focus-tag" onclick="toggleTag(this)">FA·R5050</div>
+        <div class="focus-tag" onclick="toggleTag(this)">골고루</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>오늘의 감사일기 <span style="color:#aaa;font-weight:400">(오늘 감사했던 순간)</span></label>
+      <textarea id="f-diary" placeholder="오늘 감사했던 순간을 한 줄로 남겨봐요"></textarea>
+    </div>
+    <button class="save-btn" onclick="saveRecord()">오늘 기록 저장하기</button>
+  </div>
+
+  <!-- ── 이번 주 목표 ── -->
+  <div class="tab-panel" id="tab-goal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:16px;font-weight:600;color:#222" id="goal-week-label">15주차 목표</div>
+      <div style="font-size:13px;color:var(--main);font-weight:500" id="goal-pct-label">0 / 0 달성</div>
+    </div>
+    <div class="prog-track" style="margin-bottom:20px"><div class="prog-fill" id="goal-prog" style="width:0%"></div></div>
+    <div id="goal-list"></div>
+    <div class="goal-add-row">
+      <input type="text" id="goal-input" placeholder="새 목표 입력 (예: 자소서 2편 완성)" maxlength="40" onkeydown="if(event.key==='Enter')addGoal()">
+      <button class="goal-add-btn" onclick="addGoal()">추가</button>
+    </div>
+    <div class="sec-label" style="margin-top:24px">지난 주차 보기</div>
+    <select id="past-week-sel" onchange="loadPastGoal()" style="width:100%;padding:10px 14px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:14px;font-family:inherit;outline:none;color:#222;background:white">
+      <option value="">주차 선택...</option>
+    </select>
+    <div id="past-goal-list" style="margin-top:12px"></div>
+  </div>
+
+  <!-- ── 누적 요약 ── -->
+  <div class="tab-panel" id="tab-summary">
+    <div id="summary-loading" style="text-align:center;padding:40px"><div class="spinner"></div></div>
+    <div id="summary-content" style="display:none">
+      <div class="sec-label">전체 기간 요약</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">총 기록일</div><div><span class="stat-value" id="s-days">0</span><span class="stat-unit">일</span></div></div>
+        <div class="stat-card"><div class="stat-label">총 지원 개수</div><div><span class="stat-value" id="s-apps">0</span><span class="stat-unit">개</span></div></div>
+        <div class="stat-card"><div class="stat-label">총 강의 시간</div><div><span class="stat-value" id="s-lecture">0</span><span class="stat-unit">h</span></div></div>
+        <div class="stat-card"><div class="stat-label">평균 자존감</div><div><span class="stat-value" id="s-mood">-</span><span class="stat-unit">/ 5</span></div></div>
+      </div>
+      <div class="sec-label">루틴 달성률</div>
+      <div class="prog-row"><div class="prog-header"><span>매십경</span><span class="prog-pct" id="p-gyeong">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-gyeong" style="width:0%"></div></div></div>
+      <div class="prog-row"><div class="prog-header"><span>매십면</span><span class="prog-pct" id="p-myeon">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-myeon" style="width:0%;opacity:.8"></div></div></div>
+      <div class="prog-row"><div class="prog-header"><span>매십독</span><span class="prog-pct" id="p-dok">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-dok" style="width:0%;opacity:.6"></div></div></div>
+      <div class="prog-row"><div class="prog-header"><span>매십운</span><span class="prog-pct" id="p-un">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-un" style="width:0%;opacity:.4"></div></div></div>
+      <div class="prog-row"><div class="prog-header"><span>FA·R5050</span><span class="prog-pct" id="p-fa">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-fa" style="width:0%"></div></div></div>
+      <div class="sec-label">취준 활동 일 평균</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">강의</div><div><span class="stat-value" id="s-lec-avg">0</span><span class="stat-unit">분</span></div></div>
+        <div class="stat-card"><div class="stat-label">자소서</div><div><span class="stat-value" id="s-jas-avg">0</span><span class="stat-unit">분</span></div></div>
+        <div class="stat-card"><div class="stat-label">필기</div><div><span class="stat-value" id="s-pil-avg">0</span><span class="stat-unit">분</span></div></div>
+        <div class="stat-card"><div class="stat-label">면접</div><div><span class="stat-value" id="s-int-avg">0</span><span class="stat-unit">분</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 추이 ── -->
+  <div class="tab-panel" id="tab-trend">
+    <div class="sec-label">일별 활동 시간</div>
+    <div style="position:relative;height:220px;margin-bottom:24px"><canvas id="trend-chart" role="img" aria-label="일별 활동 시간 선 그래프">활동 시간 추이</canvas></div>
+    <div class="sec-label">자존감 점수 추이</div>
+    <div style="position:relative;height:160px;margin-bottom:24px"><canvas id="mood-chart" role="img" aria-label="자존감 점수 추이">자존감 추이</canvas></div>
+    <div class="sec-label">주간 목표 달성률</div>
+    <div style="position:relative;height:160px"><canvas id="goal-chart" role="img" aria-label="주간 목표 달성률">목표 달성률 추이</canvas></div>
+  </div>
+
+  <!-- ── 기록 ── -->
+  <div class="tab-panel" id="tab-records">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:13px;color:#aaa" id="rec-count">총 0개 기록</div>
+      <input type="month" id="rec-filter" onchange="loadRecords()" style="font-size:13px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
+    </div>
+    <div id="records-list"><div class="empty-state"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- ── 감사일기 ── -->
+  <div class="tab-panel" id="tab-diary">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:13px;color:#aaa" id="diary-count">총 0개 작성</div>
+      <div style="font-size:12px;color:var(--main);font-weight:500" id="diary-streak"></div>
+    </div>
+    <div id="diary-list"><div class="empty-state"><div class="spinner"></div></div></div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- 프로필 수정 모달 -->
+<div id="profile-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:16px">
+  <div style="background:white;border-radius:20px;width:100%;max-width:440px;overflow:hidden">
+    <div style="background:var(--main);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+      <span style="color:white;font-size:15px;font-weight:600">프로필 설정</span>
+      <button onclick="closeProfile()" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:20px;line-height:1;padding:0">×</button>
+    </div>
+    <div style="padding:20px">
+
+      <!-- 프로필 정보 -->
+      <div style="display:flex;align-items:center;gap:12px;padding:14px;background:#f8f8ff;border-radius:12px;margin-bottom:20px">
+        <div id="pm-avatar" style="width:44px;height:44px;border-radius:50%;background:#AFA9EC;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#26215C;overflow:hidden;flex-shrink:0"></div>
+        <div>
+          <div id="pm-email" style="font-size:12px;color:#aaa"></div>
+          <div id="pm-joined" style="font-size:11px;color:#ccc;margin-top:2px"></div>
+        </div>
+      </div>
+
+      <!-- 닉네임 -->
+      <div class="field">
+        <label>닉네임</label>
+        <input type="text" id="pm-nickname" maxlength="12" placeholder="서비스 내 표시 이름">
+      </div>
+
+      <!-- 참여 시작일 -->
+      <div class="field">
+        <label>커리어PT 참여 시작일</label>
+        <input type="date" id="pm-startdate" onchange="pmCalcWeek()">
+        <div id="pm-week-preview" style="margin-top:6px;padding:8px 12px;background:var(--main-light);border-radius:8px;font-size:12px;color:var(--main-dark);display:none">
+          현재 <strong id="pm-week-num"></strong>주차
+        </div>
+      </div>
+
+      <!-- 그룹 변경 -->
+      <div class="field">
+        <label>소속 그룹</label>
+        <div id="pm-group-list" style="display:flex;flex-direction:column;gap:6px;margin-top:4px"></div>
+      </div>
+
+      <!-- 테마 컬러 -->
+      <div class="field">
+        <label>테마 컬러</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px" id="pm-swatches"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+          <span style="font-size:12px;color:#aaa">직접 입력</span>
+          <input type="text" id="pm-hex" maxlength="7" placeholder="#534AB7"
+            style="width:100px;padding:6px 10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;font-family:inherit;outline:none">
+          <button onclick="pmApplyHex()"
+            style="padding:6px 14px;background:var(--main);color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit">적용</button>
+        </div>
+      </div>
+
+      <!-- 저장 버튼 -->
+      <button id="pm-save-btn" onclick="saveProfile()"
+        style="width:100%;padding:13px;background:var(--main);color:white;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px">
+        변경사항 저장
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, collection, query,
+  where, orderBy, getDocs, deleteDoc }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+// ★ Firebase 설정값 (index.html과 동일하게 입력)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let user = null, userProfile = null;
+let scoreSelected = 0, faSelected = null;
+let allRecords = [];
+
+// ── 인증 확인 ──
+onAuthStateChanged(auth, async u => {
+  if (!u) { window.location.href = 'index.html'; return; }
+  user = u;
+  userProfile = (await getDoc(doc(db, 'users', u.uid))).data();
+  if (!userProfile?.onboardingDone) { window.location.href = 'index.html'; return; }
+  applyTheme(userProfile.themeColor || '#534AB7');
+  initHeader();
+  initInputForm();
+  loadGoals();
+  loadAllRecords();
+});
+
+function applyTheme(color) {
+  document.documentElement.style.setProperty('--main', color);
+  const r=parseInt(color.slice(1,3),16),g=parseInt(color.slice(3,5),16),b=parseInt(color.slice(5,7),16);
+  document.documentElement.style.setProperty('--main-dark',`rgb(${Math.round(r*.85)},${Math.round(g*.85)},${Math.round(b*.85)})`);
+  document.documentElement.style.setProperty('--main-mid',`rgb(${Math.min(255,Math.round(r*1.12))},${Math.min(255,Math.round(g*1.12))},${Math.min(255,Math.round(b*1.12))})`);
+  document.documentElement.style.setProperty('--main-light',`rgba(${r},${g},${b},0.12)`);
+  document.documentElement.style.setProperty('--main-xlight',`rgba(${r},${g},${b},0.06)`);
+}
+
+function calcWeek(startDate) {
+  const diff = Math.floor((new Date() - new Date(startDate)) / 86400000);
+  return Math.max(1, Math.floor(diff / 7) + 1);
+}
+
+function initHeader() {
+  const p = userProfile;
+  const wk = calcWeek(p.startDate);
+  document.getElementById('user-name').textContent = p.nickname;
+  document.getElementById('week-badge').textContent = `${wk}주차`;
+  const av = document.getElementById('avatar');
+  if (user.photoURL) av.innerHTML = `<img src="${user.photoURL}" alt="프로필">`;
+  else av.textContent = p.nickname[0];
+}
+
+function initInputForm() {
+  document.getElementById('f-nickname').value = userProfile.nickname;
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+}
+
+// ── 탭 전환 ──
+window.switchTab = (id, btn) => {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'summary') loadSummary();
+  if (id === 'trend') loadTrend();
+  if (id === 'records') loadRecords();
+  if (id === 'diary') loadDiaryTab();
+};
+
+// ── 루틴 토글 ──
+window.toggleRoutine = (row, id) => {
+  const chk = document.getElementById(id);
+  chk.classList.toggle('checked');
+  row.classList.toggle('checked');
+};
+
+// ── 점수 선택 ──
+window.selectScore = (btn, val) => {
+  document.querySelectorAll('.score-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  scoreSelected = val;
+};
+
+// ── FA 선택 ──
+window.selectFA = (yes) => {
+  document.querySelectorAll('.fa-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelector(yes ? '.fa-btn.yes' : '.fa-btn.no').classList.add('selected');
+  faSelected = yes;
+};
+
+// ── 태그 토글 ──
+window.toggleTag = el => el.classList.toggle('selected');
+
+// ── 기록 저장 ──
+window.saveRecord = async () => {
+  const date = document.getElementById('f-date').value;
+  if (!date) { showToast('날짜를 선택해주세요'); return; }
+  const btn = document.querySelector('.save-btn');
+  btn.disabled = true; btn.textContent = '저장 중...';
+  try {
+    const focusTags = [...document.querySelectorAll('.focus-tag.selected')].map(t => t.textContent);
+    const data = {
+      uid: user.uid, nickname: userProfile.nickname, date,
+      routineGyeong: document.getElementById('r-gyeong').classList.contains('checked'),
+      routineMyeon: document.getElementById('r-myeon').classList.contains('checked'),
+      routineDok: document.getElementById('r-dok').classList.contains('checked'),
+      routineUn: document.getElementById('r-un').classList.contains('checked'),
+      routineTime: Number(document.getElementById('f-routine-time').value) || 0,
+      lecture: Number(document.getElementById('f-lecture').value) || 0,
+      jasoseo: Number(document.getElementById('f-jasoseo').value) || 0,
+      pilgi: Number(document.getElementById('f-pilgi').value) || 0,
+      interview: Number(document.getElementById('f-interview').value) || 0,
+      applications: Number(document.getElementById('f-applications').value) || 0,
+      selfEsteem: scoreSelected || 0,
+      jobProb: Number(document.getElementById('f-prob').value) || 0,
+      fa5050: faSelected,
+      focusTags,
+      diary: document.getElementById('f-diary').value.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    await setDoc(doc(db, 'records', `${user.uid}_${date}`), data);
+    showToast('기록이 저장되었어요! 🎉');
+    allRecords = allRecords.filter(r => r.date !== date);
+    allRecords.unshift(data);
+    allRecords.sort((a,b) => b.date.localeCompare(a.date));
+  } catch(e) { showToast('저장 중 오류가 발생했어요'); console.error(e); }
+  btn.disabled = false; btn.textContent = '오늘 기록 저장하기';
+};
+
+// ── 기록 전체 로드 ──
+async function loadAllRecords() {
+  const q = query(collection(db,'records'), where('uid','==',user.uid), orderBy('date','desc'));
+  const snap = await getDocs(q);
+  allRecords = snap.docs.map(d => d.data());
+}
+
+// ── 누적 요약 ──
+async function loadSummary() {
+  document.getElementById('summary-loading').style.display = 'block';
+  document.getElementById('summary-content').style.display = 'none';
+  if (!allRecords.length) await loadAllRecords();
+  const recs = allRecords;
+  const n = recs.length;
+  if (!n) { document.getElementById('summary-loading').style.display='none'; return; }
+  document.getElementById('s-days').textContent = n;
+  document.getElementById('s-apps').textContent = recs.reduce((a,r)=>a+(r.applications||0),0);
+  document.getElementById('s-lecture').textContent = Math.round(recs.reduce((a,r)=>a+(r.lecture||0),0)/60);
+  const moods = recs.filter(r=>r.selfEsteem>0);
+  document.getElementById('s-mood').textContent = moods.length ? (moods.reduce((a,r)=>a+r.selfEsteem,0)/moods.length).toFixed(1) : '-';
+  const pct = k => Math.round(recs.filter(r=>r[k]).length/n*100);
+  const setPct = (id,pb,v) => { document.getElementById(id).textContent=v+'%'; document.getElementById(pb).style.width=v+'%'; };
+  setPct('p-gyeong','pb-gyeong',pct('routineGyeong'));
+  setPct('p-myeon','pb-myeon',pct('routineMyeon'));
+  setPct('p-dok','pb-dok',pct('routineDok'));
+  setPct('p-un','pb-un',pct('routineUn'));
+  setPct('p-fa','pb-fa',pct('fa5050'));
+  const avg = k => n ? Math.round(recs.reduce((a,r)=>a+(r[k]||0),0)/n) : 0;
+  document.getElementById('s-lec-avg').textContent = avg('lecture');
+  document.getElementById('s-jas-avg').textContent = avg('jasoseo');
+  document.getElementById('s-pil-avg').textContent = avg('pilgi');
+  document.getElementById('s-int-avg').textContent = avg('interview');
+  document.getElementById('summary-loading').style.display = 'none';
+  document.getElementById('summary-content').style.display = 'block';
+}
+
+// ── 추이 차트 ──
+let trendChartInst, moodChartInst, goalChartInst;
+async function loadTrend() {
+  if (!allRecords.length) await loadAllRecords();
+  const recs = [...allRecords].reverse().slice(-14);
+  const labels = recs.map(r => r.date.slice(5));
+  const color = getComputedStyle(document.documentElement).getPropertyValue('--main').trim() || '#534AB7';
+  const mkChart = (id,ds,opts={}) => {
+    const el = document.getElementById(id);
+    const ex = Chart.getChart(el); if(ex) ex.destroy();
+    return new Chart(el,{type:'line',data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10}},grid:{display:false}},y:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,.04)'}}},...opts}});
+  };
+  trendChartInst = mkChart('trend-chart',[
+    {label:'강의',data:recs.map(r=>r.lecture||0),borderColor:color,borderWidth:2,pointRadius:2,tension:.3,fill:false},
+    {label:'자소서',data:recs.map(r=>r.jasoseo||0),borderColor:color+'99',borderWidth:1.5,borderDash:[4,3],pointRadius:2,tension:.3,fill:false},
+    {label:'필기',data:recs.map(r=>r.pilgi||0),borderColor:color+'66',borderWidth:1.5,pointRadius:2,tension:.3,fill:false},
+    {label:'면접',data:recs.map(r=>r.interview||0),borderColor:color+'44',borderWidth:1.5,borderDash:[4,3],pointRadius:2,tension:.3,fill:false},
+  ]);
+  moodChartInst = mkChart('mood-chart',[
+    {label:'자존감',data:recs.map(r=>r.selfEsteem||null),borderColor:color,borderWidth:2,pointRadius:3,pointBackgroundColor:color,tension:.3,fill:true,backgroundColor:color+'15',spanGaps:true},
+  ],{scales:{x:{ticks:{font:{size:10}},grid:{display:false}},y:{min:0,max:5,ticks:{stepSize:1,font:{size:10}},grid:{color:'rgba(0,0,0,.04)'}}}});
+}
+
+// ── 기록 목록 ──
+window.loadRecords = async () => {
+  if (!allRecords.length) await loadAllRecords();
+  const filter = document.getElementById('rec-filter').value;
+  const recs = filter ? allRecords.filter(r => r.date.startsWith(filter)) : allRecords;
+  document.getElementById('rec-count').textContent = `총 ${recs.length}개 기록`;
+  const list = document.getElementById('records-list');
+  if (!recs.length) { list.innerHTML = '<div class="empty-state"><p>아직 기록이 없어요.<br>오늘 입력 탭에서 첫 기록을 남겨보세요!</p></div>'; return; }
+  list.innerHTML = recs.map(r => {
+    const routineDone = [r.routineGyeong,r.routineMyeon,r.routineDok,r.routineUn].filter(Boolean).length;
+    const dateStr = new Date(r.date).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+    return `<div class="record-card">
+      <div class="record-header">
+        <div><div class="record-date">${dateStr}</div></div>
+        <div class="record-badges">
+          ${r.fa5050 ? '<span class="badge badge-purple">FA완료 ✦</span>' : ''}
+          <span class="badge ${routineDone===4?'badge-purple':routineDone>=2?'badge-green':'badge-gray'}">루틴 ${routineDone}/4</span>
+        </div>
+      </div>
+      <div class="record-grid">
+        <div class="record-item">강의 <span>${r.lecture||0}분</span></div>
+        <div class="record-item">자소서 <span>${r.jasoseo||0}분</span></div>
+        <div class="record-item">필기 <span>${r.pilgi||0}분</span></div>
+        <div class="record-item">면접 <span>${r.interview||0}분</span></div>
+        <div class="record-item">지원 <span>${r.applications||0}개</span></div>
+        <div class="record-item">자존감 <span>${r.selfEsteem||'-'}점</span></div>
+      </div>
+      <div class="routine-tags">
+        <span class="rtag ${r.routineGyeong?'rtag-done':'rtag-miss'}">매십경${r.routineGyeong?' ✓':''}</span>
+        <span class="rtag ${r.routineMyeon?'rtag-done':'rtag-miss'}">매십면${r.routineMyeon?' ✓':''}</span>
+        <span class="rtag ${r.routineDok?'rtag-done':'rtag-miss'}">매십독${r.routineDok?' ✓':''}</span>
+        <span class="rtag ${r.routineUn?'rtag-done':'rtag-miss'}">매십운${r.routineUn?' ✓':''}</span>
+      </div>
+      ${r.focusTags?.length ? `<div style="font-size:12px;color:#aaa;margin-bottom:8px">집중: <span style="color:var(--main)">${r.focusTags.join(', ')}</span></div>` : ''}
+      <div class="record-actions">
+        <button class="btn-sm btn-sm-danger" onclick="deleteRecord('${r.date}')">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+};
+
+window.deleteRecord = async (date) => {
+  if (!confirm('이 기록을 삭제할까요?')) return;
+  await deleteDoc(doc(db, 'records', `${user.uid}_${date}`));
+  allRecords = allRecords.filter(r => r.date !== date);
+  loadRecords();
+  showToast('기록이 삭제되었어요');
+};
+
+// ── 감사일기 탭 ──
+async function loadDiaryTab() {
+  if (!allRecords.length) await loadAllRecords();
+  const diaries = allRecords.filter(r => r.diary);
+  document.getElementById('diary-count').textContent = `총 ${diaries.length}개 작성`;
+  const today = new Date().toISOString().split('T')[0];
+  const list = document.getElementById('diary-list');
+  if (!diaries.length) { list.innerHTML = '<div class="empty-state"><p>아직 감사일기가 없어요.</p></div>'; return; }
+  list.innerHTML = diaries.map(r => `
+    <div class="diary-card ${r.date===today?'diary-today':''}">
+      <div class="diary-date">${r.date}${r.date===today?' (오늘)':''}</div>
+      <div class="diary-text">${r.diary}</div>
+    </div>`).join('');
+}
+
+// ── 주간 목표 ──
+let goals = [], currentWeekKey = '';
+async function loadGoals() {
+  const wk = calcWeek(userProfile.startDate);
+  currentWeekKey = `${user.uid}_week${wk}`;
+  document.getElementById('goal-week-label').textContent = `${wk}주차 목표`;
+  const snap = await getDoc(doc(db, 'weekly_goals', currentWeekKey));
+  goals = snap.exists() ? (snap.data().goals || []) : [];
+  renderGoals();
+  populatePastWeeks(wk);
+}
+
+function renderGoals() {
+  const done = goals.filter(g=>g.done).length;
+  const pct = goals.length ? Math.round(done/goals.length*100) : 0;
+  document.getElementById('goal-pct-label').textContent = `${done} / ${goals.length} 달성 (${pct}%)`;
+  document.getElementById('goal-prog').style.width = pct + '%';
+  document.getElementById('goal-list').innerHTML = goals.map((g,i) => `
+    <div class="goal-item ${g.done?'done':''}" >
+      <div class="chk-box ${g.done?'checked':''}" onclick="toggleGoal(${i})" style="cursor:pointer">
+        ${g.done?'<span style="color:white;font-size:12px;font-weight:700">✓</span>':''}
+      </div>
+      <div class="goal-text">${g.text}</div>
+      <button class="goal-del" onclick="removeGoal(${i})">×</button>
+    </div>`).join('');
+}
+
+window.addGoal = async () => {
+  const inp = document.getElementById('goal-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  if (goals.length >= 10) { showToast('목표는 최대 10개까지 추가할 수 있어요'); return; }
+  goals.push({ text, done: false });
+  inp.value = '';
+  await saveGoals();
+  renderGoals();
+};
+
+window.toggleGoal = async (i) => {
+  goals[i].done = !goals[i].done;
+  await saveGoals();
+  renderGoals();
+};
+
+window.removeGoal = async (i) => {
+  goals.splice(i, 1);
+  await saveGoals();
+  renderGoals();
+};
+
+async function saveGoals() {
+  await setDoc(doc(db, 'weekly_goals', currentWeekKey), { goals, updatedAt: new Date().toISOString() });
+}
+
+function populatePastWeeks(curWk) {
+  const sel = document.getElementById('past-week-sel');
+  sel.innerHTML = '<option value="">주차 선택...</option>';
+  for (let w = curWk-1; w >= Math.max(1, curWk-10); w--) {
+    sel.innerHTML += `<option value="${w}">${w}주차</option>`;
+  }
+}
+
+window.loadPastGoal = async () => {
+  const wk = document.getElementById('past-week-sel').value;
+  if (!wk) return;
+  const snap = await getDoc(doc(db, 'weekly_goals', `${user.uid}_week${wk}`));
+  const g = snap.exists() ? (snap.data().goals||[]) : [];
+  const done = g.filter(x=>x.done).length;
+  document.getElementById('past-goal-list').innerHTML = g.length
+    ? `<div style="font-size:13px;color:#aaa;margin-bottom:10px">${wk}주차 달성률: <strong style="color:var(--main)">${g.length?Math.round(done/g.length*100):0}%</strong></div>`
+      + g.map(x=>`<div class="goal-item ${x.done?'done':''}"><div class="chk-box ${x.done?'checked':''}">${x.done?'<span style="color:white;font-size:12px;font-weight:700">✓</span>':''}</div><div class="goal-text">${x.text}</div></div>`).join('')
+    : '<div style="font-size:13px;color:#ccc;text-align:center;padding:20px">이 주차 기록이 없어요</div>';
+};
+
+// ── 로그아웃 ──
+window.doLogout = async () => {
+  if (confirm('로그아웃 할까요?')) { await signOut(auth); window.location.href = 'index.html'; }
+};
+
+// ── 토스트 ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+window.showToast = showToast;
+
+// ────────────────────────────────────────
+// 프로필 수정 모달
+// ────────────────────────────────────────
+const THEME_PRESETS = [
+  { name:'보라', color:'#534AB7' }, { name:'파랑', color:'#185FA5' },
+  { name:'초록', color:'#3B6D11' }, { name:'청록', color:'#0F6E56' },
+  { name:'코랄', color:'#993C1D' }, { name:'핑크', color:'#993556' },
+  { name:'황색', color:'#854F0B' }, { name:'회색', color:'#5F5E5A' },
+];
+
+let pmSelectedGroupId = null;
+let pmSelectedColor = null;
+
+window.openProfile = async () => {
+  const p = userProfile;
+  const overlay = document.getElementById('profile-overlay');
+  overlay.classList.add('open');
+
+  // 프로필 정보 표시
+  const avEl = document.getElementById('pm-avatar');
+  if (user.photoURL) avEl.innerHTML = `<img src="${user.photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  else avEl.textContent = p.nickname[0];
+  document.getElementById('pm-email').textContent = user.email;
+  document.getElementById('pm-joined').textContent = `가입일: ${p.createdAt ? p.createdAt.slice(0,10) : '-'}`;
+
+  // 현재 값 채우기
+  document.getElementById('pm-nickname').value = p.nickname;
+  document.getElementById('pm-startdate').value = p.startDate;
+  pmCalcWeek();
+
+  // 현재 테마 컬러
+  pmSelectedColor = p.themeColor || '#534AB7';
+  document.getElementById('pm-hex').value = pmSelectedColor;
+
+  // 스와치 렌더
+  renderSwatches(pmSelectedColor);
+
+  // 그룹 목록 로드
+  await loadPmGroups(p.groupId);
+};
+
+window.closeProfile = () => {
+  document.getElementById('profile-overlay').classList.remove('open');
+};
+
+// 모달 배경 클릭 시 닫기
+document.getElementById('profile-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('profile-overlay')) closeProfile();
+});
+
+function renderSwatches(currentColor) {
+  const el = document.getElementById('pm-swatches');
+  el.innerHTML = '';
+  THEME_PRESETS.forEach(t => {
+    const sw = document.createElement('div');
+    sw.className = 'pm-swatch' + (t.color.toLowerCase() === currentColor.toLowerCase() ? ' on' : '');
+    sw.style.background = t.color;
+    sw.title = t.name;
+    sw.setAttribute('aria-label', t.name);
+    sw.onclick = () => {
+      pmSelectedColor = t.color;
+      document.getElementById('pm-hex').value = t.color;
+      document.querySelectorAll('.pm-swatch').forEach(s => s.classList.remove('on'));
+      sw.classList.add('on');
+    };
+    el.appendChild(sw);
+  });
+}
+
+window.pmApplyHex = () => {
+  let hex = document.getElementById('pm-hex').value.trim();
+  if (!hex.startsWith('#')) hex = '#' + hex;
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) { showToast('올바른 hex 코드를 입력해주세요 (예: #FF5500)'); return; }
+  pmSelectedColor = hex;
+  document.querySelectorAll('.pm-swatch').forEach(s => s.classList.remove('on'));
+};
+
+window.pmCalcWeek = () => {
+  const val = document.getElementById('pm-startdate').value;
+  if (!val) return;
+  const diff = Math.floor((new Date() - new Date(val)) / 86400000);
+  const wk = Math.max(1, Math.floor(diff / 7) + 1);
+  document.getElementById('pm-week-num').textContent = wk;
+  document.getElementById('pm-week-preview').style.display = 'block';
+};
+
+async function loadPmGroups(currentGroupId) {
+  pmSelectedGroupId = currentGroupId;
+  const listEl = document.getElementById('pm-group-list');
+  listEl.innerHTML = '<div style="font-size:13px;color:#ccc;padding:8px 0">불러오는 중...</div>';
+  const snap = await getDocs(collection(db, 'groups'));
+  listEl.innerHTML = '';
+  if (snap.empty) {
+    listEl.innerHTML = '<div style="font-size:13px;color:#ccc;padding:8px 0">등록된 그룹이 없어요. 관리자에게 문의해주세요.</div>';
+    return;
+  }
+  snap.forEach(d => {
+    const g = d.data();
+    const opt = document.createElement('div');
+    opt.className = 'pm-group-option' + (d.id === currentGroupId ? ' selected' : '');
+    opt.dataset.id = d.id;
+    opt.innerHTML = `<div class="g-icon">${g.name[0]}</div><div><div class="g-name">${g.name}</div><div class="g-count">멤버 ${(g.members||[]).length}명</div></div>`;
+    opt.onclick = () => {
+      document.querySelectorAll('.pm-group-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      pmSelectedGroupId = d.id;
+    };
+    listEl.appendChild(opt);
+  });
+}
+
+window.saveProfile = async () => {
+  const nickname = document.getElementById('pm-nickname').value.trim();
+  const startDate = document.getElementById('pm-startdate').value;
+  if (!nickname) { showToast('닉네임을 입력해주세요'); return; }
+  if (!startDate) { showToast('참여 시작일을 선택해주세요'); return; }
+  if (!pmSelectedGroupId) { showToast('그룹을 선택해주세요'); return; }
+
+  const btn = document.getElementById('pm-save-btn');
+  btn.disabled = true; btn.textContent = '저장 중...';
+
+  try {
+    const color = pmSelectedColor || userProfile.themeColor || '#534AB7';
+    await setDoc(doc(db, 'users', user.uid), {
+      ...userProfile,
+      nickname,
+      startDate,
+      groupId: pmSelectedGroupId,
+      themeColor: color,
+    });
+
+    // 로컬 프로필 업데이트
+    userProfile = { ...userProfile, nickname, startDate, groupId: pmSelectedGroupId, themeColor: color };
+
+    // UI 즉시 반영
+    applyTheme(color);
+    initHeader();
+    document.getElementById('f-nickname').value = nickname;
+
+    closeProfile();
+    showToast('프로필이 업데이트됐어요! 🎉');
+  } catch(e) {
+    showToast('저장 중 오류가 발생했어요');
+    console.error(e);
+  }
+  btn.disabled = false; btn.textContent = '변경사항 저장';
+};
+</script>
+</body>
+</html>

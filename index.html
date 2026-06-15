@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생존일지 — 커리어PT</title>
+<style>
+  :root {
+    --main: #534AB7;
+    --main-dark: #3C3489;
+    --main-mid: #7F77DD;
+    --main-light: #EEEDFE;
+    --main-xlight: #F5F4FF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f5f4ff; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .login-wrap { width: 100%; max-width: 420px; padding: 24px; }
+  .logo-area { text-align: center; margin-bottom: 40px; }
+  .logo-icon { width: 64px; height: 64px; background: var(--main); border-radius: 20px;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
+    font-size: 28px; color: white; }
+  .logo-title { font-size: 28px; font-weight: 700; color: var(--main-dark); }
+  .logo-sub { font-size: 14px; color: #888; margin-top: 4px; }
+  .login-card { background: white; border-radius: 20px; padding: 32px; box-shadow: 0 4px 24px rgba(83,74,183,0.08); }
+  .login-card h2 { font-size: 18px; font-weight: 600; color: #222; margin-bottom: 8px; }
+  .login-card p { font-size: 14px; color: #666; margin-bottom: 28px; line-height: 1.6; }
+  .google-btn { width: 100%; padding: 14px; border: 1.5px solid #e0e0e0; border-radius: 12px;
+    background: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    gap: 12px; font-size: 15px; font-weight: 500; color: #333; transition: background .15s, border-color .15s; }
+  .google-btn:hover { background: #f8f8f8; border-color: #ccc; }
+  .google-btn svg { flex-shrink: 0; }
+  .divider { text-align: center; font-size: 12px; color: #bbb; margin: 20px 0; }
+  .feature-list { margin-top: 24px; }
+  .feature-item { display: flex; align-items: center; gap: 10px; padding: 8px 0;
+    font-size: 13px; color: #555; border-bottom: 1px solid #f0f0f0; }
+  .feature-item:last-child { border-bottom: none; }
+  .feat-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--main); flex-shrink: 0; }
+
+  /* 온보딩 */
+  .onboarding-wrap { width: 100%; max-width: 480px; padding: 24px; display: none; }
+  .ob-header { background: var(--main); border-radius: 16px 16px 0 0; padding: 20px 24px; color: white; }
+  .ob-header h1 { font-size: 18px; font-weight: 600; }
+  .ob-header p { font-size: 13px; opacity: .8; margin-top: 4px; }
+  .ob-body { background: white; border-radius: 0 0 16px 16px; padding: 24px;
+    box-shadow: 0 4px 24px rgba(83,74,183,0.08); }
+  .step-indicator { display: flex; gap: 6px; margin-bottom: 24px; }
+  .step-dot { flex: 1; height: 4px; border-radius: 2px; background: #eee; transition: background .3s; }
+  .step-dot.done { background: var(--main); }
+  .step-dot.active { background: var(--main-mid); }
+  .ob-step { display: none; }
+  .ob-step.active { display: block; }
+  .ob-step h3 { font-size: 16px; font-weight: 600; color: #222; margin-bottom: 6px; }
+  .ob-step .hint { font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.5; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12px; font-weight: 500; color: #666; margin-bottom: 6px; }
+  .field input, .field select { width: 100%; padding: 11px 14px; border: 1.5px solid #e8e8e8;
+    border-radius: 10px; font-size: 14px; color: #222; outline: none; transition: border-color .15s;
+    font-family: inherit; }
+  .field input:focus, .field select:focus { border-color: var(--main); }
+  .week-preview { background: var(--main-light); border-radius: 8px; padding: 10px 14px;
+    font-size: 13px; color: var(--main-dark); margin-top: 8px; display: none; }
+  .week-preview strong { font-weight: 600; }
+  .group-list { display: flex; flex-direction: column; gap: 8px; }
+  .group-option { border: 1.5px solid #e8e8e8; border-radius: 10px; padding: 12px 16px;
+    cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 10px; }
+  .group-option:hover { border-color: var(--main-mid); background: var(--main-xlight); }
+  .group-option.selected { border-color: var(--main); background: var(--main-light); }
+  .group-option .g-name { font-size: 14px; font-weight: 500; color: #222; }
+  .group-option .g-count { font-size: 12px; color: #888; margin-top: 2px; }
+  .g-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--main);
+    display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+  .ob-footer { display: flex; gap: 10px; margin-top: 24px; }
+  .btn-back { padding: 12px 20px; border: 1.5px solid #e0e0e0; border-radius: 10px;
+    background: white; cursor: pointer; font-size: 14px; color: #666; font-family: inherit; }
+  .btn-next { flex: 1; padding: 12px; border: none; border-radius: 10px;
+    background: var(--main); color: white; cursor: pointer; font-size: 14px; font-weight: 600;
+    font-family: inherit; transition: background .15s; }
+  .btn-next:hover { background: var(--main-dark); }
+  .btn-next:disabled { background: #ccc; cursor: not-allowed; }
+  .complete-area { text-align: center; padding: 20px 0; }
+  .complete-icon { width: 64px; height: 64px; background: var(--main-light); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px; }
+  .complete-area h3 { font-size: 18px; font-weight: 600; color: #222; margin-bottom: 8px; }
+  .complete-area p { font-size: 14px; color: #666; line-height: 1.6; }
+
+  .loading { text-align: center; padding: 60px 20px; }
+  .loading p { font-size: 14px; color: #888; margin-top: 12px; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--main-light);
+    border-top-color: var(--main); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- 로딩 -->
+<div id="loading" class="loading">
+  <div class="spinner"></div>
+  <p>불러오는 중...</p>
+</div>
+
+<!-- 로그인 -->
+<div id="login-section" class="login-wrap" style="display:none">
+  <div class="logo-area">
+    <div class="logo-icon">🌱</div>
+    <div class="logo-title">생존일지</div>
+    <div class="logo-sub">커리어PT 취준 활동 트래커</div>
+  </div>
+  <div class="login-card">
+    <h2>함께 생존하기</h2>
+    <p>매일의 취준 활동을 기록하고,<br>조원들과 함께 현황을 공유해요.</p>
+    <button class="google-btn" onclick="loginWithGoogle()">
+      <svg width="20" height="20" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Google 계정으로 시작하기
+    </button>
+    <div class="divider">──  주요 기능  ──</div>
+    <div class="feature-list">
+      <div class="feature-item"><div class="feat-dot"></div>매일 루틴·취준 활동 기록</div>
+      <div class="feature-item"><div class="feat-dot"></div>이번 주 목표 작성 및 달성 체크</div>
+      <div class="feature-item"><div class="feat-dot"></div>조별·전체 랭킹 및 항목 비교</div>
+      <div class="feature-item"><div class="feat-dot"></div>감사일기 작성 및 공유</div>
+      <div class="feature-item"><div class="feat-dot"></div>테마 컬러 개인 커스터마이징</div>
+    </div>
+  </div>
+</div>
+
+<!-- 온보딩 -->
+<div id="onboarding-section" class="onboarding-wrap" style="display:none">
+  <div class="ob-header">
+    <h1>생존일지에 오신 걸 환영해요!</h1>
+    <p>처음 방문하셨군요. 간단한 정보를 입력해주세요.</p>
+  </div>
+  <div class="ob-body">
+    <div class="step-indicator">
+      <div class="step-dot active" id="sd1"></div>
+      <div class="step-dot" id="sd2"></div>
+      <div class="step-dot" id="sd3"></div>
+    </div>
+
+    <!-- 스텝 1: 기본 정보 -->
+    <div class="ob-step active" id="step1">
+      <h3>기본 정보를 입력해주세요</h3>
+      <p class="hint">서비스 내에서 사용할 닉네임과 커리어PT를 시작한 날짜를 입력해주세요.</p>
+      <div class="field">
+        <label>닉네임</label>
+        <input type="text" id="ob-nickname" placeholder="예: 취준킹민준" maxlength="12">
+      </div>
+      <div class="field">
+        <label>커리어PT 참여 시작일</label>
+        <input type="date" id="ob-startdate" onchange="calcWeek()">
+        <div class="week-preview" id="week-preview">
+          현재 <strong id="week-num">1</strong>주차예요!
+        </div>
+      </div>
+    </div>
+
+    <!-- 스텝 2: 그룹 선택 -->
+    <div class="ob-step" id="step2">
+      <h3>내 그룹을 선택해주세요</h3>
+      <p class="hint">소속된 조를 선택해주세요. 그룹별 현황 비교 기능에 사용됩니다.</p>
+      <div class="group-list" id="group-list">
+        <div style="text-align:center;padding:20px;color:#aaa;font-size:14px">그룹 목록 불러오는 중...</div>
+      </div>
+    </div>
+
+    <!-- 스텝 3: 완료 -->
+    <div class="ob-step" id="step3">
+      <div class="complete-area">
+        <div class="complete-icon">🎉</div>
+        <h3>설정 완료!</h3>
+        <p id="complete-msg">이제 생존일지를 시작할 수 있어요.<br>매일 꾸준히 기록해서 함께 취업에 성공해요!</p>
+      </div>
+    </div>
+
+    <div class="ob-footer">
+      <button class="btn-back" id="btn-back" onclick="obBack()" style="display:none">← 이전</button>
+      <button class="btn-next" id="btn-next" onclick="obNext()">다음 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+// ★ 여기에 본인 Firebase 설정값을 입력하세요
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+let currentUser = null;
+let selectedGroupId = null;
+let currentStep = 1;
+
+// 인증 상태 감지
+onAuthStateChanged(auth, async (user) => {
+  document.getElementById('loading').style.display = 'none';
+  if (user) {
+    currentUser = user;
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    if (userDoc.exists() && userDoc.data().onboardingDone) {
+      // 온보딩 완료 → 메인으로
+      window.location.href = 'main.html';
+    } else {
+      // 온보딩 시작
+      showOnboarding(user);
+    }
+  } else {
+    document.getElementById('login-section').style.display = 'block';
+  }
+});
+
+// 구글 로그인
+window.loginWithGoogle = async () => {
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    alert('로그인에 실패했어요. 다시 시도해주세요.');
+    console.error(e);
+  }
+};
+
+// 온보딩 표시
+async function showOnboarding(user) {
+  document.getElementById('onboarding-section').style.display = 'block';
+  // 구글 이름을 닉네임 기본값으로
+  const nameInput = document.getElementById('ob-nickname');
+  if (user.displayName) nameInput.value = user.displayName.split(' ')[0];
+  // 그룹 목록 로드
+  await loadGroups();
+}
+
+// 그룹 목록 로드
+async function loadGroups() {
+  const snap = await getDocs(collection(db, 'groups'));
+  const listEl = document.getElementById('group-list');
+  listEl.innerHTML = '';
+  if (snap.empty) {
+    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;font-size:14px">아직 등록된 그룹이 없어요.<br>관리자에게 문의해주세요.</div>';
+    return;
+  }
+  snap.forEach(d => {
+    const g = d.data();
+    const el = document.createElement('div');
+    el.className = 'group-option';
+    el.dataset.id = d.id;
+    el.innerHTML = `<div class="g-icon">${g.name[0]}</div><div><div class="g-name">${g.name}</div><div class="g-count">멤버 ${(g.members||[]).length}명</div></div>`;
+    el.onclick = () => {
+      document.querySelectorAll('.group-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedGroupId = d.id;
+    };
+    listEl.appendChild(el);
+  });
+}
+
+// 주차 계산
+window.calcWeek = () => {
+  const val = document.getElementById('ob-startdate').value;
+  if (!val) return;
+  const start = new Date(val);
+  const now = new Date();
+  const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  const week = Math.max(1, Math.floor(diffDays / 7) + 1);
+  document.getElementById('week-num').textContent = week;
+  document.getElementById('week-preview').style.display = 'block';
+};
+
+// 온보딩 스텝 이동
+window.obNext = async () => {
+  if (currentStep === 1) {
+    const nick = document.getElementById('ob-nickname').value.trim();
+    const start = document.getElementById('ob-startdate').value;
+    if (!nick) { alert('닉네임을 입력해주세요.'); return; }
+    if (!start) { alert('참여 시작일을 선택해주세요.'); return; }
+    gotoStep(2);
+  } else if (currentStep === 2) {
+    if (!selectedGroupId) { alert('그룹을 선택해주세요.'); return; }
+    gotoStep(3);
+    // 저장
+    await saveOnboarding();
+    document.getElementById('btn-next').textContent = '내 일지 시작하기 →';
+  } else if (currentStep === 3) {
+    window.location.href = 'main.html';
+  }
+};
+
+window.obBack = () => {
+  if (currentStep > 1) gotoStep(currentStep - 1);
+};
+
+function gotoStep(n) {
+  document.getElementById(`step${currentStep}`).classList.remove('active');
+  document.getElementById(`sd${currentStep}`).classList.remove('active');
+  document.getElementById(`sd${currentStep}`).classList.add('done');
+  currentStep = n;
+  document.getElementById(`step${n}`).classList.add('active');
+  document.getElementById(`sd${n}`).classList.add('active');
+  document.getElementById('btn-back').style.display = n > 1 ? 'block' : 'none';
+  if (n === 3) document.getElementById('btn-back').style.display = 'none';
+}
+
+async function saveOnboarding() {
+  const nick = document.getElementById('ob-nickname').value.trim();
+  const start = document.getElementById('ob-startdate').value;
+  await setDoc(doc(db, 'users', currentUser.uid), {
+    nickname: nick,
+    startDate: start,
+    groupId: selectedGroupId,
+    email: currentUser.email,
+    photoURL: currentUser.photoURL || '',
+    themeColor: '#534AB7',
+    onboardingDone: true,
+    createdAt: new Date().toISOString(),
+  });
+  document.getElementById('complete-msg').textContent =
+    `${nick}님, 이제 생존일지를 시작할 수 있어요!\n매일 꾸준히 기록해서 함께 취업에 성공해요!`;
+}
+</script>
+</body>
+</html>
