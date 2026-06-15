@@ -179,6 +179,8 @@
 <nav class="tab-nav">
   <div class="tab-nav-inner">
     <button class="tab-btn active" onclick="switchTab('rank',this)">랭킹</button>
+    <button class="tab-btn" onclick="switchTab('gyeong',this)">매십경 상세</button>
+    <button class="tab-btn" onclick="switchTab('myeon',this)">매십면 상세</button>
     <button class="tab-btn" onclick="switchTab('compare',this)">항목 비교</button>
     <button class="tab-btn" onclick="switchTab('group',this)">그룹별 현황</button>
     <button class="tab-btn" onclick="switchTab('diary',this)">감사일기</button>
@@ -199,6 +201,34 @@
       <button class="filter-btn" onclick="setFilter('period','all',this)">누적</button>
     </div>
     <div id="rank-content"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- ── 매십경 상세 ── -->
+  <div class="tab-panel" id="tab-gyeong">
+    <div class="filter-row">
+      <button class="filter-btn on" onclick="setFilter('gyscope','all',this)">전체</button>
+      <button class="filter-btn" onclick="setFilter('gyscope','mine',this)">내 그룹</button>
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn on" onclick="setFilter('gyperiod','week',this)">이번 주</button>
+      <button class="filter-btn" onclick="setFilter('gyperiod','month',this)">이번 달</button>
+      <button class="filter-btn" onclick="setFilter('gyperiod','all',this)">누적</button>
+    </div>
+    <div id="gyeong-content"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- ── 매십면 상세 ── -->
+  <div class="tab-panel" id="tab-myeon">
+    <div class="filter-row">
+      <button class="filter-btn on" onclick="setFilter('myscope','all',this)">전체</button>
+      <button class="filter-btn" onclick="setFilter('myscope','mine',this)">내 그룹</button>
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn on" onclick="setFilter('myperiod','week',this)">이번 주</button>
+      <button class="filter-btn" onclick="setFilter('myperiod','month',this)">이번 달</button>
+      <button class="filter-btn" onclick="setFilter('myperiod','all',this)">누적</button>
+    </div>
+    <div id="myeon-content"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
   </div>
 
   <!-- ── 항목 비교 ── -->
@@ -389,25 +419,89 @@ function calcStats(uid, period) {
   const n = recs.length || 1;
   const pct = k => recs.length ? Math.round(recs.filter(r=>r[k]).length / recs.length * 100) : 0;
   const avg = k => Math.round(recs.reduce((a,r)=>a+(r[k]||0),0) / n);
-
-  // 주간 목표 달성률
-  const userGoals = allGoals.filter(g => {
-    const key = Object.keys(g).find(k => k === 'goals') ? uid : null;
-    return true; // 실제로는 uid 매칭 필요
-  });
-  const myGoalDocs = allGoals.filter((_,i) => {
-    const snap = allGoals[i];
-    return snap; // weekly_goals는 uid_weekN 키라 별도 처리
-  });
-
   return {
-    gyeong: pct('routineGyeong'), myeon: pct('routineMyeon'),
+    gyeong: pct('routineGyeong'),
+    gyeong_article: pct('gyeong_article'), gyeong_opinion: pct('gyeong_opinion'), gyeong_comment: pct('gyeong_comment'),
+    myeon: pct('routineMyeon'),
+    myeon_am: pct('myeon_am'), myeon_pm: pct('myeon_pm'), myeon_feedback: pct('myeon_feedback'),
     dok: pct('routineDok'), un: pct('routineUn'), fa: pct('fa5050'),
     lecture: avg('lecture'), jasoseo: avg('jasoseo'),
     pilgi: avg('pilgi'), interview: avg('interview'),
     apps: recs.reduce((a,r)=>a+(r.applications||0),0),
     days: recs.length,
   };
+}
+
+// ── 매십경 상세 렌더 ──
+function renderGyeongDetail() {
+  const users = getGroupUsers(filters.gyscope || 'all');
+  const period = filters.gyperiod || 'week';
+  const statsMap = {};
+  users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
+
+  const items = [
+    { key:'gyeong_article', label:'기사 읽기' },
+    { key:'gyeong_opinion', label:'오피니언 작성' },
+    { key:'gyeong_comment', label:'댓글 작성' },
+  ];
+
+  let html = '';
+  items.forEach(item => {
+    const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
+    const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
+    html += `<div class="rank-card"><div class="rank-card-title">매십경 — ${item.label}</div>`;
+    sorted.slice(0,10).forEach((u,i) => {
+      const val = statsMap[u.uid]?.[item.key] || 0;
+      const wk = calcWeek(u.startDate);
+      const isMe = u.uid === user.uid;
+      const numCls = i===0?'top1':i===1?'top2':i===2?'top3':'';
+      html += `<div class="rank-row ${isMe?'me':''}">
+        <div class="rank-num ${numCls}">${i+1}</div>
+        <div class="rank-name">${u.nickname}<span class="rank-week">${wk}주차</span></div>
+        ${isMe?'<span class="me-tag">나</span>':''}
+        <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
+        <div class="rank-val">${val}%</div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  document.getElementById('gyeong-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
+}
+
+// ── 매십면 상세 렌더 ──
+function renderMyeonDetail() {
+  const users = getGroupUsers(filters.myscope || 'all');
+  const period = filters.myperiod || 'week';
+  const statsMap = {};
+  users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
+
+  const items = [
+    { key:'myeon_am', label:'오전' },
+    { key:'myeon_pm', label:'오후' },
+    { key:'myeon_feedback', label:'동료 피드백' },
+  ];
+
+  let html = '';
+  items.forEach(item => {
+    const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
+    const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
+    html += `<div class="rank-card"><div class="rank-card-title">매십면 — ${item.label}</div>`;
+    sorted.slice(0,10).forEach((u,i) => {
+      const val = statsMap[u.uid]?.[item.key] || 0;
+      const wk = calcWeek(u.startDate);
+      const isMe = u.uid === user.uid;
+      const numCls = i===0?'top1':i===1?'top2':i===2?'top3':'';
+      html += `<div class="rank-row ${isMe?'me':''}">
+        <div class="rank-num ${numCls}">${i+1}</div>
+        <div class="rank-name">${u.nickname}<span class="rank-week">${wk}주차</span></div>
+        ${isMe?'<span class="me-tag">나</span>':''}
+        <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
+        <div class="rank-val">${val}%</div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  document.getElementById('myeon-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
 }
 
 // ── 탭 전환 ──
@@ -418,6 +512,8 @@ window.switchTab = (id, btn) => {
   btn.classList.add('active');
   currentTab = id;
   if (id==='rank') renderRank();
+  if (id==='gyeong') renderGyeongDetail();
+  if (id==='myeon') renderMyeonDetail();
   if (id==='compare') renderCompare();
   if (id==='group') renderGroups();
   if (id==='diary') renderDiary();
@@ -430,6 +526,8 @@ window.setFilter = (key, val, btn) => {
   row.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
   if (currentTab==='rank') renderRank();
+  if (currentTab==='gyeong') renderGyeongDetail();
+  if (currentTab==='myeon') renderMyeonDetail();
   if (currentTab==='compare') renderCompare();
   if (currentTab==='group') renderGroups();
   if (currentTab==='diary') renderDiary();

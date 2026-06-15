@@ -252,21 +252,50 @@
       <div class="field"><label>기록 날짜</label><input type="date" id="f-date" readonly style="background:#f8f8ff;cursor:not-allowed;color:#888"></div>
     </div>
 
+
     <div class="sec-label">매일 루틴</div>
-    <div class="routine-row" onclick="toggleRoutine(this, 'r-gyeong')">
-      <div class="chk-box" id="r-gyeong"></div>
-      <div class="routine-info">
-        <div class="routine-name">매십경</div>
-        <div class="routine-sub">자료 정독 / 오피니언 작성 / 댓글 작성</div>
+
+    <!-- 매십경 -->
+    <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:600;color:var(--main)">매십경</div>
+        <div style="font-size:11px;color:var(--main)" id="gyeong-pct">0 / 3</div>
+      </div>
+      <div class="routine-row" onclick="toggleSubRoutine(this,'r-gyeong-1')" style="margin-bottom:4px">
+        <div class="chk-box" id="r-gyeong-1"></div>
+        <div class="routine-info"><div class="routine-name">기사 읽기</div></div>
+      </div>
+      <div class="routine-row" onclick="toggleSubRoutine(this,'r-gyeong-2')" style="margin-bottom:4px">
+        <div class="chk-box" id="r-gyeong-2"></div>
+        <div class="routine-info"><div class="routine-name">오피니언 작성</div></div>
+      </div>
+      <div class="routine-row" onclick="toggleSubRoutine(this,'r-gyeong-3')">
+        <div class="chk-box" id="r-gyeong-3"></div>
+        <div class="routine-info"><div class="routine-name">댓글 작성</div></div>
       </div>
     </div>
-    <div class="routine-row" onclick="toggleRoutine(this, 'r-myeon')">
-      <div class="chk-box" id="r-myeon"></div>
-      <div class="routine-info">
-        <div class="routine-name">매십면</div>
-        <div class="routine-sub">해키픽 도출 / 녹음 / 본인 및 동료 피드백</div>
+
+    <!-- 매십면 -->
+    <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:600;color:var(--main)">매십면</div>
+        <div style="font-size:11px;color:var(--main)" id="myeon-pct">0 / 3</div>
+      </div>
+      <div class="routine-row" onclick="toggleSubRoutine(this,'r-myeon-1')" style="margin-bottom:4px">
+        <div class="chk-box" id="r-myeon-1"></div>
+        <div class="routine-info"><div class="routine-name">오전</div></div>
+      </div>
+      <div class="routine-row" onclick="toggleSubRoutine(this,'r-myeon-2')" style="margin-bottom:4px">
+        <div class="chk-box" id="r-myeon-2"></div>
+        <div class="routine-info"><div class="routine-name">오후</div></div>
+      </div>
+      <div class="routine-row" onclick="toggleSubRoutine(this,'r-myeon-3')">
+        <div class="chk-box" id="r-myeon-3"></div>
+        <div class="routine-info"><div class="routine-name">동료 피드백</div></div>
       </div>
     </div>
+
+    <!-- 매십독 / 매십운 -->
     <div class="routine-row" onclick="toggleRoutine(this, 'r-dok')">
       <div class="chk-box" id="r-dok"></div>
       <div class="routine-info">
@@ -362,8 +391,18 @@
         <div class="stat-card"><div class="stat-label">평균 자존감</div><div><span class="stat-value" id="s-mood">-</span><span class="stat-unit">/ 5</span></div></div>
       </div>
       <div class="sec-label">루틴 달성률</div>
-      <div class="prog-row"><div class="prog-header"><span>매십경</span><span class="prog-pct" id="p-gyeong">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-gyeong" style="width:0%"></div></div></div>
-      <div class="prog-row"><div class="prog-header"><span>매십면</span><span class="prog-pct" id="p-myeon">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-myeon" style="width:0%;opacity:.8"></div></div></div>
+      <div style="background:var(--main-xlight);border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:600;color:var(--main);margin-bottom:6px">매십경</div>
+        <div class="prog-row"><div class="prog-header"><span style="font-size:11px">기사 읽기</span><span class="prog-pct" id="p-gyeong-1">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-gyeong-1" style="width:0%"></div></div></div>
+        <div class="prog-row"><div class="prog-header"><span style="font-size:11px">오피니언 작성</span><span class="prog-pct" id="p-gyeong-2">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-gyeong-2" style="width:0%;opacity:.8"></div></div></div>
+        <div class="prog-row" style="margin-bottom:0"><div class="prog-header"><span style="font-size:11px">댓글 작성</span><span class="prog-pct" id="p-gyeong-3">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-gyeong-3" style="width:0%;opacity:.6"></div></div></div>
+      </div>
+      <div style="background:var(--main-xlight);border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:600;color:var(--main);margin-bottom:6px">매십면</div>
+        <div class="prog-row"><div class="prog-header"><span style="font-size:11px">오전</span><span class="prog-pct" id="p-myeon-1">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-myeon-1" style="width:0%"></div></div></div>
+        <div class="prog-row"><div class="prog-header"><span style="font-size:11px">오후</span><span class="prog-pct" id="p-myeon-2">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-myeon-2" style="width:0%;opacity:.8"></div></div></div>
+        <div class="prog-row" style="margin-bottom:0"><div class="prog-header"><span style="font-size:11px">동료 피드백</span><span class="prog-pct" id="p-myeon-3">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-myeon-3" style="width:0%;opacity:.6"></div></div></div>
+      </div>
       <div class="prog-row"><div class="prog-header"><span>매십독</span><span class="prog-pct" id="p-dok">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-dok" style="width:0%;opacity:.6"></div></div></div>
       <div class="prog-row"><div class="prog-header"><span>매십운</span><span class="prog-pct" id="p-un">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-un" style="width:0%;opacity:.4"></div></div></div>
       <div class="prog-row"><div class="prog-header"><span>FA·R5050</span><span class="prog-pct" id="p-fa">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-fa" style="width:0%"></div></div></div>
@@ -568,6 +607,24 @@ window.toggleRoutine = (row, id) => {
   row.classList.toggle('checked');
 };
 
+// 세부 루틴 토글 (매십경/매십면)
+window.toggleSubRoutine = (row, id) => {
+  const chk = document.getElementById(id);
+  chk.classList.toggle('checked');
+  row.classList.toggle('checked');
+  updateGyeongPct();
+  updateMyeonPct();
+};
+
+function updateGyeongPct() {
+  const cnt = ['r-gyeong-1','r-gyeong-2','r-gyeong-3'].filter(id => document.getElementById(id).classList.contains('checked')).length;
+  document.getElementById('gyeong-pct').textContent = `${cnt} / 3`;
+}
+function updateMyeonPct() {
+  const cnt = ['r-myeon-1','r-myeon-2','r-myeon-3'].filter(id => document.getElementById(id).classList.contains('checked')).length;
+  document.getElementById('myeon-pct').textContent = `${cnt} / 3`;
+}
+
 // ── 점수 선택 ──
 window.selectScore = (btn, val) => {
   document.querySelectorAll('.score-btn').forEach(b => b.classList.remove('selected'));
@@ -593,12 +650,24 @@ window.saveRecord = async () => {
   btn.disabled = true; btn.textContent = '저장 중...';
   try {
     const focusTags = [...document.querySelectorAll('.focus-tag.selected')].map(t => t.textContent);
+    const chk = id => document.getElementById(id).classList.contains('checked');
     const data = {
       uid: user.uid, nickname: userProfile.nickname, date,
-      routineGyeong: document.getElementById('r-gyeong').classList.contains('checked'),
-      routineMyeon: document.getElementById('r-myeon').classList.contains('checked'),
-      routineDok: document.getElementById('r-dok').classList.contains('checked'),
-      routineUn: document.getElementById('r-un').classList.contains('checked'),
+      // 매십경 세부
+      gyeong_article: chk('r-gyeong-1'),
+      gyeong_opinion: chk('r-gyeong-2'),
+      gyeong_comment: chk('r-gyeong-3'),
+      gyeongScore: [chk('r-gyeong-1'),chk('r-gyeong-2'),chk('r-gyeong-3')].filter(Boolean).length,
+      // 매십면 세부
+      myeon_am: chk('r-myeon-1'),
+      myeon_pm: chk('r-myeon-2'),
+      myeon_feedback: chk('r-myeon-3'),
+      myeonScore: [chk('r-myeon-1'),chk('r-myeon-2'),chk('r-myeon-3')].filter(Boolean).length,
+      // 기존 호환성 유지
+      routineGyeong: chk('r-gyeong-1') && chk('r-gyeong-2') && chk('r-gyeong-3'),
+      routineMyeon:  chk('r-myeon-1')  && chk('r-myeon-2')  && chk('r-myeon-3'),
+      routineDok: chk('r-dok'),
+      routineUn:  chk('r-un'),
       routineTime: Number(document.getElementById('f-routine-time').value) || 0,
       lecture: Number(document.getElementById('f-lecture').value) || 0,
       jasoseo: Number(document.getElementById('f-jasoseo').value) || 0,
@@ -647,8 +716,15 @@ async function loadSummary() {
   document.getElementById('s-mood').textContent = moods.length ? (moods.reduce((a,r)=>a+r.selfEsteem,0)/moods.length).toFixed(1) : '-';
   const pct = k => Math.round(recs.filter(r=>r[k]).length/n*100);
   const setPct = (id,pb,v) => { document.getElementById(id).textContent=v+'%'; document.getElementById(pb).style.width=v+'%'; };
-  setPct('p-gyeong','pb-gyeong',pct('routineGyeong'));
-  setPct('p-myeon','pb-myeon',pct('routineMyeon'));
+  // 매십경 세부
+  setPct('p-gyeong-1','pb-gyeong-1',pct('gyeong_article'));
+  setPct('p-gyeong-2','pb-gyeong-2',pct('gyeong_opinion'));
+  setPct('p-gyeong-3','pb-gyeong-3',pct('gyeong_comment'));
+  // 매십면 세부
+  setPct('p-myeon-1','pb-myeon-1',pct('myeon_am'));
+  setPct('p-myeon-2','pb-myeon-2',pct('myeon_pm'));
+  setPct('p-myeon-3','pb-myeon-3',pct('myeon_feedback'));
+  // 나머지
   setPct('p-dok','pb-dok',pct('routineDok'));
   setPct('p-un','pb-un',pct('routineUn'));
   setPct('p-fa','pb-fa',pct('fa5050'));
@@ -831,14 +907,20 @@ window.editTodayRecord = () => {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-input').classList.add('active');
   document.querySelectorAll('.tab-btn')[0].classList.add('active');
-  ['r-gyeong','r-myeon','r-dok','r-un'].forEach(id => {
-    document.getElementById(id).classList.remove('checked');
-    document.getElementById(id).closest('.routine-row').classList.remove('checked');
+  ['r-gyeong-1','r-gyeong-2','r-gyeong-3','r-myeon-1','r-myeon-2','r-myeon-3','r-dok','r-un'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('checked'); el.closest('.routine-row').classList.remove('checked'); }
   });
-  const routineMap = {gyeong:'routineGyeong',myeon:'routineMyeon',dok:'routineDok',un:'routineUn'};
-  Object.entries(routineMap).forEach(([k,v]) => {
-    if (r[v]) { document.getElementById('r-'+k).classList.add('checked'); document.getElementById('r-'+k).closest('.routine-row').classList.add('checked'); }
-  });
+  if (r.gyeong_article) { document.getElementById('r-gyeong-1').classList.add('checked'); document.getElementById('r-gyeong-1').closest('.routine-row').classList.add('checked'); }
+  if (r.gyeong_opinion) { document.getElementById('r-gyeong-2').classList.add('checked'); document.getElementById('r-gyeong-2').closest('.routine-row').classList.add('checked'); }
+  if (r.gyeong_comment) { document.getElementById('r-gyeong-3').classList.add('checked'); document.getElementById('r-gyeong-3').closest('.routine-row').classList.add('checked'); }
+  if (r.myeon_am)       { document.getElementById('r-myeon-1').classList.add('checked'); document.getElementById('r-myeon-1').closest('.routine-row').classList.add('checked'); }
+  if (r.myeon_pm)       { document.getElementById('r-myeon-2').classList.add('checked'); document.getElementById('r-myeon-2').closest('.routine-row').classList.add('checked'); }
+  if (r.myeon_feedback) { document.getElementById('r-myeon-3').classList.add('checked'); document.getElementById('r-myeon-3').closest('.routine-row').classList.add('checked'); }
+  if (r.routineDok)     { document.getElementById('r-dok').classList.add('checked'); document.getElementById('r-dok').closest('.routine-row').classList.add('checked'); }
+  if (r.routineUn)      { document.getElementById('r-un').classList.add('checked');  document.getElementById('r-un').closest('.routine-row').classList.add('checked'); }
+  updateGyeongPct();
+  updateMyeonPct();
   document.getElementById('f-routine-time').value = r.routineTime || '';
   document.getElementById('f-lecture').value      = r.lecture || 0;
   document.getElementById('f-jasoseo').value      = r.jasoseo || 0;
