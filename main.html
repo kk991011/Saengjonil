@@ -249,7 +249,7 @@
   <div class="tab-panel active" id="tab-input">
     <div class="row2">
       <div class="field"><label>닉네임</label><input type="text" id="f-nickname" readonly></div>
-      <div class="field"><label>기록 날짜</label><input type="date" id="f-date"></div>
+      <div class="field"><label>기록 날짜</label><input type="date" id="f-date" readonly style="background:#f8f8ff;cursor:not-allowed;color:#888"></div>
     </div>
 
     <div class="sec-label">매일 루틴</div>
@@ -396,7 +396,12 @@
   <div class="tab-panel" id="tab-records">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:13px;color:#aaa" id="rec-count">총 0개 기록</div>
-      <input type="month" id="rec-filter" onchange="loadRecords()" style="font-size:13px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="downloadMyExcel()" style="display:flex;align-items:center;gap:5px;padding:5px 12px;border:1.5px solid var(--main-mid);border-radius:8px;background:var(--main-light);color:var(--main-dark);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit">
+          ↓ 엑셀 저장
+        </button>
+        <input type="month" id="rec-filter" onchange="loadRecords()" style="font-size:13px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
+      </div>
     </div>
     <div id="records-list"><div class="empty-state"><div class="spinner"></div></div></div>
   </div>
@@ -764,15 +769,19 @@ window.loadRecords = async () => {
   if (!allRecords.length) await loadAllRecords();
   const filter = document.getElementById('rec-filter').value;
   const recs = filter ? allRecords.filter(r => r.date.startsWith(filter)) : allRecords;
+  const today = new Date().toISOString().split('T')[0];
   document.getElementById('rec-count').textContent = `총 ${recs.length}개 기록`;
   const list = document.getElementById('records-list');
   if (!recs.length) { list.innerHTML = '<div class="empty-state"><p>아직 기록이 없어요.<br>오늘 입력 탭에서 첫 기록을 남겨보세요!</p></div>'; return; }
   list.innerHTML = recs.map(r => {
     const routineDone = [r.routineGyeong,r.routineMyeon,r.routineDok,r.routineUn].filter(Boolean).length;
     const dateStr = new Date(r.date).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
-    return `<div class="record-card">
+    const isToday = r.date === today;
+    return `<div class="record-card" ${isToday ? 'style="border-color:var(--main-mid)"' : ''}>
       <div class="record-header">
-        <div><div class="record-date">${dateStr}</div></div>
+        <div>
+          <div class="record-date">${dateStr}${isToday ? ' <span style="font-size:11px;background:var(--main);color:white;padding:1px 7px;border-radius:6px;margin-left:4px">오늘</span>' : ''}</div>
+        </div>
         <div class="record-badges">
           ${r.fa5050 ? '<span class="badge badge-purple">FA완료 ✦</span>' : ''}
           <span class="badge ${routineDone===4?'badge-purple':routineDone>=2?'badge-green':'badge-gray'}">루틴 ${routineDone}/4</span>
@@ -793,19 +802,58 @@ window.loadRecords = async () => {
         <span class="rtag ${r.routineUn?'rtag-done':'rtag-miss'}">매십운${r.routineUn?' ✓':''}</span>
       </div>
       ${r.focusTags?.length ? `<div style="font-size:12px;color:#aaa;margin-bottom:8px">집중: <span style="color:var(--main)">${r.focusTags.join(', ')}</span></div>` : ''}
+      ${r.diary ? `<div style="font-size:12px;color:#aaa;margin-bottom:8px">감사일기: <span style="color:#555">${r.diary}</span></div>` : ''}
+      ${isToday ? `
       <div class="record-actions">
+        <button class="btn-sm btn-sm-primary" onclick="editTodayRecord()">수정</button>
         <button class="btn-sm btn-sm-danger" onclick="deleteRecord('${r.date}')">삭제</button>
-      </div>
+      </div>` : `<div style="font-size:11px;color:#ccc;text-align:right">당일만 수정 가능</div>`}
     </div>`;
   }).join('');
 };
+};
 
 window.deleteRecord = async (date) => {
-  if (!confirm('이 기록을 삭제할까요?')) return;
+  const today = new Date().toISOString().split('T')[0];
+  if (date !== today) { showToast('당일 기록만 삭제할 수 있어요'); return; }
+  if (!confirm('오늘 기록을 삭제할까요?')) return;
   await deleteDoc(doc(db, 'records', `${user.uid}_${date}`));
   allRecords = allRecords.filter(r => r.date !== date);
   loadRecords();
-  showToast('기록이 삭제되었어요');
+  showToast('기록이 삭제됐어요');
+};
+
+// 오늘 기록 수정
+window.editTodayRecord = () => {
+  const today = new Date().toISOString().split('T')[0];
+  const r = allRecords.find(rec => rec.date === today);
+  if (!r) return;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-input').classList.add('active');
+  document.querySelectorAll('.tab-btn')[0].classList.add('active');
+  ['r-gyeong','r-myeon','r-dok','r-un'].forEach(id => {
+    document.getElementById(id).classList.remove('checked');
+    document.getElementById(id).closest('.routine-row').classList.remove('checked');
+  });
+  const routineMap = {gyeong:'routineGyeong',myeon:'routineMyeon',dok:'routineDok',un:'routineUn'};
+  Object.entries(routineMap).forEach(([k,v]) => {
+    if (r[v]) { document.getElementById('r-'+k).classList.add('checked'); document.getElementById('r-'+k).closest('.routine-row').classList.add('checked'); }
+  });
+  document.getElementById('f-routine-time').value = r.routineTime || '';
+  document.getElementById('f-lecture').value      = r.lecture || 0;
+  document.getElementById('f-jasoseo').value      = r.jasoseo || 0;
+  document.getElementById('f-pilgi').value        = r.pilgi || 0;
+  document.getElementById('f-interview').value    = r.interview || 0;
+  document.getElementById('f-applications').value = r.applications || 0;
+  document.getElementById('f-prob').value         = r.jobProb || '';
+  document.getElementById('f-diary').value        = r.diary || '';
+  scoreSelected = r.selfEsteem || 0;
+  document.querySelectorAll('.score-btn').forEach((btn,i) => btn.classList.toggle('selected', i+1 === r.selfEsteem));
+  if (r.fa5050 !== null && r.fa5050 !== undefined) selectFA(r.fa5050);
+  document.querySelectorAll('.focus-tag').forEach(tag => tag.classList.toggle('selected', (r.focusTags||[]).includes(tag.textContent)));
+  showToast('오늘 기록을 불러왔어요. 수정 후 저장해주세요! ✏️');
+  window.scrollTo(0, 0);
 };
 
 // ── 감사일기 탭 ──
@@ -895,6 +943,55 @@ window.loadPastGoal = async () => {
     ? `<div style="font-size:13px;color:#aaa;margin-bottom:10px">${wk}주차 달성률: <strong style="color:var(--main)">${g.length?Math.round(done/g.length*100):0}%</strong></div>`
       + g.map(x=>`<div class="goal-item ${x.done?'done':''}"><div class="chk-box ${x.done?'checked':''}">${x.done?'<span style="color:white;font-size:12px;font-weight:700">✓</span>':''}</div><div class="goal-text">${x.text}</div></div>`).join('')
     : '<div style="font-size:13px;color:#ccc;text-align:center;padding:20px">이 주차 기록이 없어요</div>';
+};
+
+// ── 내 기록 엑셀 다운로드 ──
+window.downloadMyExcel = () => {
+  if (!allRecords.length) { showToast('다운로드할 기록이 없어요'); return; }
+  const filter = document.getElementById('rec-filter').value;
+  const recs = filter ? allRecords.filter(r => r.date.startsWith(filter)) : allRecords;
+  if (!recs.length) { showToast('선택한 기간에 기록이 없어요'); return; }
+
+  const headers = [
+    '날짜', '매십경', '매십면', '매십독', '매십운', '루틴시간(분)',
+    '강의(분)', '자소서(분)', '필기(분)', '면접(분)', '지원개수',
+    '자존감(1-5)', '취업확률(%)', 'FA5050', '집중활동', '감사일기'
+  ];
+
+  const rows = [...recs].reverse().map(r => [
+    r.date,
+    r.routineGyeong ? 'O' : 'X',
+    r.routineMyeon  ? 'O' : 'X',
+    r.routineDok    ? 'O' : 'X',
+    r.routineUn     ? 'O' : 'X',
+    r.routineTime   || 0,
+    r.lecture       || 0,
+    r.jasoseo       || 0,
+    r.pilgi         || 0,
+    r.interview     || 0,
+    r.applications  || 0,
+    r.selfEsteem    || '',
+    r.jobProb       || '',
+    r.fa5050 === true ? 'O' : r.fa5050 === false ? 'X' : '',
+    (r.focusTags || []).join('/'),
+    r.diary         || '',
+  ]);
+
+  const nickname = userProfile.nickname || '기록';
+  const filename = filter
+    ? `생존일지_${nickname}_${filter}.csv`
+    : `생존일지_${nickname}_전체.csv`;
+
+  const csv = [headers, ...rows]
+    .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  showToast(`${recs.length}개 기록을 다운로드했어요 📊`);
 };
 
 // ── 로그아웃 ──
