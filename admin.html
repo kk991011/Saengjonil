@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생존일지 — 관리자</title>
+<style>
+  :root { --main:#534AB7; --main-dark:#3C3489; --main-mid:#7F77DD; --main-light:#EEEDFE; --main-xlight:#F5F4FF; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif; background:#f5f4ff; min-height:100vh; }
+
+  .app-header { background:var(--main); padding:0 16px; }
+  .header-inner { max-width:800px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; height:52px; }
+  .header-logo { color:white; font-size:16px; font-weight:700; }
+  .header-badge { background:rgba(255,255,255,.2); color:white; font-size:11px; padding:2px 8px; border-radius:6px; margin-left:8px; }
+  .nav-link { color:rgba(255,255,255,.85); font-size:12px; text-decoration:none; }
+
+  .content { max-width:800px; margin:0 auto; padding:20px 16px; }
+  .page-title { font-size:20px; font-weight:700; color:#222; margin-bottom:4px; }
+  .page-sub { font-size:13px; color:#aaa; margin-bottom:24px; }
+
+  .section { background:white; border-radius:16px; padding:20px; margin-bottom:16px; border:1px solid #f0f0f0; }
+  .section-title { font-size:15px; font-weight:700; color:#222; margin-bottom:14px;
+    display:flex; align-items:center; justify-content:space-between; }
+  .sec-label { font-size:11px; font-weight:600; color:#aaa; letter-spacing:.05em; text-transform:uppercase; margin:16px 0 8px; }
+
+  .field { margin-bottom:12px; }
+  .field label { display:block; font-size:12px; font-weight:500; color:#666; margin-bottom:5px; }
+  .field input, .field select { width:100%; padding:10px 14px; border:1.5px solid #e8e8e8; border-radius:10px;
+    font-size:14px; color:#222; outline:none; transition:border-color .15s; font-family:inherit; }
+  .field input:focus { border-color:var(--main); }
+
+  .btn { padding:10px 18px; border-radius:10px; border:none; cursor:pointer; font-size:13px;
+    font-weight:600; font-family:inherit; transition:all .15s; }
+  .btn-primary { background:var(--main); color:white; }
+  .btn-primary:hover { background:var(--main-dark); }
+  .btn-danger { background:#fee2e2; color:#dc2626; }
+  .btn-danger:hover { background:#fecaca; }
+  .btn-sm { padding:5px 12px; border-radius:8px; border:1px solid #e0e0e0; background:white;
+    cursor:pointer; font-size:12px; font-family:inherit; }
+  .btn-sm-danger { color:#dc2626; border-color:#fecaca; }
+  .btn-sm-danger:hover { background:#fff5f5; }
+  .btn-sm-primary { color:var(--main); border-color:var(--main-mid); }
+  .btn-sm-primary:hover { background:var(--main-xlight); }
+
+  .group-card { border:1.5px solid #e8e8e8; border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+  .group-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .group-card-name { font-size:14px; font-weight:600; color:#222; }
+  .group-card-count { font-size:12px; color:#aaa; }
+  .group-members { display:flex; flex-wrap:wrap; gap:6px; }
+  .member-chip { display:flex; align-items:center; gap:5px; padding:4px 10px; background:#f5f4ff;
+    border-radius:20px; font-size:12px; color:#555; }
+  .member-chip .remove-btn { background:none; border:none; cursor:pointer; color:#ccc;
+    font-size:14px; line-height:1; padding:0; }
+  .member-chip .remove-btn:hover { color:#f87171; }
+
+  .user-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .user-table th { padding:9px 10px; text-align:left; font-size:11px; font-weight:600;
+    color:#aaa; border-bottom:2px solid #f0f0f0; }
+  .user-table td { padding:9px 10px; border-bottom:1px solid #f5f5f5; color:#333; vertical-align:middle; }
+  .user-table tr:last-child td { border-bottom:none; }
+  .user-table tr:hover td { background:#fafafa; }
+  .user-avatar { width:28px; height:28px; border-radius:50%; background:var(--main-light);
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600;
+    color:var(--main-dark); overflow:hidden; }
+  .user-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+
+  .stat-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:16px; }
+  .stat-box { background:#f8f8ff; border-radius:10px; padding:12px; text-align:center; }
+  .stat-box .num { font-size:22px; font-weight:700; color:var(--main); }
+  .stat-box .lbl { font-size:11px; color:#aaa; margin-top:2px; }
+
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#222;
+    color:white; padding:10px 22px; border-radius:24px; font-size:13px; opacity:0;
+    transition:opacity .3s; pointer-events:none; z-index:999; white-space:nowrap; }
+  .toast.show { opacity:1; }
+  .spinner { width:28px; height:28px; border:3px solid var(--main-light);
+    border-top-color:var(--main); border-radius:50%; animation:spin .7s linear infinite; margin:0 auto; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .access-denied { text-align:center; padding:80px 20px; }
+  .access-denied h2 { font-size:20px; color:#333; margin-bottom:8px; }
+  .access-denied p { font-size:14px; color:#aaa; }
+
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200;
+    align-items:center; justify-content:center; padding:16px; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:white; border-radius:16px; width:100%; max-width:420px; overflow:hidden; }
+  .modal-header { background:var(--main); padding:14px 18px; display:flex; align-items:center; justify-content:space-between; }
+  .modal-header h3 { color:white; font-size:15px; font-weight:600; }
+  .modal-close { background:none; border:none; cursor:pointer; color:rgba(255,255,255,.8); font-size:20px; line-height:1; }
+  .modal-body { padding:20px; }
+
+  select.inline { padding:5px 10px; border:1.5px solid #e8e8e8; border-radius:8px; font-size:13px;
+    font-family:inherit; outline:none; color:#333; background:white; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+    <div style="display:flex;align-items:center">
+      <span class="header-logo">생존일지</span>
+      <span class="header-badge">관리자</span>
+    </div>
+    <a href="main.html" class="nav-link">← 내 일지</a>
+  </div>
+</header>
+
+<!-- 접근 거부 -->
+<div id="access-denied" style="display:none" class="content">
+  <div class="access-denied">
+    <h2>접근 권한이 없어요</h2>
+    <p>관리자 계정으로 로그인해야 이 페이지를 볼 수 있어요.</p>
+    <a href="main.html" style="display:inline-block;margin-top:20px;padding:10px 24px;background:var(--main);color:white;border-radius:10px;text-decoration:none;font-weight:600">내 일지로 돌아가기</a>
+  </div>
+</div>
+
+<!-- 관리자 본문 -->
+<div id="admin-content" style="display:none" class="content">
+  <div class="page-title">관리자 대시보드</div>
+  <div class="page-sub" id="admin-email"></div>
+
+  <!-- 전체 현황 -->
+  <div class="section">
+    <div class="section-title">전체 현황</div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="num" id="st-users">-</div><div class="lbl">전체 유저</div></div>
+      <div class="stat-box"><div class="num" id="st-groups">-</div><div class="lbl">그룹 수</div></div>
+      <div class="stat-box"><div class="num" id="st-records">-</div><div class="lbl">총 기록 수</div></div>
+      <div class="stat-box"><div class="num" id="st-today">-</div><div class="lbl">오늘 기록</div></div>
+    </div>
+  </div>
+
+  <!-- 그룹 관리 -->
+  <div class="section">
+    <div class="section-title">
+      그룹 관리
+      <button class="btn btn-primary" onclick="openCreateGroup()" style="font-size:12px;padding:7px 14px">+ 그룹 추가</button>
+    </div>
+    <div id="group-list"><div style="text-align:center;padding:20px"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- 참여자 관리 -->
+  <div class="section">
+    <div class="section-title">참여자 관리</div>
+    <div style="margin-bottom:12px">
+      <input type="text" id="user-search" placeholder="닉네임 또는 이메일 검색..."
+        oninput="filterUsers()"
+        style="width:100%;padding:9px 14px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:14px;font-family:inherit;outline:none">
+    </div>
+    <div style="overflow-x:auto">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th style="width:36px"></th>
+            <th>닉네임</th>
+            <th>이메일</th>
+            <th>그룹</th>
+            <th>주차</th>
+            <th>마지막 기록</th>
+            <th>관리</th>
+          </tr>
+        </thead>
+        <tbody id="user-table-body">
+          <tr><td colspan="7" style="text-align:center;padding:24px;color:#ccc">불러오는 중...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 그룹 생성 모달 -->
+<div class="modal-overlay" id="create-group-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>새 그룹 만들기</h3>
+      <button class="modal-close" onclick="closeModal('create-group-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>그룹 이름</label><input type="text" id="new-group-name" placeholder="예: A조, 1팀" maxlength="20"></div>
+      <button class="btn btn-primary" style="width:100%;padding:12px" onclick="createGroup()">그룹 만들기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 그룹 수정 모달 -->
+<div class="modal-overlay" id="edit-group-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="edit-group-title">그룹 수정</h3>
+      <button class="modal-close" onclick="closeModal('edit-group-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>그룹 이름</label><input type="text" id="edit-group-name" maxlength="20"></div>
+      <input type="hidden" id="edit-group-id">
+      <button class="btn btn-primary" style="width:100%;padding:12px;margin-bottom:10px" onclick="saveGroupEdit()">저장</button>
+      <button class="btn btn-danger" style="width:100%;padding:12px" onclick="deleteGroup()">그룹 삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- 유저 관리 모달 -->
+<div class="modal-overlay" id="user-manage-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="user-modal-title">유저 관리</h3>
+      <button class="modal-close" onclick="closeModal('user-manage-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>소속 그룹 변경</label>
+        <select id="user-group-select" class="field input"></select>
+      </div>
+      <input type="hidden" id="manage-user-uid">
+      <button class="btn btn-primary" style="width:100%;padding:12px;margin-bottom:10px" onclick="saveUserGroup()">그룹 변경 저장</button>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f0f0">
+        <button class="btn btn-danger" style="width:100%;padding:12px" onclick="resetOnboarding()">온보딩 초기화 (그룹 재설정)</button>
+        <div style="font-size:11px;color:#aaa;margin-top:6px">초기화하면 다음 로그인 시 온보딩 화면이 다시 표시돼요</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, addDoc, deleteDoc,
+  updateDoc, collection, getDocs, query, orderBy, where }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDxt2OyXE_ZkYo6NSIHf_AJf2-8IOP5yFk",
+  authDomain: "saengjonil.firebaseapp.com",
+  projectId: "saengjonil",
+  storageBucket: "saengjonil.firebasestorage.app",
+  messagingSenderId: "148403039390",
+  appId: "1:148403039390:web:a1052eede7dcc9d94e9f8f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ★ 관리자 UID 목록 — Firebase 콘솔에서 본인 UID 확인 후 추가
+// Authentication → 사용자 탭에서 UID 확인 가능
+const ADMIN_UIDS = [
+  'YOUR_ADMIN_UID_HERE'
+];
+
+let allUsers = [], allGroups = [], allRecords = [];
+
+// ── 인증 ──
+onAuthStateChanged(auth, async u => {
+  if (!u) { window.location.href = 'index.html'; return; }
+
+  if (!ADMIN_UIDS.includes(u.uid)) {
+    document.getElementById('access-denied').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('admin-content').style.display = 'block';
+  document.getElementById('admin-email').textContent = `로그인: ${u.email}`;
+  await loadData();
+  renderStats();
+  renderGroups();
+  renderUsers();
+});
+
+// ── 전체 데이터 로드 ──
+async function loadData() {
+  const [uSnap, gSnap, rSnap] = await Promise.all([
+    getDocs(collection(db, 'users')),
+    getDocs(collection(db, 'groups')),
+    getDocs(collection(db, 'records')),
+  ]);
+  allUsers = uSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
+  allGroups = gSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  allRecords = rSnap.docs.map(d => d.data());
+}
+
+// ── 통계 ──
+function renderStats() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('st-users').textContent = allUsers.length;
+  document.getElementById('st-groups').textContent = allGroups.length;
+  document.getElementById('st-records').textContent = allRecords.length;
+  document.getElementById('st-today').textContent = allRecords.filter(r=>r.date===today).length;
+}
+
+// ── 그룹 렌더 ──
+function renderGroups() {
+  const el = document.getElementById('group-list');
+  if (!allGroups.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:#ccc;font-size:14px">그룹이 없어요. 위 버튼으로 추가해주세요.</div>';
+    return;
+  }
+  el.innerHTML = allGroups.map(g => {
+    const members = allUsers.filter(u => u.groupId === g.id);
+    return `<div class="group-card">
+      <div class="group-card-header">
+        <div>
+          <div class="group-card-name">${g.name}</div>
+          <div class="group-card-count">${members.length}명</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn-sm btn-sm-primary" onclick="openEditGroup('${g.id}','${g.name}')">수정</button>
+        </div>
+      </div>
+      <div class="group-members">
+        ${members.length ? members.map(m =>
+          `<div class="member-chip">${m.nickname}
+            <button class="remove-btn" onclick="removeMemberFromGroup('${m.uid}','${g.name}')" title="그룹에서 제거">×</button>
+          </div>`).join('') : '<span style="font-size:12px;color:#ccc">멤버 없음</span>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 유저 테이블 렌더 ──
+function renderUsers(search='') {
+  const groupMap = {};
+  allGroups.forEach(g => { groupMap[g.id] = g.name; });
+  const filtered = search ? allUsers.filter(u =>
+    u.nickname?.includes(search) || u.email?.includes(search)) : allUsers;
+  const lastRecMap = {};
+  allRecords.forEach(r => {
+    if (!lastRecMap[r.uid] || r.date > lastRecMap[r.uid]) lastRecMap[r.uid] = r.date;
+  });
+  const calcWeek = sd => {
+    if (!sd) return '-';
+    const diff = Math.floor((new Date() - new Date(sd)) / 86400000);
+    return Math.max(1, Math.floor(diff/7)+1) + '주차';
+  };
+  document.getElementById('user-table-body').innerHTML = filtered.map(u => `
+    <tr>
+      <td><div class="user-avatar">${u.photoURL ? `<img src="${u.photoURL}">` : (u.nickname?.[0]||'?')}</div></td>
+      <td style="font-weight:500">${u.nickname||'-'}</td>
+      <td style="font-size:12px;color:#aaa">${u.email||'-'}</td>
+      <td><span style="background:var(--main-light);color:var(--main-dark);padding:2px 8px;border-radius:6px;font-size:11px">${groupMap[u.groupId]||'미배정'}</span></td>
+      <td style="font-size:12px;color:#aaa">${calcWeek(u.startDate)}</td>
+      <td style="font-size:12px;color:#aaa">${lastRecMap[u.uid]||'없음'}</td>
+      <td><button class="btn-sm btn-sm-primary" onclick="openUserManage('${u.uid}','${u.nickname}','${u.groupId||''}')">관리</button></td>
+    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:20px;color:#ccc">검색 결과 없음</td></tr>';
+}
+
+window.filterUsers = () => renderUsers(document.getElementById('user-search').value.trim());
+
+// ── 그룹 생성 ──
+window.openCreateGroup = () => {
+  document.getElementById('new-group-name').value = '';
+  openModal('create-group-modal');
+};
+
+window.createGroup = async () => {
+  const name = document.getElementById('new-group-name').value.trim();
+  if (!name) { showToast('그룹 이름을 입력해주세요'); return; }
+  try {
+    const ref = await addDoc(collection(db, 'groups'), { name, members: [], createdAt: new Date().toISOString() });
+    allGroups.push({ id: ref.id, name, members: [] });
+    closeModal('create-group-modal');
+    renderStats();
+    renderGroups();
+    showToast(`"${name}" 그룹이 만들어졌어요!`);
+  } catch(e) { showToast('오류가 발생했어요'); console.error(e); }
+};
+
+// ── 그룹 수정 ──
+window.openEditGroup = (id, name) => {
+  document.getElementById('edit-group-id').value = id;
+  document.getElementById('edit-group-name').value = name;
+  document.getElementById('edit-group-title').textContent = `"${name}" 수정`;
+  openModal('edit-group-modal');
+};
+
+window.saveGroupEdit = async () => {
+  const id = document.getElementById('edit-group-id').value;
+  const name = document.getElementById('edit-group-name').value.trim();
+  if (!name) { showToast('그룹 이름을 입력해주세요'); return; }
+  try {
+    await updateDoc(doc(db, 'groups', id), { name });
+    const g = allGroups.find(x=>x.id===id);
+    if (g) g.name = name;
+    closeModal('edit-group-modal');
+    renderGroups();
+    renderUsers();
+    showToast('그룹 이름이 변경됐어요');
+  } catch(e) { showToast('오류가 발생했어요'); console.error(e); }
+};
+
+window.deleteGroup = async () => {
+  const id = document.getElementById('edit-group-id').value;
+  const g = allGroups.find(x=>x.id===id);
+  if (!confirm(`"${g?.name}" 그룹을 삭제할까요?\n이 그룹의 멤버들은 미배정 상태가 됩니다.`)) return;
+  try {
+    await deleteDoc(doc(db, 'groups', id));
+    allGroups = allGroups.filter(x=>x.id!==id);
+    closeModal('edit-group-modal');
+    renderStats();
+    renderGroups();
+    showToast('그룹이 삭제됐어요');
+  } catch(e) { showToast('오류가 발생했어요'); console.error(e); }
+};
+
+// ── 그룹에서 멤버 제거 ──
+window.removeMemberFromGroup = async (uid, groupName) => {
+  if (!confirm(`이 멤버를 "${groupName}"에서 제거할까요?`)) return;
+  try {
+    await updateDoc(doc(db, 'users', uid), { groupId: '' });
+    const u = allUsers.find(x=>x.uid===uid);
+    if (u) u.groupId = '';
+    renderGroups();
+    renderUsers();
+    showToast('멤버가 그룹에서 제거됐어요');
+  } catch(e) { showToast('오류가 발생했어요'); console.error(e); }
+};
+
+// ── 유저 관리 모달 ──
+window.openUserManage = (uid, nickname, currentGroupId) => {
+  document.getElementById('manage-user-uid').value = uid;
+  document.getElementById('user-modal-title').textContent = `${nickname} 관리`;
+  const sel = document.getElementById('user-group-select');
+  sel.innerHTML = '<option value="">미배정</option>' +
+    allGroups.map(g => `<option value="${g.id}" ${g.id===currentGroupId?'selected':''}>${g.name}</option>`).join('');
+  openModal('user-manage-modal');
+};
+
+window.saveUserGroup = async () => {
+  const uid = document.getElementById('manage-user-uid').value;
+  const groupId = document.getElementById('user-group-select').value;
+  try {
+    await updateDoc(doc(db, 'users', uid), { groupId });
+    const u = allUsers.find(x=>x.uid===uid);
+    if (u) u.groupId = groupId;
+    closeModal('user-manage-modal');
+    renderGroups();
+    renderUsers();
+    showToast('그룹이 변경됐어요');
+  } catch(e) { showToast('오류가 발생했어요'); console.error(e); }
+};
+
+window.resetOnboarding = async () => {
+  const uid = document.getElementById('manage-user-uid').value;
+  const u = allUsers.find(x=>x.uid===uid);
+  if (!confirm(`${u?.nickname}의 온보딩을 초기화할까요?\n다음 로그인 시 온보딩 화면이 다시 표시됩니다.`)) return;
+  try {
+    await updateDoc(doc(db, 'users', uid), { onboardingDone: false });
+    closeModal('user-manage-modal');
+    showToast('온보딩이 초기화됐어요');
+  } catch(e) { showToast('오류가 발생했어요'); console.error(e); }
+};
+
+// ── 모달 ──
+window.openModal = id => document.getElementById(id).classList.add('open');
+window.closeModal = id => document.getElementById(id).classList.remove('open');
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target===el) el.classList.remove('open'); });
+});
+
+// ── 토스트 ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2400);
+}
+</script>
+</body>
+</html>
