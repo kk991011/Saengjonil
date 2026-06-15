@@ -224,9 +224,7 @@
     </div>
     <div class="header-right">
       <a href="compare.html" class="nav-link">함께 생존 →</a>
-      <button class="logout-btn" onclick="openProfile()" style="color:rgba(255,255,255,.85)">
-        <i class="ti ti-settings" style="font-size:16px;vertical-align:-2px" aria-hidden="true"></i>
-      </button>
+      <button class="logout-btn" onclick="openProfile()" style="color:rgba(255,255,255,.9);font-size:18px;padding:0 4px" title="프로필 설정">⚙️</button>
       <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
@@ -376,6 +374,11 @@
         <div class="stat-card"><div class="stat-label">필기</div><div><span class="stat-value" id="s-pil-avg">0</span><span class="stat-unit">분</span></div></div>
         <div class="stat-card"><div class="stat-label">면접</div><div><span class="stat-value" id="s-int-avg">0</span><span class="stat-unit">분</span></div></div>
       </div>
+      <div class="sec-label">집중 활동 분포</div>
+      <div style="position:relative;width:220px;height:220px;margin:0 auto 8px">
+        <canvas id="focus-donut" role="img" aria-label="집중 활동 분포 도넛 차트"></canvas>
+      </div>
+      <div id="focus-legend" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:8px;font-size:12px;color:#888"></div>
     </div>
   </div>
 
@@ -497,7 +500,7 @@ const db = getFirestore(app);
 
 let user = null, userProfile = null;
 let scoreSelected = 0, faSelected = null;
-let allRecords = [];
+let allRecords = [], allGoals = [];
 
 // ── 인증 확인 ──
 onAuthStateChanged(auth, async u => {
@@ -618,6 +621,10 @@ async function loadAllRecords() {
   const q = query(collection(db,'records'), where('uid','==',user.uid), orderBy('date','desc'));
   const snap = await getDocs(q);
   allRecords = snap.docs.map(d => d.data());
+
+  // 주간 목표도 같이 로드
+  const goalSnap = await getDocs(collection(db, 'weekly_goals'));
+  allGoals = goalSnap.docs.map(d => ({ _id: d.id, ...d.data() }));
 }
 
 // ── 누적 요약 ──
@@ -645,6 +652,60 @@ async function loadSummary() {
   document.getElementById('s-jas-avg').textContent = avg('jasoseo');
   document.getElementById('s-pil-avg').textContent = avg('pilgi');
   document.getElementById('s-int-avg').textContent = avg('interview');
+
+  // 집중 활동 분포 도넛 차트
+  const focusCount = { '자소서':0, '필기':0, '면접':0, 'FA·R5050':0, '골고루':0 };
+  recs.forEach(r => { (r.focusTags||[]).forEach(t => { if(focusCount[t]!==undefined) focusCount[t]++; }); });
+  const focusLabels = Object.keys(focusCount).filter(k => focusCount[k] > 0);
+  const focusData = focusLabels.map(k => focusCount[k]);
+  const color = getComputedStyle(document.documentElement).getPropertyValue('--main').trim() || '#534AB7';
+  const r2 = parseInt(color.slice(1,3)||'53',16), g2 = parseInt(color.slice(3,5)||'4a',16), b2 = parseInt(color.slice(5,7)||'b7',16);
+  const palette = [
+    color,
+    `rgba(${r2},${g2},${b2},.75)`,
+    `rgba(${r2},${g2},${b2},.55)`,
+    `rgba(${r2},${g2},${b2},.35)`,
+    `rgba(${r2},${g2},${b2},.2)`,
+  ];
+  const donutEl = document.getElementById('focus-donut');
+  const exD = Chart.getChart(donutEl); if(exD) exD.destroy();
+  if (focusData.length) {
+    new Chart(donutEl, {
+      type: 'doughnut',
+      data: { labels: focusLabels, datasets: [{ data: focusData, backgroundColor: palette, borderWidth: 1 }] },
+      options: { responsive: true, maintainAspectRatio: false, layout: { padding: 24 },
+        plugins: { legend: { display: false }, tooltip: { enabled: true } } },
+      plugins: [{ id: 'dl', afterDraw(chart) {
+        const { ctx, data } = chart;
+        const meta = chart.getDatasetMeta(0);
+        const total = data.datasets[0].data.reduce((a,b)=>a+b,0);
+        meta.data.forEach((arc, i) => {
+          const angle = (arc.startAngle + arc.endAngle) / 2;
+          const r = arc.outerRadius + 18;
+          const x = arc.x + Math.cos(angle) * r;
+          const y = arc.y + Math.sin(angle) * r;
+          const pct = Math.round(data.datasets[0].data[i] / total * 100);
+          ctx.save();
+          ctx.font = '500 11px sans-serif';
+          ctx.fillStyle = '#444';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(data.labels[i], x, y - 6);
+          ctx.font = '400 10px sans-serif';
+          ctx.fillStyle = '#888';
+          ctx.fillText(pct + '%', x, y + 7);
+          ctx.restore();
+        });
+      }}]
+    });
+    document.getElementById('focus-legend').innerHTML = focusLabels.map((l,i) =>
+      `<span style="display:flex;align-items:center;gap:4px">
+        <span style="width:10px;height:10px;border-radius:2px;background:${palette[i]};display:inline-block"></span>${l}
+      </span>`).join('');
+  } else {
+    donutEl.parentElement.innerHTML = '<div style="text-align:center;padding:20px;color:#ccc;font-size:13px">집중 활동 기록이 없어요</div>';
+  }
+
   document.getElementById('summary-loading').style.display = 'none';
   document.getElementById('summary-content').style.display = 'block';
 }
@@ -670,6 +731,32 @@ async function loadTrend() {
   moodChartInst = mkChart('mood-chart',[
     {label:'자존감',data:recs.map(r=>r.selfEsteem||null),borderColor:color,borderWidth:2,pointRadius:3,pointBackgroundColor:color,tension:.3,fill:true,backgroundColor:color+'15',spanGaps:true},
   ],{scales:{x:{ticks:{font:{size:10}},grid:{display:false}},y:{min:0,max:5,ticks:{stepSize:1,font:{size:10}},grid:{color:'rgba(0,0,0,.04)'}}}});
+
+  // 주간 목표 달성률 차트
+  const wk = calcWeek(userProfile.startDate);
+  const goalLabels = [], goalData = [];
+  for (let w = Math.max(1, wk-7); w <= wk; w++) {
+    const snap = allGoals.find ? null : null; // allGoals는 배열
+    const gDoc = allGoals.filter ? allGoals.find(g => g._id === `${user.uid}_week${w}`) : null;
+    goalLabels.push(`${w}주차`);
+    if (gDoc) {
+      const goals = gDoc.goals || [];
+      goalData.push(goals.length ? Math.round(goals.filter(g=>g.done).length/goals.length*100) : 0);
+    } else { goalData.push(null); }
+  }
+  const goalEl = document.getElementById('goal-chart');
+  if (goalEl) {
+    const exG = Chart.getChart(goalEl); if(exG) exG.destroy();
+    new Chart(goalEl, { type:'line', data:{ labels:goalLabels,
+      datasets:[{ label:'목표달성률', data:goalData, borderColor:color, borderWidth:2,
+        pointRadius:4, pointBackgroundColor:color, tension:.3, fill:true,
+        backgroundColor:color+'15', spanGaps:true }]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ display:false } },
+        scales:{ x:{ ticks:{ font:{ size:10 } }, grid:{ display:false } },
+          y:{ min:0, max:100, ticks:{ callback:v=>v+'%', font:{ size:10 } },
+          grid:{ color:'rgba(0,0,0,.04)' } } } } });
+  }
 }
 
 // ── 기록 목록 ──
