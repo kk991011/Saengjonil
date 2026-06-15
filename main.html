@@ -583,9 +583,17 @@ function initHeader() {
   else av.textContent = p.nickname[0];
 }
 
+function localDate(d) {
+  const dt = d || new Date();
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
+
 function initInputForm() {
   document.getElementById('f-nickname').value = userProfile.nickname;
-  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  // 로컬 시간 기준 오늘 날짜 (UTC 변환 오류 방지)
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  document.getElementById('f-date').value = today;
 }
 
 // ── 탭 전환 ──
@@ -845,7 +853,7 @@ window.loadRecords = async () => {
   if (!allRecords.length) await loadAllRecords();
   const filter = document.getElementById('rec-filter').value;
   const recs = filter ? allRecords.filter(r => r.date.startsWith(filter)) : allRecords;
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDate();
   document.getElementById('rec-count').textContent = `총 ${recs.length}개 기록`;
   const list = document.getElementById('records-list');
   if (!recs.length) { list.innerHTML = '<div class="empty-state"><p>아직 기록이 없어요.<br>오늘 입력 탭에서 첫 기록을 남겨보세요!</p></div>'; return; }
@@ -889,7 +897,7 @@ window.loadRecords = async () => {
 };
 
 window.deleteRecord = async (date) => {
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDate();
   if (date !== today) { showToast('당일 기록만 삭제할 수 있어요'); return; }
   if (!confirm('오늘 기록을 삭제할까요?')) return;
   await deleteDoc(doc(db, 'records', `${user.uid}_${date}`));
@@ -900,7 +908,7 @@ window.deleteRecord = async (date) => {
 
 // 오늘 기록 수정
 window.editTodayRecord = () => {
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDate();
   const r = allRecords.find(rec => rec.date === today);
   if (!r) return;
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -942,7 +950,7 @@ async function loadDiaryTab() {
   if (!allRecords.length) await loadAllRecords();
   const diaries = allRecords.filter(r => r.diary);
   document.getElementById('diary-count').textContent = `총 ${diaries.length}개 작성`;
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDate();
   const list = document.getElementById('diary-list');
   if (!diaries.length) { list.innerHTML = '<div class="empty-state"><p>아직 감사일기가 없어요.</p></div>'; return; }
   list.innerHTML = diaries.map(r => `
