@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생존일지 — 함께 생존</title>
+<style>
+  :root {
+    --main: #534AB7; --main-dark: #3C3489; --main-mid: #7F77DD;
+    --main-light: #EEEDFE; --main-xlight: #F5F4FF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f5f4ff; min-height: 100vh; }
+
+  .app-header { background: var(--main); padding: 0 16px; position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center;
+    justify-content: space-between; height: 52px; }
+  .header-logo { color: white; font-size: 16px; font-weight: 700; }
+  .user-info { display: flex; align-items: center; gap: 8px; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: #AFA9EC;
+    display: flex; align-items: center; justify-content: center; font-size: 11px;
+    font-weight: 600; color: #26215C; overflow: hidden; }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .user-name { color: white; font-size: 13px; font-weight: 500; }
+  .week-badge { background: rgba(255,255,255,.25); color: white; font-size: 10px;
+    padding: 2px 8px; border-radius: 10px; }
+  .nav-link { color: rgba(255,255,255,.85); font-size: 12px; text-decoration: none; }
+
+  .tab-nav { background: white; border-bottom: 1px solid #eee; position: sticky; top: 52px; z-index: 99; }
+  .tab-nav-inner { max-width: 720px; margin: 0 auto; display: flex; overflow-x: auto; }
+  .tab-nav-inner::-webkit-scrollbar { display: none; }
+  .tab-btn { padding: 12px 18px; border: none; background: transparent; font-size: 13px;
+    color: #888; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent;
+    font-family: inherit; transition: color .15s; }
+  .tab-btn.active { color: var(--main); border-bottom-color: var(--main); font-weight: 500; }
+
+  .content { max-width: 720px; margin: 0 auto; padding: 16px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .filter-btn { padding: 6px 14px; border-radius: 20px; border: 1.5px solid #e0e0e0;
+    background: white; font-size: 12px; color: #888; cursor: pointer; font-family: inherit;
+    transition: all .15s; }
+  .filter-btn.on { background: var(--main); color: white; border-color: var(--main); }
+
+  .sec-label { font-size: 11px; font-weight: 600; color: #aaa; letter-spacing: .06em;
+    text-transform: uppercase; margin: 20px 0 10px; }
+
+  /* 랭킹 */
+  .rank-card { background: white; border-radius: 14px; padding: 14px 16px;
+    margin-bottom: 10px; border: 1px solid #f0f0f0; }
+  .rank-card-title { font-size: 13px; font-weight: 600; color: #444; margin-bottom: 10px; }
+  .rank-row { display: flex; align-items: center; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid #f5f5f5; }
+  .rank-row:last-child { border-bottom: none; }
+  .rank-row.me { background: var(--main-xlight); border-radius: 8px; padding: 8px 10px; margin: 2px -10px; }
+  .rank-num { width: 22px; font-size: 13px; font-weight: 700; text-align: center;
+    flex-shrink: 0; color: #ccc; }
+  .rank-num.top1 { color: #f59e0b; }
+  .rank-num.top2 { color: #9ca3af; }
+  .rank-num.top3 { color: #cd7c3a; }
+  .rank-name { flex: 1; font-size: 13px; font-weight: 500; color: #222;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank-week { font-size: 10px; padding: 1px 6px; border-radius: 6px;
+    background: var(--main-light); color: var(--main-dark); margin-left: 4px; }
+  .rank-bar-wrap { width: 80px; flex-shrink: 0; }
+  .rank-bar-track { height: 5px; background: #f0f0f0; border-radius: 3px; overflow: hidden; }
+  .rank-bar-fill { height: 100%; background: var(--main); border-radius: 3px; transition: width .4s; }
+  .rank-val { font-size: 12px; font-weight: 600; color: var(--main);
+    min-width: 40px; text-align: right; flex-shrink: 0; }
+  .me-tag { font-size: 10px; color: var(--main); font-weight: 600; flex-shrink: 0; }
+
+  /* 항목 비교 테이블 */
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid #f0f0f0; }
+  .cmp-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 540px; table-layout: fixed; }
+  .cmp-table th { padding: 9px 8px; text-align: left; font-size: 10px; font-weight: 600;
+    color: #fff; background: var(--main-dark); white-space: nowrap; overflow: hidden; }
+  .cmp-table th:first-child { border-radius: 12px 0 0 0; }
+  .cmp-table th:last-child { border-radius: 0 12px 0 0; }
+  .cmp-table td { padding: 8px 8px; border-bottom: 1px solid #f5f5f5;
+    color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cmp-table tr:last-child td { border-bottom: none; }
+  .cmp-table tr.avg-row td { background: var(--main-light); font-weight: 600; color: var(--main-dark); }
+  .cmp-table tr.me-row td { background: var(--main-xlight); }
+  .cmp-table tr:nth-child(even):not(.avg-row):not(.me-row) td { background: #fafafa; }
+  .hi { color: var(--main); font-weight: 600; }
+  .dl-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px;
+    border: 1.5px solid #e0e0e0; border-radius: 8px; background: white; font-size: 12px;
+    color: #666; cursor: pointer; font-family: inherit; margin-bottom: 10px; }
+  .dl-btn:hover { border-color: var(--main); color: var(--main); }
+
+  /* 그룹 현황 */
+  .group-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .group-card { background: white; border: 1.5px solid #e8e8e8; border-radius: 14px;
+    padding: 14px; cursor: pointer; transition: all .15s; }
+  .group-card:hover { border-color: var(--main-mid); background: var(--main-xlight); }
+  .group-card.mine { border-color: var(--main); background: var(--main-xlight); }
+  .group-card.rank1 { }
+  .group-name { font-size: 13px; font-weight: 600; color: #222; margin-bottom: 2px;
+    display: flex; align-items: center; gap: 6px; }
+  .group-badge { font-size: 10px; padding: 1px 6px; border-radius: 6px; }
+  .badge-mine { background: var(--main); color: white; }
+  .badge-rank1 { background: var(--main-light); color: var(--main-dark); }
+  .group-count { font-size: 11px; color: #aaa; margin-bottom: 8px; }
+  .group-stat-row { display: flex; justify-content: space-between; font-size: 11px;
+    margin-bottom: 3px; }
+  .group-stat-label { color: #aaa; }
+  .group-stat-val { color: var(--main); font-weight: 600; }
+  .group-prog-track { height: 4px; background: #f0f0f0; border-radius: 2px;
+    overflow: hidden; margin-top: 8px; }
+  .group-prog-fill { height: 100%; background: var(--main); border-radius: 2px; }
+
+  /* 그룹 상세 */
+  .back-btn { display: flex; align-items: center; gap: 6px; background: none; border: none;
+    cursor: pointer; color: #888; font-size: 13px; font-family: inherit; margin-bottom: 14px;
+    padding: 0; }
+  .back-btn:hover { color: var(--main); }
+  .member-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    background: white; border-radius: 10px; margin-bottom: 6px; border: 1px solid #f0f0f0; }
+  .member-row.me { background: var(--main-xlight); border-color: var(--main-mid); }
+  .member-rank { width: 20px; font-size: 12px; font-weight: 700; color: #ccc;
+    text-align: center; flex-shrink: 0; }
+  .member-rank.top { color: var(--main); }
+  .member-av { width: 28px; height: 28px; border-radius: 50%; background: var(--main-light);
+    display: flex; align-items: center; justify-content: center; font-size: 11px;
+    font-weight: 600; color: var(--main-dark); flex-shrink: 0; }
+  .member-name { flex: 1; font-size: 13px; font-weight: 500; color: #222; min-width: 0; }
+  .member-bars { display: flex; flex-direction: column; gap: 3px; width: 130px; flex-shrink: 0; }
+  .mini-bar-row { display: flex; align-items: center; gap: 4px; }
+  .mini-bar-label { font-size: 9px; color: #aaa; width: 16px; text-align: right; flex-shrink: 0; }
+  .mini-bar-track { flex: 1; height: 4px; background: #f0f0f0; border-radius: 2px; overflow: hidden; }
+  .mini-bar-fill { height: 100%; border-radius: 2px; background: var(--main); }
+  .mini-bar-pct { font-size: 9px; color: var(--main); font-weight: 600; width: 26px; text-align: right; flex-shrink: 0; }
+
+  /* 감사일기 */
+  .diary-card { background: white; border-radius: 12px; padding: 14px 16px;
+    margin-bottom: 8px; border: 1px solid #f0f0f0; }
+  .diary-meta { display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px; }
+  .diary-date { font-size: 11px; color: #aaa; }
+  .diary-author { font-size: 11px; color: var(--main); font-weight: 500; }
+  .diary-text { font-size: 14px; color: #333; line-height: 1.6; }
+  .diary-card.mine { border-color: var(--main-mid); background: var(--main-xlight); }
+  .diary-card.mine .diary-text { color: var(--main-dark); }
+
+  .empty-state { text-align: center; padding: 48px 20px; }
+  .empty-state p { font-size: 14px; color: #bbb; margin-top: 8px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--main-light);
+    border-top-color: var(--main); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:16px; }
+  .stat-card { background:white; border-radius:12px; padding:12px 14px; border:1px solid #f0f0f0; }
+  .stat-label { font-size:11px; color:#aaa; margin-bottom:4px; }
+  .stat-value { font-size:22px; font-weight:700; color:var(--main); }
+  .stat-unit { font-size:12px; color:#aaa; margin-left:2px; }
+
+  @media(max-width:480px) { .group-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="header-logo">함께 생존</span>
+      <div class="user-info">
+        <div class="avatar" id="avatar"></div>
+        <span class="user-name" id="user-name"></span>
+        <span class="week-badge" id="week-badge"></span>
+      </div>
+    </div>
+    <a href="main.html" class="nav-link">← 내 일지</a>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <div class="tab-nav-inner">
+    <button class="tab-btn active" onclick="switchTab('rank',this)">랭킹</button>
+    <button class="tab-btn" onclick="switchTab('compare',this)">항목 비교</button>
+    <button class="tab-btn" onclick="switchTab('group',this)">그룹별 현황</button>
+    <button class="tab-btn" onclick="switchTab('diary',this)">감사일기</button>
+  </div>
+</nav>
+
+<main class="content">
+
+  <!-- ── 랭킹 ── -->
+  <div class="tab-panel active" id="tab-rank">
+    <div class="filter-row" id="rank-scope-filter">
+      <button class="filter-btn on" onclick="setFilter('scope','all',this)">전체</button>
+      <button class="filter-btn" onclick="setFilter('scope','mine',this)" id="btn-mygroup">내 그룹</button>
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn on" onclick="setFilter('period','week',this)">이번 주</button>
+      <button class="filter-btn" onclick="setFilter('period','month',this)">이번 달</button>
+      <button class="filter-btn" onclick="setFilter('period','all',this)">누적</button>
+    </div>
+    <div id="rank-content"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- ── 항목 비교 ── -->
+  <div class="tab-panel" id="tab-compare">
+    <div class="filter-row">
+      <button class="filter-btn on" onclick="setFilter('cscope','all',this)">전체</button>
+      <button class="filter-btn" onclick="setFilter('cscope','mine',this)">내 그룹</button>
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn on" onclick="setFilter('cperiod','week',this)">이번 주</button>
+      <button class="filter-btn" onclick="setFilter('cperiod','month',this)">이번 달</button>
+      <button class="filter-btn" onclick="setFilter('cperiod','all',this)">누적</button>
+    </div>
+    <button class="dl-btn" onclick="downloadExcel()">
+      ↓ 엑셀 다운로드
+    </button>
+    <div class="table-wrap">
+      <table class="cmp-table" id="cmp-table">
+        <thead>
+          <tr>
+            <th style="width:90px">닉네임</th>
+            <th style="width:36px">주차</th>
+            <th style="width:44px">매십경</th>
+            <th style="width:44px">매십면</th>
+            <th style="width:44px">매십독</th>
+            <th style="width:44px">매십운</th>
+            <th style="width:36px">FA</th>
+            <th style="width:50px">강의</th>
+            <th style="width:50px">자소서</th>
+            <th style="width:44px">필기</th>
+            <th style="width:44px">면접</th>
+            <th style="width:36px">지원</th>
+            <th style="width:46px">목표</th>
+          </tr>
+        </thead>
+        <tbody id="cmp-body">
+          <tr><td colspan="13" style="text-align:center;padding:30px;color:#ccc">불러오는 중...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:11px;color:#aaa;margin-top:8px">
+      <span style="color:var(--main);font-weight:600">파란 값</span> = 최고 수치 &nbsp;|&nbsp;
+      <span style="background:var(--main-light);color:var(--main-dark);padding:1px 5px;border-radius:4px;font-weight:600">보라 행</span> = 전체 평균 (항상 맨 위)
+    </div>
+  </div>
+
+  <!-- ── 그룹별 현황 ── -->
+  <div class="tab-panel" id="tab-group">
+    <div id="group-overview">
+      <div class="filter-row">
+        <button class="filter-btn on" onclick="setFilter('gperiod','week',this)">이번 주</button>
+        <button class="filter-btn" onclick="setFilter('gperiod','month',this)">이번 달</button>
+        <button class="filter-btn" onclick="setFilter('gperiod','all',this)">누적</button>
+      </div>
+      <div id="group-grid-wrap"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
+    </div>
+    <div id="group-detail" style="display:none">
+      <button class="back-btn" onclick="showGroupOverview()">← 그룹 목록으로</button>
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px">
+        <div style="font-size:16px;font-weight:700;color:#222" id="detail-title"></div>
+        <div style="font-size:12px;color:#aaa" id="detail-sub"></div>
+      </div>
+      <div id="member-list"></div>
+    </div>
+  </div>
+
+  <!-- ── 감사일기 ── -->
+  <div class="tab-panel" id="tab-diary">
+    <div class="filter-row">
+      <button class="filter-btn on" onclick="setFilter('dscope','all',this)">전체</button>
+      <button class="filter-btn" onclick="setFilter('dscope','mine',this)">내 그룹</button>
+    </div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:12px" id="diary-written-count"></div>
+    <div id="diary-list"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
+  </div>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, doc, getDoc, collection, query, where,
+  orderBy, getDocs, limit } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDxt20yXE_ZkYo6NSIHf_AJf2-8IOP5yFk",
+  authDomain: "saengjonil.firebaseapp.com",
+  projectId: "saengjonil",
+  storageBucket: "saengjonil.firebasestorage.app",
+  messagingSenderId: "148403039390",
+  appId: "1:148403039390:web:a1052eede7dcc9d94e9f8f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let user = null, userProfile = null;
+let allUsers = [], allRecords = [], allGroups = [], allGoals = [];
+let filters = { scope:'all', period:'week', cscope:'all', cperiod:'week', gperiod:'week', dscope:'all' };
+let currentTab = 'rank';
+
+// ── 인증 ──
+onAuthStateChanged(auth, async u => {
+  if (!u) { window.location.href = 'index.html'; return; }
+  user = u;
+  const uSnap = await getDoc(doc(db, 'users', u.uid));
+  if (!uSnap.exists() || !uSnap.data().onboardingDone) { window.location.href = 'index.html'; return; }
+  userProfile = uSnap.data();
+  applyTheme(userProfile.themeColor || '#534AB7');
+  initHeader();
+  await loadAllData();
+  renderRank();
+});
+
+function applyTheme(color) {
+  document.documentElement.style.setProperty('--main', color);
+  const r=parseInt(color.slice(1,3),16),g=parseInt(color.slice(3,5),16),b=parseInt(color.slice(5,7),16);
+  document.documentElement.style.setProperty('--main-dark',`rgb(${Math.round(r*.8)},${Math.round(g*.8)},${Math.round(b*.8)})`);
+  document.documentElement.style.setProperty('--main-mid',`rgb(${Math.min(255,Math.round(r*1.15))},${Math.min(255,Math.round(g*1.15))},${Math.min(255,Math.round(b*1.15))})`);
+  document.documentElement.style.setProperty('--main-light',`rgba(${r},${g},${b},0.12)`);
+  document.documentElement.style.setProperty('--main-xlight',`rgba(${r},${g},${b},0.06)`);
+}
+
+function calcWeek(startDate) {
+  const diff = Math.floor((new Date() - new Date(startDate)) / 86400000);
+  return Math.max(1, Math.floor(diff / 7) + 1);
+}
+
+function initHeader() {
+  const wk = calcWeek(userProfile.startDate);
+  document.getElementById('user-name').textContent = userProfile.nickname;
+  document.getElementById('week-badge').textContent = `${wk}주차`;
+  const av = document.getElementById('avatar');
+  if (user.photoURL) av.innerHTML = `<img src="${user.photoURL}" alt="프로필">`;
+  else av.textContent = userProfile.nickname[0];
+}
+
+// ── 데이터 전체 로드 ──
+async function loadAllData() {
+  // 그룹 목록
+  const gSnap = await getDocs(collection(db, 'groups'));
+  allGroups = gSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // 전체 유저
+  const uSnap = await getDocs(collection(db, 'users'));
+  allUsers = uSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
+
+  // 전체 기록
+  const rSnap = await getDocs(query(collection(db, 'records'), orderBy('date', 'desc')));
+  allRecords = rSnap.docs.map(d => d.data());
+
+  // 전체 주간 목표
+  const gSnap2 = await getDocs(collection(db, 'weekly_goals'));
+  allGoals = gSnap2.docs.map(d => d.data());
+}
+
+// ── 기간 필터 함수 ──
+function getDateRange(period) {
+  const now = new Date();
+  if (period === 'week') {
+    const day = now.getDay() || 7;
+    const mon = new Date(now); mon.setDate(now.getDate() - day + 1);
+    return mon.toISOString().split('T')[0];
+  }
+  if (period === 'month') return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+  return '2000-01-01';
+}
+
+function filterRecords(recs, period) {
+  const from = getDateRange(period);
+  return recs.filter(r => r.date >= from);
+}
+
+function getUserRecords(uid, period) {
+  return filterRecords(allRecords.filter(r => r.uid === uid), period);
+}
+
+function getGroupUsers(scope) {
+  if (scope === 'mine') return allUsers.filter(u => u.groupId === userProfile.groupId);
+  return allUsers;
+}
+
+// ── 유저별 통계 계산 ──
+function calcStats(uid, period) {
+  const recs = getUserRecords(uid, period);
+  const n = recs.length || 1;
+  const pct = k => recs.length ? Math.round(recs.filter(r=>r[k]).length / recs.length * 100) : 0;
+  const avg = k => Math.round(recs.reduce((a,r)=>a+(r[k]||0),0) / n);
+
+  // 주간 목표 달성률
+  const userGoals = allGoals.filter(g => {
+    const key = Object.keys(g).find(k => k === 'goals') ? uid : null;
+    return true; // 실제로는 uid 매칭 필요
+  });
+  const myGoalDocs = allGoals.filter((_,i) => {
+    const snap = allGoals[i];
+    return snap; // weekly_goals는 uid_weekN 키라 별도 처리
+  });
+
+  return {
+    gyeong: pct('routineGyeong'), myeon: pct('routineMyeon'),
+    dok: pct('routineDok'), un: pct('routineUn'), fa: pct('fa5050'),
+    lecture: avg('lecture'), jasoseo: avg('jasoseo'),
+    pilgi: avg('pilgi'), interview: avg('interview'),
+    apps: recs.reduce((a,r)=>a+(r.applications||0),0),
+    days: recs.length,
+  };
+}
+
+// ── 탭 전환 ──
+window.switchTab = (id, btn) => {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  currentTab = id;
+  if (id==='rank') renderRank();
+  if (id==='compare') renderCompare();
+  if (id==='group') renderGroups();
+  if (id==='diary') renderDiary();
+};
+
+// ── 필터 ──
+window.setFilter = (key, val, btn) => {
+  filters[key] = val;
+  const row = btn.parentElement;
+  row.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if (currentTab==='rank') renderRank();
+  if (currentTab==='compare') renderCompare();
+  if (currentTab==='group') renderGroups();
+  if (currentTab==='diary') renderDiary();
+};
+
+// ── 랭킹 렌더 ──
+function renderRank() {
+  const users = getGroupUsers(filters.scope);
+  const period = filters.period;
+
+  const RANK_ITEMS = [
+    { key:'gyeong', label:'매십경 달성률', unit:'%' },
+    { key:'myeon',  label:'매십면 달성률', unit:'%' },
+    { key:'dok',    label:'매십독 달성률', unit:'%' },
+    { key:'un',     label:'매십운 달성률', unit:'%' },
+    { key:'fa',     label:'FA·R5050 달성률', unit:'%' },
+    { key:'apps',   label:'총 지원 개수', unit:'개' },
+    { key:'jasoseo',label:'자소서 시간 (일평균)', unit:'분' },
+    { key:'lecture',label:'강의 시간 (일평균)', unit:'분' },
+    { key:'pilgi',  label:'필기 시간 (일평균)', unit:'분' },
+    { key:'interview',label:'면접 시간 (일평균)', unit:'분' },
+  ];
+
+  const statsMap = {};
+  users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
+
+  let html = '';
+  RANK_ITEMS.forEach(item => {
+    const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
+    const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
+    html += `<div class="rank-card"><div class="rank-card-title">${item.label}</div>`;
+    sorted.slice(0, 5).forEach((u, i) => {
+      const val = statsMap[u.uid]?.[item.key] || 0;
+      const wk = calcWeek(u.startDate);
+      const isMe = u.uid === user.uid;
+      const numClass = i===0?'top1':i===1?'top2':i===2?'top3':'';
+      html += `<div class="rank-row ${isMe?'me':''}">
+        <div class="rank-num ${numClass}">${i+1}</div>
+        <div class="rank-name">${u.nickname}<span class="rank-week">${wk}주차</span></div>
+        ${isMe?'<span class="me-tag">나</span>':''}
+        <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
+        <div class="rank-val">${val}${item.unit}</div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  document.getElementById('rank-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
+}
+
+// ── 항목 비교 렌더 ──
+function renderCompare() {
+  const users = getGroupUsers(filters.cscope);
+  const period = filters.cperiod;
+  const statsMap = {};
+  users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
+
+  // 전체 평균 계산
+  const keys = ['gyeong','myeon','dok','un','fa','lecture','jasoseo','pilgi','interview','apps'];
+  const avg = {};
+  keys.forEach(k => {
+    avg[k] = users.length ? Math.round(users.reduce((a,u)=>a+(statsMap[u.uid]?.[k]||0),0)/users.length) : 0;
+  });
+
+  // 각 항목 최대값
+  const maxMap = {};
+  keys.forEach(k => { maxMap[k] = Math.max(...users.map(u=>statsMap[u.uid]?.[k]||0)); });
+
+  const row = (data, isAvg, isMe) => {
+    const cls = isAvg ? 'avg-row' : isMe ? 'me-row' : '';
+    const name = isAvg ? '전체 평균' : (data.nickname + (isMe ? ' 나' : ''));
+    const wk = isAvg ? '—' : calcWeek(data.startDate)+'주';
+    const s = isAvg ? avg : statsMap[data.uid];
+    return `<tr class="${cls}">
+      <td title="${name}">${name}</td><td>${wk}</td>
+      <td class="${!isAvg&&s.gyeong===maxMap.gyeong?'hi':''}">${s.gyeong}%</td>
+      <td class="${!isAvg&&s.myeon===maxMap.myeon?'hi':''}">${s.myeon}%</td>
+      <td class="${!isAvg&&s.dok===maxMap.dok?'hi':''}">${s.dok}%</td>
+      <td class="${!isAvg&&s.un===maxMap.un?'hi':''}">${s.un}%</td>
+      <td class="${!isAvg&&s.fa===maxMap.fa?'hi':''}">${s.fa}%</td>
+      <td class="${!isAvg&&s.lecture===maxMap.lecture?'hi':''}">${s.lecture}</td>
+      <td class="${!isAvg&&s.jasoseo===maxMap.jasoseo?'hi':''}">${s.jasoseo}</td>
+      <td class="${!isAvg&&s.pilgi===maxMap.pilgi?'hi':''}">${s.pilgi}</td>
+      <td class="${!isAvg&&s.interview===maxMap.interview?'hi':''}">${s.interview}</td>
+      <td class="${!isAvg&&s.apps===maxMap.apps?'hi':''}">${s.apps}</td>
+      <td>—</td>
+    </tr>`;
+  };
+
+  let html = row(null, true, false);
+  const sorted = [...users].sort((a,b) => {
+    if (a.uid === user.uid) return -1;
+    if (b.uid === user.uid) return 1;
+    return (statsMap[b.uid]?.gyeong||0) - (statsMap[a.uid]?.gyeong||0);
+  });
+  sorted.forEach(u => { html += row(u, false, u.uid===user.uid); });
+  document.getElementById('cmp-body').innerHTML = html;
+
+  // 엑셀 다운로드용 데이터 저장
+  window._compareData = { users: sorted, statsMap, avg };
+}
+
+// ── 엑셀 다운로드 ──
+window.downloadExcel = () => {
+  if (!window._compareData) { alert('먼저 항목 비교 탭을 열어주세요'); return; }
+  const { users, statsMap, avg } = window._compareData;
+  const headers = ['닉네임','주차','매십경','매십면','매십독','매십운','FA','강의','자소서','필기','면접','지원수'];
+  const rows = [
+    ['전체 평균','—',...['gyeong','myeon','dok','un','fa','lecture','jasoseo','pilgi','interview','apps'].map(k=>avg[k])],
+    ...users.map(u => {
+      const s = statsMap[u.uid];
+      return [u.nickname, calcWeek(u.startDate)+'주', s.gyeong+'%', s.myeon+'%', s.dok+'%', s.un+'%', s.fa+'%', s.lecture, s.jasoseo, s.pilgi, s.interview, s.apps];
+    })
+  ];
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `생존일지_항목비교_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+};
+
+// ── 그룹 현황 렌더 ──
+function renderGroups() {
+  const period = filters.gperiod;
+  if (!allGroups.length) {
+    document.getElementById('group-grid-wrap').innerHTML = '<div class="empty-state"><p>등록된 그룹이 없어요</p></div>';
+    return;
+  }
+
+  // 그룹별 통계
+  const groupStats = allGroups.map(g => {
+    const members = allUsers.filter(u => u.groupId === g.id);
+    const statsArr = members.map(u => calcStats(u.uid, period));
+    const n = statsArr.length || 1;
+    const avgStat = k => Math.round(statsArr.reduce((a,s)=>a+(s[k]||0),0)/n);
+    return {
+      ...g, memberCount: members.length,
+      routineAvg: avgStat('gyeong'),
+      lectureAvg: avgStat('lecture'),
+      totalApps: statsArr.reduce((a,s)=>a+(s.apps||0),0),
+      members,
+    };
+  }).sort((a,b) => b.routineAvg - a.routineAvg);
+
+  const topGroup = groupStats[0]?.id;
+  let html = '<div class="group-grid">';
+  groupStats.forEach(g => {
+    const isMe = g.id === userProfile.groupId;
+    const isTop = g.id === topGroup;
+    html += `<div class="group-card ${isMe?'mine':''}" onclick="showGroupDetail('${g.id}')">
+      <div class="group-name">${g.name}
+        ${isMe ? '<span class="group-badge badge-mine">내 그룹</span>' : ''}
+        ${isTop && !isMe ? '<span class="group-badge badge-rank1">1위</span>' : ''}
+      </div>
+      <div class="group-count">${g.memberCount}명 · 클릭해서 조원 보기</div>
+      <div class="group-stat-row"><span class="group-stat-label">루틴 달성</span><span class="group-stat-val">${g.routineAvg}%</span></div>
+      <div class="group-stat-row"><span class="group-stat-label">강의 평균</span><span class="group-stat-val">${g.lectureAvg}분</span></div>
+      <div class="group-stat-row"><span class="group-stat-label">총 지원수</span><span class="group-stat-val">${g.totalApps}개</span></div>
+      <div class="group-prog-track"><div class="group-prog-fill" style="width:${g.routineAvg}%"></div></div>
+    </div>`;
+  });
+  html += '</div>';
+  document.getElementById('group-grid-wrap').innerHTML = html;
+  window._groupStats = groupStats;
+}
+
+window.showGroupDetail = (groupId) => {
+  const g = window._groupStats?.find(x=>x.id===groupId);
+  if (!g) return;
+  document.getElementById('group-overview').style.display = 'none';
+  document.getElementById('group-detail').style.display = 'block';
+  document.getElementById('detail-title').textContent = `${g.name} 조원 현황`;
+  document.getElementById('detail-sub').textContent = `${g.memberCount}명 · 루틴 달성 평균 ${g.routineAvg}%`;
+
+  const period = filters.gperiod;
+  const members = [...g.members].sort((a,b) => {
+    const sa = calcStats(a.uid, period), sb = calcStats(b.uid, period);
+    return sb.gyeong - sa.gyeong;
+  });
+
+  let html = '';
+  members.forEach((m, i) => {
+    const s = calcStats(m.uid, period);
+    const wk = calcWeek(m.startDate);
+    const isMe = m.uid === user.uid;
+    html += `<div class="member-row ${isMe?'me':''}">
+      <div class="member-rank ${i<3?'top':''}">${i+1}</div>
+      <div class="member-av">${m.nickname[0]}</div>
+      <div class="member-name">${m.nickname}${isMe?' <span style="font-size:10px;color:var(--main);font-weight:600">나</span>':''}<br>
+        <span style="font-size:10px;color:#aaa">${wk}주차</span>
+      </div>
+      <div class="member-bars">
+        <div class="mini-bar-row"><span class="mini-bar-label">경</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${s.gyeong}%"></div></div><span class="mini-bar-pct">${s.gyeong}%</span></div>
+        <div class="mini-bar-row"><span class="mini-bar-label">면</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${s.myeon}%;opacity:.8"></div></div><span class="mini-bar-pct">${s.myeon}%</span></div>
+        <div class="mini-bar-row"><span class="mini-bar-label">독</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${s.dok}%;opacity:.6"></div></div><span class="mini-bar-pct">${s.dok}%</span></div>
+        <div class="mini-bar-row"><span class="mini-bar-label">운</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${s.un}%;opacity:.4"></div></div><span class="mini-bar-pct">${s.un}%</span></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('member-list').innerHTML = html || '<div class="empty-state"><p>조원 기록이 없어요</p></div>';
+};
+
+window.showGroupOverview = () => {
+  document.getElementById('group-overview').style.display = 'block';
+  document.getElementById('group-detail').style.display = 'none';
+};
+
+// ── 감사일기 렌더 ──
+function renderDiary() {
+  let recs = allRecords.filter(r => r.diary);
+  if (filters.dscope === 'mine') {
+    const myGroupUids = allUsers.filter(u=>u.groupId===userProfile.groupId).map(u=>u.uid);
+    recs = recs.filter(r => myGroupUids.includes(r.uid));
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+  const todayCount = recs.filter(r=>r.date===today).length;
+  document.getElementById('diary-written-count').textContent = `오늘 ${todayCount}명 작성`;
+
+  if (!recs.length) {
+    document.getElementById('diary-list').innerHTML = '<div class="empty-state"><p>아직 감사일기가 없어요</p></div>';
+    return;
+  }
+
+  const userMap = {};
+  allUsers.forEach(u => { userMap[u.uid] = u; });
+  const groupMap = {};
+  allGroups.forEach(g => { groupMap[g.id] = g; });
+
+  let html = '';
+  recs.slice(0, 50).forEach(r => {
+    const u = userMap[r.uid];
+    if (!u) return;
+    const wk = calcWeek(u.startDate);
+    const grp = groupMap[u.groupId]?.name || '';
+    const isMe = r.uid === user.uid;
+    html += `<div class="diary-card ${isMe?'mine':''}">
+      <div class="diary-meta">
+        <span class="diary-date">${r.date}${r.date===today?' (오늘)':''}</span>
+        <span class="diary-author">${u.nickname} · ${wk}주차 · ${grp}</span>
+      </div>
+      <div class="diary-text">${r.diary}</div>
+    </div>`;
+  });
+  document.getElementById('diary-list').innerHTML = html;
+}
+</script>
+</body>
+</html>
