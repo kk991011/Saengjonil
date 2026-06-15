@@ -172,7 +172,7 @@
         <span class="week-badge" id="week-badge"></span>
       </div>
     </div>
-    <a href="main.html" class="nav-link">← 내 일지</a>
+    <a href="/Saengjonil/main.html" class="nav-link">← 내 일지</a>
   </div>
 </header>
 
@@ -304,10 +304,10 @@ let currentTab = 'rank';
 
 // ── 인증 ──
 onAuthStateChanged(auth, async u => {
-  if (!u) { window.location.href = 'index.html'; return; }
+  if (!u) { window.location.href = '/Saengjonil/index.html'; return; }
   user = u;
   const uSnap = await getDoc(doc(db, 'users', u.uid));
-  if (!uSnap.exists() || !uSnap.data().onboardingDone) { window.location.href = 'index.html'; return; }
+  if (!uSnap.exists() || !uSnap.data().onboardingDone) { window.location.href = '/Saengjonil/index.html'; return; }
   userProfile = uSnap.data();
   applyTheme(userProfile.themeColor || '#534AB7');
   initHeader();

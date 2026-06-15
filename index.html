@@ -219,7 +219,7 @@ onAuthStateChanged(auth, async (user) => {
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     if (userDoc.exists() && userDoc.data().onboardingDone) {
       // 온보딩 완료 → 메인으로
-      window.location.href = 'main.html';
+      window.location.href = '/Saengjonil/main.html';
     } else {
       // 온보딩 시작
       showOnboarding(user);
@@ -300,7 +300,7 @@ window.obNext = async () => {
     await saveOnboarding();
     document.getElementById('btn-next').textContent = '내 일지 시작하기 →';
   } else if (currentStep === 3) {
-    window.location.href = 'main.html';
+    window.location.href = '/Saengjonil/main.html';
   }
 };
 
