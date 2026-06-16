@@ -73,9 +73,10 @@
   .me-tag { font-size: 10px; color: var(--main); font-weight: 600; flex-shrink: 0; }
 
   /* 항목 비교 테이블 */
-  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid #f0f0f0; }
+  .table-wrap { overflow-x: auto; overflow-y: auto; max-height: 480px; border-radius: 12px; border: 1px solid #f0f0f0; }
   .cmp-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 540px; table-layout: fixed; }
   .cmp-table th { padding: 9px 8px; text-align: left; font-size: 10px; font-weight: 600;
+    position: sticky; top: 0; z-index: 1;
     color: #fff; background: var(--main-dark); white-space: nowrap; overflow: hidden; }
   .cmp-table th:first-child { border-radius: 12px 0 0 0; }
   .cmp-table th:last-child { border-radius: 0 12px 0 0; }
@@ -284,17 +285,12 @@
             <th style="width:44px">필기</th>
             <th style="width:44px">면접</th>
             <th style="width:36px">지원</th>
-            <th style="width:46px">목표</th>
           </tr>
         </thead>
         <tbody id="cmp-body">
-          <tr><td colspan="13" style="text-align:center;padding:30px;color:#ccc">불러오는 중...</td></tr>
+          <tr><td colspan="12" style="text-align:center;padding:30px;color:#ccc">불러오는 중...</td></tr>
         </tbody>
       </table>
-    </div>
-    <div style="font-size:11px;color:#aaa;margin-top:8px">
-      <span style="color:var(--main);font-weight:600">파란 값</span> = 최고 수치 &nbsp;|&nbsp;
-      <span style="background:var(--main-light);color:var(--main-dark);padding:1px 5px;border-radius:4px;font-weight:600">보라 행</span> = 전체 평균 (항상 맨 위)
     </div>
   </div>
 
@@ -451,17 +447,31 @@ function getGroupUsers(scope) {
   return allUsers;
 }
 
+// 상위 N명 + 내 순위가 N위 밖이면 내 행도 별도로 추가
+function buildRankRows(sorted, topN) {
+  const myIdx = sorted.findIndex(u => u.uid === user.uid);
+  const top = sorted.slice(0, topN).map((u, i) => ({ u, rank: i + 1 }));
+  if (myIdx >= topN) {
+    top.push({ u: sorted[myIdx], rank: myIdx + 1, separated: true });
+  }
+  return top;
+}
+
 // ── 유저별 통계 계산 ──
 function calcStats(uid, period) {
   const recs = getUserRecords(uid, period);
   const n = recs.length || 1;
   const pct = k => recs.length ? Math.round(recs.filter(r=>r[k]).length / recs.length * 100) : 0;
   const avg = k => Math.round(recs.reduce((a,r)=>a+(r[k]||0),0) / n);
+  const gA = pct('gyeong_article'), gO = pct('gyeong_opinion'), gC = pct('gyeong_comment');
+  const mA = pct('myeon_am'), mP = pct('myeon_pm'), mF = pct('myeon_feedback');
   return {
     gyeong: pct('routineGyeong'),
-    gyeong_article: pct('gyeong_article'), gyeong_opinion: pct('gyeong_opinion'), gyeong_comment: pct('gyeong_comment'),
+    gyeong_article: gA, gyeong_opinion: gO, gyeong_comment: gC,
+    gyeongAvg: Math.round((gA + gO + gC) / 3),
     myeon: pct('routineMyeon'),
-    myeon_am: pct('myeon_am'), myeon_pm: pct('myeon_pm'), myeon_feedback: pct('myeon_feedback'),
+    myeon_am: mA, myeon_pm: mP, myeon_feedback: mF,
+    myeonAvg: Math.round((mA + mP + mF) / 3),
     dok: pct('routineDok'), un: pct('routineUn'), fa: pct('fa5050'),
     lecture: avg('lecture'), jasoseo: avg('jasoseo'),
     pilgi: avg('pilgi'), interview: avg('interview'),
@@ -478,6 +488,7 @@ function renderGyeongDetail() {
   users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
 
   const items = [
+    { key:'gyeongAvg', label:'종합 달성률', highlight:true },
     { key:'gyeong_article', label:'기사 읽기' },
     { key:'gyeong_opinion', label:'오피니언 작성' },
     { key:'gyeong_comment', label:'댓글 작성' },
@@ -487,14 +498,16 @@ function renderGyeongDetail() {
   items.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
     const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
-    html += `<div class="rank-card"><div class="rank-card-title">매십경 — ${item.label}</div>`;
-    sorted.slice(0,10).forEach((u,i) => {
+    html += `<div class="rank-card" ${item.highlight?'style="border:1.5px solid var(--main-mid)"':''}><div class="rank-card-title">매십경 — ${item.label}</div>`;
+    const rows = buildRankRows(sorted, 10);
+    rows.forEach(({u, rank, separated}) => {
       const val = statsMap[u.uid]?.[item.key] || 0;
       const wk = calcWeek(u.startDate);
       const isMe = u.uid === user.uid;
-      const numCls = i===0?'top1':i===1?'top2':i===2?'top3':'';
+      const numCls = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
+      if (separated) html += `<div style="text-align:center;font-size:11px;color:#ccc;padding:2px 0">⋯</div>`;
       html += `<div class="rank-row ${isMe?'me':''}">
-        <div class="rank-num ${numCls}">${i+1}</div>
+        <div class="rank-num ${numCls}">${rank}</div>
         <div class="rank-name">${u.nickname}<span class="rank-week">${wk}주차</span></div>
         ${isMe?'<span class="me-tag">나</span>':''}
         <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
@@ -514,6 +527,7 @@ function renderMyeonDetail() {
   users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
 
   const items = [
+    { key:'myeonAvg', label:'종합 달성률', highlight:true },
     { key:'myeon_am', label:'오전' },
     { key:'myeon_pm', label:'오후' },
     { key:'myeon_feedback', label:'동료 피드백' },
@@ -523,14 +537,16 @@ function renderMyeonDetail() {
   items.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
     const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
-    html += `<div class="rank-card"><div class="rank-card-title">매십면 — ${item.label}</div>`;
-    sorted.slice(0,10).forEach((u,i) => {
+    html += `<div class="rank-card" ${item.highlight?'style="border:1.5px solid var(--main-mid)"':''}><div class="rank-card-title">매십면 — ${item.label}</div>`;
+    const rows = buildRankRows(sorted, 10);
+    rows.forEach(({u, rank, separated}) => {
       const val = statsMap[u.uid]?.[item.key] || 0;
       const wk = calcWeek(u.startDate);
       const isMe = u.uid === user.uid;
-      const numCls = i===0?'top1':i===1?'top2':i===2?'top3':'';
+      const numCls = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
+      if (separated) html += `<div style="text-align:center;font-size:11px;color:#ccc;padding:2px 0">⋯</div>`;
       html += `<div class="rank-row ${isMe?'me':''}">
-        <div class="rank-num ${numCls}">${i+1}</div>
+        <div class="rank-num ${numCls}">${rank}</div>
         <div class="rank-name">${u.nickname}<span class="rank-week">${wk}주차</span></div>
         ${isMe?'<span class="me-tag">나</span>':''}
         <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
@@ -629,13 +645,15 @@ function renderRank() {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
     const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
     html += `<div class="rank-card"><div class="rank-card-title">${item.label}</div>`;
-    sorted.slice(0, 5).forEach((u, i) => {
+    const rows = buildRankRows(sorted, 5);
+    rows.forEach(({u, rank, separated}, idx) => {
       const val = statsMap[u.uid]?.[item.key] || 0;
       const wk = calcWeek(u.startDate);
       const isMe = u.uid === user.uid;
-      const numClass = i===0?'top1':i===1?'top2':i===2?'top3':'';
+      const numClass = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
+      if (separated) html += `<div style="text-align:center;font-size:11px;color:#ccc;padding:2px 0">⋯</div>`;
       html += `<div class="rank-row ${isMe?'me':''}">
-        <div class="rank-num ${numClass}">${i+1}</div>
+        <div class="rank-num ${numClass}">${rank}</div>
         <div class="rank-name">${u.nickname}<span class="rank-week">${wk}주차</span></div>
         ${isMe?'<span class="me-tag">나</span>':''}
         <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
@@ -683,21 +701,21 @@ function renderCompare() {
       <td class="${!isAvg&&s.pilgi===maxMap.pilgi?'hi':''}">${s.pilgi}</td>
       <td class="${!isAvg&&s.interview===maxMap.interview?'hi':''}">${s.interview}</td>
       <td class="${!isAvg&&s.apps===maxMap.apps?'hi':''}">${s.apps}</td>
-      <td>—</td>
     </tr>`;
   };
 
   let html = row(null, true, false);
-  const sorted = [...users].sort((a,b) => {
-    if (a.uid === user.uid) return -1;
-    if (b.uid === user.uid) return 1;
-    return (statsMap[b.uid]?.gyeong||0) - (statsMap[a.uid]?.gyeong||0);
-  });
-  sorted.forEach(u => { html += row(u, false, u.uid===user.uid); });
+  // 나를 제외한 나머지를 매십경 기준 내림차순 정렬
+  const others = users.filter(u => u.uid !== user.uid)
+    .sort((a,b) => (statsMap[b.uid]?.gyeong||0) - (statsMap[a.uid]?.gyeong||0));
+  const me = users.find(u => u.uid === user.uid);
+  // 전체 평균 바로 아래에 내 행을 고정, 그 다음 나머지
+  if (me) html += row(me, false, true);
+  others.forEach(u => { html += row(u, false, false); });
   document.getElementById('cmp-body').innerHTML = html;
 
-  // 엑셀 다운로드용 데이터 저장
-  window._compareData = { users: sorted, statsMap, avg };
+  // 엑셀 다운로드용 데이터 저장 (전체 평균 바로 아래 내 행 고정 순서 유지)
+  window._compareData = { users: me ? [me, ...others] : others, statsMap, avg };
 }
 
 // ── 엑셀 다운로드 ──
