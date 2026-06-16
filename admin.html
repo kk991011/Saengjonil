@@ -218,6 +218,10 @@
         <button class="btn btn-danger" style="width:100%;padding:12px" onclick="resetOnboarding()">온보딩 초기화 (그룹 재설정)</button>
         <div style="font-size:11px;color:#aaa;margin-top:6px">초기화하면 다음 로그인 시 온보딩 화면이 다시 표시돼요</div>
       </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f0f0">
+        <button class="btn btn-danger" style="width:100%;padding:12px;background:#fee2e2;color:#b91c1c" onclick="deleteUser()">회원 삭제 (기록 전체 삭제)</button>
+        <div style="font-size:11px;color:#aaa;margin-top:6px">이 회원의 프로필과 모든 기록이 영구 삭제돼요. 되돌릴 수 없어요.</div>
+      </div>
     </div>
   </div>
 </div>
@@ -450,6 +454,38 @@ window.resetOnboarding = async () => {
     closeModal('user-manage-modal');
     showToast('온보딩이 초기화됐어요');
   } catch(e) { showToast('오류가 발생했어요'); console.error(e); }
+};
+
+// 회원 삭제 — users 문서 + 해당 유저의 records 전체 삭제
+window.deleteUser = async () => {
+  const uid = document.getElementById('manage-user-uid').value;
+  const u = allUsers.find(x=>x.uid===uid);
+  if (!u) return;
+  if (ADMIN_UIDS.includes(uid)) { showToast('관리자 계정은 삭제할 수 없어요'); return; }
+
+  const ok1 = confirm(`"${u.nickname}" 회원을 삭제할까요?\n이 회원의 모든 기록(${allRecords.filter(r=>r.uid===uid).length}개)도 함께 삭제됩니다.`);
+  if (!ok1) return;
+  const ok2 = confirm('정말로 삭제하시겠어요?\n이 작업은 되돌릴 수 없어요.');
+  if (!ok2) return;
+
+  try {
+    // 1) 해당 유저의 모든 records 삭제
+    const userRecords = allRecords.filter(r => r.uid === uid);
+    for (const r of userRecords) {
+      await deleteDoc(doc(db, 'records', `${uid}_${r.date}`));
+    }
+    // 2) users 문서 삭제
+    await deleteDoc(doc(db, 'users', uid));
+
+    allUsers = allUsers.filter(x => x.uid !== uid);
+    allRecords = allRecords.filter(r => r.uid !== uid);
+
+    closeModal('user-manage-modal');
+    renderStats();
+    renderGroups();
+    renderUsers();
+    showToast(`"${u.nickname}" 회원이 삭제됐어요`);
+  } catch(e) { showToast('삭제 중 오류가 발생했어요'); console.error(e); }
 };
 
 // ── 모달 ──

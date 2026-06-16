@@ -238,7 +238,6 @@
     <button class="tab-btn" onclick="switchTab('summary', this)">누적 요약</button>
     <button class="tab-btn" onclick="switchTab('trend', this)">추이</button>
     <button class="tab-btn" onclick="switchTab('records', this)">기록</button>
-    <button class="tab-btn" onclick="switchTab('diary', this)">감사일기</button>
   </div>
 </nav>
 
@@ -295,21 +294,45 @@
       </div>
     </div>
 
-    <!-- 매십독 / 매십운 -->
-    <div class="routine-row" onclick="toggleRoutine(this, 'r-dok')">
-      <div class="chk-box" id="r-dok"></div>
-      <div class="routine-info">
-        <div class="routine-name">매십독</div>
-        <div class="routine-sub">하루 10분 독서</div>
+    <!-- 매십독: 완료 체크 + 책 이름 작성 -->
+    <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:6px">
+      <div class="routine-row" onclick="toggleRoutine(this, 'r-dok')" style="background:transparent;margin-bottom:8px;padding:4px 0">
+        <div class="chk-box" id="r-dok"></div>
+        <div class="routine-info">
+          <div class="routine-name">매십독</div>
+          <div class="routine-sub">하루 10분 독서</div>
+        </div>
+        <div style="font-size:11px;color:var(--main)" id="dok-status">미입력</div>
       </div>
+      <input type="text" id="f-book-title" placeholder="오늘 읽은 책 이름을 입력해주세요" oninput="updateDokStatus()"
+        style="width:100%;font-size:13px;padding:8px 12px;border:1.5px solid #e8e8e8;border-radius:8px;font-family:inherit;outline:none;background:white">
     </div>
-    <div class="routine-row" onclick="toggleRoutine(this, 'r-un')">
-      <div class="chk-box" id="r-un"></div>
-      <div class="routine-info">
-        <div class="routine-name">매십운</div>
-        <div class="routine-sub">하루 10분 운동</div>
+
+    <!-- 매십운: 운동 종류 선택 -->
+    <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:600;color:var(--main)">매십운</div>
+        <div style="font-size:11px;color:var(--main)" id="un-status">선택 안 함</div>
       </div>
+      <div class="tag-row" id="exercise-tags">
+        <div class="focus-tag exercise-tag" onclick="toggleExercise(this)">헬스</div>
+        <div class="focus-tag exercise-tag" onclick="toggleExercise(this)">러닝</div>
+        <div class="focus-tag exercise-tag" onclick="toggleExercise(this)">요가</div>
+        <div class="focus-tag exercise-tag" onclick="toggleExercise(this)">필라테스</div>
+        <div class="focus-tag exercise-tag" onclick="toggleExercise(this)">홈트</div>
+        <div class="focus-tag exercise-tag" onclick="toggleExercise(this)">등산</div>
+        <div class="focus-tag exercise-tag" onclick="toggleExercise(this)">수영</div>
+        <div class="focus-tag exercise-tag" onclick="toggleExercise(this)">축구·풋살</div>
+        <div class="focus-tag exercise-tag" onclick="toggleExercise(this)">배드민턴</div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input type="text" id="exercise-custom-input" placeholder="기타 운동 직접 입력"
+          style="flex:1;font-size:12px;padding:6px 10px;border:1.5px solid #e8e8e8;border-radius:8px;font-family:inherit;outline:none">
+        <button onclick="addCustomExercise()" style="padding:6px 14px;background:var(--main);color:white;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">추가</button>
+      </div>
+      <div id="custom-exercise-list" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px"></div>
     </div>
+
     <div class="field" style="margin-top:10px">
       <label>루틴 실행 시간 <span style="color:#aaa;font-weight:400">(분)</span></label>
       <input type="number" id="f-routine-time" min="0" placeholder="예: 45">
@@ -335,9 +358,8 @@
         <button class="score-btn" onclick="selectScore(this,5)">5</button>
       </div>
     </div>
-    <div class="field"><label>취업 확률 <span style="color:#aaa;font-weight:400">(%)</span></label><input type="number" id="f-prob" min="0" max="100" placeholder="예: 35"></div>
     <div class="field">
-      <label>FA5050 / FR5050</label>
+      <label>FA5050/현장방문</label>
       <div class="fa-row">
         <button class="fa-btn yes" onclick="selectFA(true)">✓ 했어요</button>
         <button class="fa-btn no" onclick="selectFA(false)">✗ 못 했어요</button>
@@ -349,13 +371,9 @@
         <div class="focus-tag" onclick="toggleTag(this)">자소서</div>
         <div class="focus-tag" onclick="toggleTag(this)">필기</div>
         <div class="focus-tag" onclick="toggleTag(this)">면접</div>
-        <div class="focus-tag" onclick="toggleTag(this)">FA·R5050</div>
+        <div class="focus-tag" onclick="toggleTag(this)">FA5050/현장방문</div>
         <div class="focus-tag" onclick="toggleTag(this)">골고루</div>
       </div>
-    </div>
-    <div class="field">
-      <label>오늘의 감사일기 <span style="color:#aaa;font-weight:400">(오늘 감사했던 순간)</span></label>
-      <textarea id="f-diary" placeholder="오늘 감사했던 순간을 한 줄로 남겨봐요"></textarea>
     </div>
     <button class="save-btn" onclick="saveRecord()">오늘 기록 저장하기</button>
   </div>
@@ -405,7 +423,7 @@
       </div>
       <div class="prog-row"><div class="prog-header"><span>매십독</span><span class="prog-pct" id="p-dok">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-dok" style="width:0%;opacity:.6"></div></div></div>
       <div class="prog-row"><div class="prog-header"><span>매십운</span><span class="prog-pct" id="p-un">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-un" style="width:0%;opacity:.4"></div></div></div>
-      <div class="prog-row"><div class="prog-header"><span>FA·R5050</span><span class="prog-pct" id="p-fa">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-fa" style="width:0%"></div></div></div>
+      <div class="prog-row"><div class="prog-header"><span>FA5050/현장방문</span><span class="prog-pct" id="p-fa">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-fa" style="width:0%"></div></div></div>
       <div class="sec-label">취준 활동 일 평균</div>
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-label">강의</div><div><span class="stat-value" id="s-lec-avg">0</span><span class="stat-unit">분</span></div></div>
@@ -445,15 +463,6 @@
     <div id="records-list"><div class="empty-state"><div class="spinner"></div></div></div>
   </div>
 
-  <!-- ── 감사일기 ── -->
-  <div class="tab-panel" id="tab-diary">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div style="font-size:13px;color:#aaa" id="diary-count">총 0개 작성</div>
-      <div style="font-size:12px;color:var(--main);font-weight:500" id="diary-streak"></div>
-    </div>
-    <div id="diary-list"><div class="empty-state"><div class="spinner"></div></div></div>
-  </div>
-
 </main>
 
 <div class="toast" id="toast"></div>
@@ -489,6 +498,12 @@
         <div id="pm-week-preview" style="margin-top:6px;padding:8px 12px;background:var(--main-light);border-radius:8px;font-size:12px;color:var(--main-dark);display:none">
           현재 <strong id="pm-week-num"></strong>주차
         </div>
+      </div>
+
+      <!-- 취업 확률 -->
+      <div class="field">
+        <label>현재 예상 취업 확률 (%)</label>
+        <input type="number" id="pm-jobprob" min="0" max="100" placeholder="예: 35">
       </div>
 
       <!-- 그룹 변경 -->
@@ -581,6 +596,8 @@ function initHeader() {
   const av = document.getElementById('avatar');
   if (user.photoURL) av.innerHTML = `<img src="${user.photoURL}" alt="프로필">`;
   else av.textContent = p.nickname[0];
+  const jp = document.getElementById('jobprob-display');
+  if (jp) jp.textContent = (p.jobProb || 0) + '%';
 }
 
 function localDate(d) {
@@ -605,7 +622,6 @@ window.switchTab = (id, btn) => {
   if (id === 'summary') loadSummary();
   if (id === 'trend') loadTrend();
   if (id === 'records') loadRecords();
-  if (id === 'diary') loadDiaryTab();
 };
 
 // ── 루틴 토글 ──
@@ -624,6 +640,53 @@ window.toggleSubRoutine = (row, id) => {
   updateMyeonPct();
 };
 
+// 매십운: 운동 종류 선택
+let customExercises = [];
+window.toggleExercise = (el) => {
+  el.classList.toggle('selected');
+  updateExerciseStatus();
+};
+
+window.addCustomExercise = () => {
+  const inp = document.getElementById('exercise-custom-input');
+  const val = inp.value.trim();
+  if (!val) return;
+  if (customExercises.includes(val)) { inp.value = ''; return; }
+  customExercises.push(val);
+  inp.value = '';
+  renderCustomExercises();
+  updateExerciseStatus();
+};
+
+function renderCustomExercises() {
+  const wrap = document.getElementById('custom-exercise-list');
+  wrap.innerHTML = customExercises.map(name => `
+    <div class="focus-tag exercise-tag selected" data-custom="1" onclick="toggleCustomExercise(this,'${name.replace(/'/g,"\\'")}')">
+      ${name} <span style="margin-left:4px;opacity:.6">×</span>
+    </div>`).join('');
+}
+
+window.toggleCustomExercise = (el, name) => {
+  if (event.target.tagName === 'SPAN' || el.classList.contains('selected') && event.offsetX > el.offsetWidth - 24) {
+    customExercises = customExercises.filter(n => n !== name);
+    renderCustomExercises();
+  } else {
+    el.classList.toggle('selected');
+  }
+  updateExerciseStatus();
+};
+
+function updateExerciseStatus() {
+  const selected = getSelectedExercises();
+  document.getElementById('un-status').textContent = selected.length ? `${selected.length}개 선택` : '선택 안 함';
+}
+
+function getSelectedExercises() {
+  const preset = [...document.querySelectorAll('.exercise-tag.selected:not([data-custom])')].map(t => t.textContent.trim());
+  const custom = [...document.querySelectorAll('.exercise-tag.selected[data-custom]')].map(t => t.textContent.replace('×','').trim());
+  return [...preset, ...custom];
+}
+
 function updateGyeongPct() {
   const cnt = ['r-gyeong-1','r-gyeong-2','r-gyeong-3'].filter(id => document.getElementById(id).classList.contains('checked')).length;
   document.getElementById('gyeong-pct').textContent = `${cnt} / 3`;
@@ -632,6 +695,17 @@ function updateMyeonPct() {
   const cnt = ['r-myeon-1','r-myeon-2','r-myeon-3'].filter(id => document.getElementById(id).classList.contains('checked')).length;
   document.getElementById('myeon-pct').textContent = `${cnt} / 3`;
 }
+
+// 매십독: 책 이름 입력 상태 업데이트
+window.updateDokStatus = () => {
+  const title = document.getElementById('f-book-title').value.trim();
+  const statusEl = document.getElementById('dok-status');
+  if (!title) {
+    statusEl.textContent = '미입력';
+  } else {
+    statusEl.textContent = title.length > 12 ? title.slice(0,12) + '…' : title;
+  }
+};
 
 // ── 점수 선택 ──
 window.selectScore = (btn, val) => {
@@ -657,7 +731,7 @@ window.saveRecord = async () => {
   const btn = document.querySelector('.save-btn');
   btn.disabled = true; btn.textContent = '저장 중...';
   try {
-    const focusTags = [...document.querySelectorAll('.focus-tag.selected')].map(t => t.textContent);
+    const focusTags = [...document.querySelectorAll('.focus-tag.selected:not(.exercise-tag)')].map(t => t.textContent);
     const chk = id => document.getElementById(id).classList.contains('checked');
     const data = {
       uid: user.uid, nickname: userProfile.nickname, date,
@@ -675,7 +749,9 @@ window.saveRecord = async () => {
       routineGyeong: chk('r-gyeong-1') && chk('r-gyeong-2') && chk('r-gyeong-3'),
       routineMyeon:  chk('r-myeon-1')  && chk('r-myeon-2')  && chk('r-myeon-3'),
       routineDok: chk('r-dok'),
-      routineUn:  chk('r-un'),
+      bookTitle:  document.getElementById('f-book-title').value.trim(),
+      routineUn:  getSelectedExercises().length > 0,
+      exercises:  getSelectedExercises(),
       routineTime: Number(document.getElementById('f-routine-time').value) || 0,
       lecture: Number(document.getElementById('f-lecture').value) || 0,
       jasoseo: Number(document.getElementById('f-jasoseo').value) || 0,
@@ -683,10 +759,9 @@ window.saveRecord = async () => {
       interview: Number(document.getElementById('f-interview').value) || 0,
       applications: Number(document.getElementById('f-applications').value) || 0,
       selfEsteem: scoreSelected || 0,
-      jobProb: Number(document.getElementById('f-prob').value) || 0,
+      jobProb: userProfile.jobProb || 0,
       fa5050: faSelected,
       focusTags,
-      diary: document.getElementById('f-diary').value.trim(),
       createdAt: new Date().toISOString(),
     };
     await setDoc(doc(db, 'records', `${user.uid}_${date}`), data);
@@ -743,7 +818,7 @@ async function loadSummary() {
   document.getElementById('s-int-avg').textContent = avg('interview');
 
   // 집중 활동 분포 도넛 차트
-  const focusCount = { '자소서':0, '필기':0, '면접':0, 'FA·R5050':0, '골고루':0 };
+  const focusCount = { '자소서':0, '필기':0, '면접':0, 'FA5050/현장방문':0, '골고루':0 };
   recs.forEach(r => { (r.focusTags||[]).forEach(t => { if(focusCount[t]!==undefined) focusCount[t]++; }); });
   const focusLabels = Object.keys(focusCount).filter(k => focusCount[k] > 0);
   const focusData = focusLabels.map(k => focusCount[k]);
@@ -882,11 +957,10 @@ window.loadRecords = async () => {
       <div class="routine-tags">
         <span class="rtag ${r.routineGyeong?'rtag-done':'rtag-miss'}">매십경${r.routineGyeong?' ✓':''}</span>
         <span class="rtag ${r.routineMyeon?'rtag-done':'rtag-miss'}">매십면${r.routineMyeon?' ✓':''}</span>
-        <span class="rtag ${r.routineDok?'rtag-done':'rtag-miss'}">매십독${r.routineDok?' ✓':''}</span>
+        <span class="rtag ${r.routineDok?'rtag-done':'rtag-miss'}">매십독${r.bookTitle?' · '+r.bookTitle:''}</span>
         <span class="rtag ${r.routineUn?'rtag-done':'rtag-miss'}">매십운${r.routineUn?' ✓':''}</span>
       </div>
       ${r.focusTags?.length ? `<div style="font-size:12px;color:#aaa;margin-bottom:8px">집중: <span style="color:var(--main)">${r.focusTags.join(', ')}</span></div>` : ''}
-      ${r.diary ? `<div style="font-size:12px;color:#aaa;margin-bottom:8px">감사일기: <span style="color:#555">${r.diary}</span></div>` : ''}
       ${isToday ? `
       <div class="record-actions">
         <button class="btn-sm btn-sm-primary" onclick="editTodayRecord()">수정</button>
@@ -915,7 +989,7 @@ window.editTodayRecord = () => {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-input').classList.add('active');
   document.querySelectorAll('.tab-btn')[0].classList.add('active');
-  ['r-gyeong-1','r-gyeong-2','r-gyeong-3','r-myeon-1','r-myeon-2','r-myeon-3','r-dok','r-un'].forEach(id => {
+  ['r-gyeong-1','r-gyeong-2','r-gyeong-3','r-myeon-1','r-myeon-2','r-myeon-3','r-dok'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.classList.remove('checked'); el.closest('.routine-row').classList.remove('checked'); }
   });
@@ -926,39 +1000,38 @@ window.editTodayRecord = () => {
   if (r.myeon_pm)       { document.getElementById('r-myeon-2').classList.add('checked'); document.getElementById('r-myeon-2').closest('.routine-row').classList.add('checked'); }
   if (r.myeon_feedback) { document.getElementById('r-myeon-3').classList.add('checked'); document.getElementById('r-myeon-3').closest('.routine-row').classList.add('checked'); }
   if (r.routineDok)     { document.getElementById('r-dok').classList.add('checked'); document.getElementById('r-dok').closest('.routine-row').classList.add('checked'); }
-  if (r.routineUn)      { document.getElementById('r-un').classList.add('checked');  document.getElementById('r-un').closest('.routine-row').classList.add('checked'); }
+  document.getElementById('f-book-title').value = r.bookTitle || '';
+  updateDokStatus();
   updateGyeongPct();
   updateMyeonPct();
+
+  // 운동 선택 복원
+  document.querySelectorAll('#exercise-tags .exercise-tag').forEach(tag => tag.classList.remove('selected'));
+  customExercises = [];
+  const presetList = ['헬스','러닝','요가','필라테스','홈트','등산','수영','축구·풋살','배드민턴'];
+  (r.exercises || []).forEach(ex => {
+    if (presetList.includes(ex)) {
+      [...document.querySelectorAll('#exercise-tags .exercise-tag')].find(t => t.textContent.trim() === ex)?.classList.add('selected');
+    } else {
+      customExercises.push(ex);
+    }
+  });
+  renderCustomExercises();
+  updateExerciseStatus();
+
   document.getElementById('f-routine-time').value = r.routineTime || '';
   document.getElementById('f-lecture').value      = r.lecture || 0;
   document.getElementById('f-jasoseo').value      = r.jasoseo || 0;
   document.getElementById('f-pilgi').value        = r.pilgi || 0;
   document.getElementById('f-interview').value    = r.interview || 0;
   document.getElementById('f-applications').value = r.applications || 0;
-  document.getElementById('f-prob').value         = r.jobProb || '';
-  document.getElementById('f-diary').value        = r.diary || '';
   scoreSelected = r.selfEsteem || 0;
   document.querySelectorAll('.score-btn').forEach((btn,i) => btn.classList.toggle('selected', i+1 === r.selfEsteem));
   if (r.fa5050 !== null && r.fa5050 !== undefined) selectFA(r.fa5050);
-  document.querySelectorAll('.focus-tag').forEach(tag => tag.classList.toggle('selected', (r.focusTags||[]).includes(tag.textContent)));
+  document.querySelectorAll('.tag-row:last-of-type .focus-tag').forEach(tag => tag.classList.toggle('selected', (r.focusTags||[]).includes(tag.textContent)));
   showToast('오늘 기록을 불러왔어요. 수정 후 저장해주세요! ✏️');
   window.scrollTo(0, 0);
 };
-
-// ── 감사일기 탭 ──
-async function loadDiaryTab() {
-  if (!allRecords.length) await loadAllRecords();
-  const diaries = allRecords.filter(r => r.diary);
-  document.getElementById('diary-count').textContent = `총 ${diaries.length}개 작성`;
-  const today = localDate();
-  const list = document.getElementById('diary-list');
-  if (!diaries.length) { list.innerHTML = '<div class="empty-state"><p>아직 감사일기가 없어요.</p></div>'; return; }
-  list.innerHTML = diaries.map(r => `
-    <div class="diary-card ${r.date===today?'diary-today':''}">
-      <div class="diary-date">${r.date}${r.date===today?' (오늘)':''}</div>
-      <div class="diary-text">${r.diary}</div>
-    </div>`).join('');
-}
 
 // ── 주간 목표 ──
 let goals = [], currentWeekKey = '';
@@ -1042,17 +1115,17 @@ window.downloadMyExcel = () => {
   if (!recs.length) { showToast('선택한 기간에 기록이 없어요'); return; }
 
   const headers = [
-    '날짜', '매십경', '매십면', '매십독', '매십운', '루틴시간(분)',
+    '날짜', '매십경', '매십면', '매십독(책제목)', '매십운(운동종류)', '루틴시간(분)',
     '강의(분)', '자소서(분)', '필기(분)', '면접(분)', '지원개수',
-    '자존감(1-5)', '취업확률(%)', 'FA5050', '집중활동', '감사일기'
+    '자존감(1-5)', '취업확률(%)', 'FA5050/현장방문', '집중활동'
   ];
 
   const rows = [...recs].reverse().map(r => [
     r.date,
     r.routineGyeong ? 'O' : 'X',
     r.routineMyeon  ? 'O' : 'X',
-    r.routineDok    ? 'O' : 'X',
-    r.routineUn     ? 'O' : 'X',
+    r.bookTitle     || (r.routineDok ? 'O' : 'X'),
+    (r.exercises && r.exercises.length) ? r.exercises.join('/') : (r.routineUn ? 'O' : 'X'),
     r.routineTime   || 0,
     r.lecture       || 0,
     r.jasoseo       || 0,
@@ -1063,7 +1136,6 @@ window.downloadMyExcel = () => {
     r.jobProb       || '',
     r.fa5050 === true ? 'O' : r.fa5050 === false ? 'X' : '',
     (r.focusTags || []).join('/'),
-    r.diary         || '',
   ]);
 
   const nickname = userProfile.nickname || '기록';
@@ -1124,6 +1196,7 @@ window.openProfile = async () => {
   // 현재 값 채우기
   document.getElementById('pm-nickname').value = p.nickname;
   document.getElementById('pm-startdate').value = p.startDate;
+  document.getElementById('pm-jobprob').value = p.jobProb || '';
   pmCalcWeek();
 
   // 현재 테마 컬러
@@ -1210,6 +1283,7 @@ async function loadPmGroups(currentGroupId) {
 window.saveProfile = async () => {
   const nickname = document.getElementById('pm-nickname').value.trim();
   const startDate = document.getElementById('pm-startdate').value;
+  const jobProb = Number(document.getElementById('pm-jobprob').value) || 0;
   if (!nickname) { showToast('닉네임을 입력해주세요'); return; }
   if (!startDate) { showToast('참여 시작일을 선택해주세요'); return; }
   if (!pmSelectedGroupId) { showToast('그룹을 선택해주세요'); return; }
@@ -1223,12 +1297,13 @@ window.saveProfile = async () => {
       ...userProfile,
       nickname,
       startDate,
+      jobProb,
       groupId: pmSelectedGroupId,
       themeColor: color,
     });
 
     // 로컬 프로필 업데이트
-    userProfile = { ...userProfile, nickname, startDate, groupId: pmSelectedGroupId, themeColor: color };
+    userProfile = { ...userProfile, nickname, startDate, jobProb, groupId: pmSelectedGroupId, themeColor: color };
 
     // UI 즉시 반영
     applyTheme(color);

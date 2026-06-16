@@ -183,7 +183,6 @@
     <button class="tab-btn" onclick="switchTab('myeon',this)">매십면 상세</button>
     <button class="tab-btn" onclick="switchTab('compare',this)">항목 비교</button>
     <button class="tab-btn" onclick="switchTab('group',this)">그룹별 현황</button>
-    <button class="tab-btn" onclick="switchTab('diary',this)">감사일기</button>
   </div>
 </nav>
 
@@ -199,6 +198,12 @@
       <button class="filter-btn on" onclick="setFilter('period','week',this)">이번 주</button>
       <button class="filter-btn" onclick="setFilter('period','month',this)">이번 달</button>
       <button class="filter-btn" onclick="setFilter('period','all',this)">누적</button>
+      <button class="filter-btn" onclick="setFilter('period','specific_week',this)">특정 주차</button>
+    </div>
+    <div class="filter-row" id="rank-week-picker" style="display:none">
+      <select onchange="setWeekFilter(this.value,'rank')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
+        <option value="">주차 선택...</option>
+      </select>
     </div>
     <div id="rank-content"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
   </div>
@@ -213,6 +218,12 @@
       <button class="filter-btn on" onclick="setFilter('gyperiod','week',this)">이번 주</button>
       <button class="filter-btn" onclick="setFilter('gyperiod','month',this)">이번 달</button>
       <button class="filter-btn" onclick="setFilter('gyperiod','all',this)">누적</button>
+      <button class="filter-btn" onclick="setFilter('gyperiod','specific_week',this)">특정 주차</button>
+    </div>
+    <div class="filter-row" id="gyeong-week-picker" style="display:none">
+      <select onchange="setWeekFilter(this.value,'gyeong')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
+        <option value="">주차 선택...</option>
+      </select>
     </div>
     <div id="gyeong-content"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
   </div>
@@ -227,6 +238,12 @@
       <button class="filter-btn on" onclick="setFilter('myperiod','week',this)">이번 주</button>
       <button class="filter-btn" onclick="setFilter('myperiod','month',this)">이번 달</button>
       <button class="filter-btn" onclick="setFilter('myperiod','all',this)">누적</button>
+      <button class="filter-btn" onclick="setFilter('myperiod','specific_week',this)">특정 주차</button>
+    </div>
+    <div class="filter-row" id="myeon-week-picker" style="display:none">
+      <select onchange="setWeekFilter(this.value,'myeon')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
+        <option value="">주차 선택...</option>
+      </select>
     </div>
     <div id="myeon-content"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
   </div>
@@ -241,6 +258,12 @@
       <button class="filter-btn on" onclick="setFilter('cperiod','week',this)">이번 주</button>
       <button class="filter-btn" onclick="setFilter('cperiod','month',this)">이번 달</button>
       <button class="filter-btn" onclick="setFilter('cperiod','all',this)">누적</button>
+      <button class="filter-btn" onclick="setFilter('cperiod','specific_week',this)">특정 주차</button>
+    </div>
+    <div class="filter-row" id="compare-week-picker" style="display:none">
+      <select onchange="setWeekFilter(this.value,'compare')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
+        <option value="">주차 선택...</option>
+      </select>
     </div>
     <button class="dl-btn" onclick="downloadExcel()">
       ↓ 엑셀 다운로드
@@ -282,6 +305,12 @@
         <button class="filter-btn on" onclick="setFilter('gperiod','week',this)">이번 주</button>
         <button class="filter-btn" onclick="setFilter('gperiod','month',this)">이번 달</button>
         <button class="filter-btn" onclick="setFilter('gperiod','all',this)">누적</button>
+        <button class="filter-btn" onclick="setFilter('gperiod','specific_week',this)">특정 주차</button>
+      </div>
+      <div class="filter-row" id="group-week-picker" style="display:none">
+        <select onchange="setWeekFilter(this.value,'group')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
+          <option value="">주차 선택...</option>
+        </select>
       </div>
       <div id="group-grid-wrap"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
     </div>
@@ -293,16 +322,6 @@
       </div>
       <div id="member-list"></div>
     </div>
-  </div>
-
-  <!-- ── 감사일기 ── -->
-  <div class="tab-panel" id="tab-diary">
-    <div class="filter-row">
-      <button class="filter-btn on" onclick="setFilter('dscope','all',this)">전체</button>
-      <button class="filter-btn" onclick="setFilter('dscope','mine',this)">내 그룹</button>
-    </div>
-    <div style="font-size:12px;color:#aaa;margin-bottom:12px" id="diary-written-count"></div>
-    <div id="diary-list"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
   </div>
 
 </main>
@@ -399,13 +418,32 @@ function getDateRange(period) {
   return '2000-01-01';
 }
 
-function filterRecords(recs, period) {
+// 특정 주차(N주차)의 시작일~종료일 계산 — 각 유저의 startDate 기준
+function getWeekRange(startDate, weekNum) {
+  const start = new Date(startDate);
+  const from = new Date(start);
+  from.setDate(start.getDate() + (weekNum - 1) * 7);
+  const to = new Date(from);
+  to.setDate(from.getDate() + 6);
+  return { from: localDateStr(from), to: localDateStr(to) };
+}
+
+function localDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function filterRecords(recs, period, startDate) {
+  if (period === 'specific_week' && filters.selectedWeek && startDate) {
+    const { from, to } = getWeekRange(startDate, Number(filters.selectedWeek));
+    return recs.filter(r => r.date >= from && r.date <= to);
+  }
   const from = getDateRange(period);
   return recs.filter(r => r.date >= from);
 }
 
 function getUserRecords(uid, period) {
-  return filterRecords(allRecords.filter(r => r.uid === uid), period);
+  const u = allUsers.find(x => x.uid === uid);
+  return filterRecords(allRecords.filter(r => r.uid === uid), period, u?.startDate);
 }
 
 function getGroupUsers(scope) {
@@ -516,21 +554,53 @@ window.switchTab = (id, btn) => {
   if (id==='myeon') renderMyeonDetail();
   if (id==='compare') renderCompare();
   if (id==='group') renderGroups();
-  if (id==='diary') renderDiary();
 };
 
 // ── 필터 ──
+const WEEK_PICKER_MAP = { period:'rank-week-picker', gyperiod:'gyeong-week-picker', myperiod:'myeon-week-picker', cperiod:'compare-week-picker', gperiod:'group-week-picker' };
+const TAB_KEY_MAP = { rank:'period', gyeong:'gyperiod', myeon:'myperiod', compare:'cperiod', group:'gperiod' };
+
 window.setFilter = (key, val, btn) => {
   filters[key] = val;
   const row = btn.parentElement;
   row.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
+
+  // 특정 주차 선택 시 드롭다운 표시
+  const pickerId = WEEK_PICKER_MAP[key];
+  if (pickerId) {
+    const picker = document.getElementById(pickerId);
+    if (val === 'specific_week') {
+      picker.style.display = 'flex';
+      populateWeekPicker(picker.querySelector('select'));
+    } else {
+      picker.style.display = 'none';
+    }
+  }
+
   if (currentTab==='rank') renderRank();
   if (currentTab==='gyeong') renderGyeongDetail();
   if (currentTab==='myeon') renderMyeonDetail();
   if (currentTab==='compare') renderCompare();
   if (currentTab==='group') renderGroups();
-  if (currentTab==='diary') renderDiary();
+};
+
+// 주차 드롭다운 채우기 — 내 기준 현재 주차부터 1주차까지
+function populateWeekPicker(sel) {
+  const myWeek = calcWeek(userProfile.startDate);
+  sel.innerHTML = '<option value="">주차 선택...</option>';
+  for (let w = myWeek; w >= 1; w--) {
+    sel.innerHTML += `<option value="${w}">${w}주차</option>`;
+  }
+}
+
+window.setWeekFilter = (weekVal, tabKey) => {
+  filters.selectedWeek = weekVal;
+  if (currentTab==='rank') renderRank();
+  if (currentTab==='gyeong') renderGyeongDetail();
+  if (currentTab==='myeon') renderMyeonDetail();
+  if (currentTab==='compare') renderCompare();
+  if (currentTab==='group') renderGroups();
 };
 
 // ── 랭킹 렌더 ──
@@ -543,7 +613,7 @@ function renderRank() {
     { key:'myeon',  label:'매십면 달성률', unit:'%' },
     { key:'dok',    label:'매십독 달성률', unit:'%' },
     { key:'un',     label:'매십운 달성률', unit:'%' },
-    { key:'fa',     label:'FA·R5050 달성률', unit:'%' },
+    { key:'fa',     label:'FA5050/현장방문 달성률', unit:'%' },
     { key:'apps',   label:'총 지원 개수', unit:'개' },
     { key:'jasoseo',label:'자소서 시간 (일평균)', unit:'분' },
     { key:'lecture',label:'강의 시간 (일평균)', unit:'분' },
@@ -735,46 +805,6 @@ window.showGroupOverview = () => {
   document.getElementById('group-overview').style.display = 'block';
   document.getElementById('group-detail').style.display = 'none';
 };
-
-// ── 감사일기 렌더 ──
-function renderDiary() {
-  let recs = allRecords.filter(r => r.diary);
-  if (filters.dscope === 'mine') {
-    const myGroupUids = allUsers.filter(u=>u.groupId===userProfile.groupId).map(u=>u.uid);
-    recs = recs.filter(r => myGroupUids.includes(r.uid));
-  }
-
-  const today = new Date().toISOString().split('T')[0];
-  const todayCount = recs.filter(r=>r.date===today).length;
-  document.getElementById('diary-written-count').textContent = `오늘 ${todayCount}명 작성`;
-
-  if (!recs.length) {
-    document.getElementById('diary-list').innerHTML = '<div class="empty-state"><p>아직 감사일기가 없어요</p></div>';
-    return;
-  }
-
-  const userMap = {};
-  allUsers.forEach(u => { userMap[u.uid] = u; });
-  const groupMap = {};
-  allGroups.forEach(g => { groupMap[g.id] = g; });
-
-  let html = '';
-  recs.slice(0, 50).forEach(r => {
-    const u = userMap[r.uid];
-    if (!u) return;
-    const wk = calcWeek(u.startDate);
-    const grp = groupMap[u.groupId]?.name || '';
-    const isMe = r.uid === user.uid;
-    html += `<div class="diary-card ${isMe?'mine':''}">
-      <div class="diary-meta">
-        <span class="diary-date">${r.date}${r.date===today?' (오늘)':''}</span>
-        <span class="diary-author">${u.nickname} · ${wk}주차 · ${grp}</span>
-      </div>
-      <div class="diary-text">${r.diary}</div>
-    </div>`;
-  });
-  document.getElementById('diary-list').innerHTML = html;
-}
 </script>
 </body>
 </html>

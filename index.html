@@ -157,6 +157,10 @@
           현재 <strong id="week-num">1</strong>주차예요!
         </div>
       </div>
+      <div class="field">
+        <label>현재 예상 취업 확률 <span style="color:#aaa;font-weight:400">(%)</span></label>
+        <input type="number" id="ob-jobprob" min="0" max="100" placeholder="예: 30">
+      </div>
     </div>
 
     <!-- 스텝 2: 그룹 선택 -->
@@ -322,10 +326,12 @@ function gotoStep(n) {
 async function saveOnboarding() {
   const nick = document.getElementById('ob-nickname').value.trim();
   const start = document.getElementById('ob-startdate').value;
+  const jobProb = Number(document.getElementById('ob-jobprob').value) || 0;
   await setDoc(doc(db, 'users', currentUser.uid), {
     nickname: nick,
     startDate: start,
     groupId: selectedGroupId,
+    jobProb,
     email: currentUser.email,
     photoURL: currentUser.photoURL || '',
     themeColor: '#534AB7',
