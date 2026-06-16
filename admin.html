@@ -42,6 +42,7 @@
   .btn-sm-danger:hover { background:#fff5f5; }
   .btn-sm-primary { color:var(--main); border-color:var(--main-mid); }
   .btn-sm-primary:hover { background:var(--main-xlight); }
+  .detail-filter-btn.on { background:var(--main); color:white; border-color:var(--main); }
 
   .group-card { border:1.5px solid #e8e8e8; border-radius:12px; padding:14px 16px; margin-bottom:10px; }
   .group-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
@@ -159,11 +160,12 @@
             <th>그룹</th>
             <th>주차</th>
             <th>마지막 기록</th>
+            <th>상세</th>
             <th>관리</th>
           </tr>
         </thead>
         <tbody id="user-table-body">
-          <tr><td colspan="7" style="text-align:center;padding:24px;color:#ccc">불러오는 중...</td></tr>
+          <tr><td colspan="8" style="text-align:center;padding:24px;color:#ccc">불러오는 중...</td></tr>
         </tbody>
       </table>
     </div>
@@ -222,6 +224,30 @@
         <button class="btn btn-danger" style="width:100%;padding:12px;background:#fee2e2;color:#b91c1c" onclick="deleteUser()">회원 삭제 (기록 전체 삭제)</button>
         <div style="font-size:11px;color:#aaa;margin-top:6px">이 회원의 프로필과 모든 기록이 영구 삭제돼요. 되돌릴 수 없어요.</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- 유저 상세보기 모달 -->
+<div class="modal-overlay" id="user-detail-modal">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <h3 id="detail-modal-title">유저 상세보기</h3>
+      <button class="modal-close" onclick="closeModal('user-detail-modal')">×</button>
+    </div>
+    <div class="modal-body" style="max-height:75vh;overflow-y:auto">
+      <div class="filter-row" style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn-sm btn-sm-primary detail-filter-btn on" onclick="setDetailFilter('week',this)">이번 주</button>
+        <button class="btn-sm detail-filter-btn" onclick="setDetailFilter('month',this)">이번 달</button>
+        <button class="btn-sm detail-filter-btn" onclick="setDetailFilter('all',this)">누적</button>
+        <button class="btn-sm detail-filter-btn" onclick="setDetailFilter('specific_week',this)">특정 주차</button>
+      </div>
+      <div id="detail-week-picker" style="display:none;margin-bottom:14px">
+        <select id="detail-week-select" onchange="renderUserDetail()" style="font-size:13px;padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
+          <option value="">주차 선택...</option>
+        </select>
+      </div>
+      <div id="user-detail-content"></div>
     </div>
   </div>
 </div>
@@ -324,6 +350,12 @@ function renderGroups() {
 }
 
 // ── 유저 테이블 렌더 ──
+function calcWeek(sd) {
+  if (!sd) return '-';
+  const diff = Math.floor((new Date() - new Date(sd)) / 86400000);
+  return Math.max(1, Math.floor(diff/7)+1);
+}
+
 function renderUsers(search='') {
   const groupMap = {};
   allGroups.forEach(g => { groupMap[g.id] = g.name; });
@@ -333,21 +365,17 @@ function renderUsers(search='') {
   allRecords.forEach(r => {
     if (!lastRecMap[r.uid] || r.date > lastRecMap[r.uid]) lastRecMap[r.uid] = r.date;
   });
-  const calcWeek = sd => {
-    if (!sd) return '-';
-    const diff = Math.floor((new Date() - new Date(sd)) / 86400000);
-    return Math.max(1, Math.floor(diff/7)+1) + '주차';
-  };
   document.getElementById('user-table-body').innerHTML = filtered.map(u => `
     <tr>
       <td><div class="user-avatar">${u.photoURL ? `<img src="${u.photoURL}">` : (u.nickname?.[0]||'?')}</div></td>
       <td style="font-weight:500">${u.nickname||'-'}</td>
       <td style="font-size:12px;color:#aaa">${u.email||'-'}</td>
       <td><span style="background:var(--main-light);color:var(--main-dark);padding:2px 8px;border-radius:6px;font-size:11px">${groupMap[u.groupId]||'미배정'}</span></td>
-      <td style="font-size:12px;color:#aaa">${calcWeek(u.startDate)}</td>
+      <td style="font-size:12px;color:#aaa">${u.startDate ? calcWeek(u.startDate)+'주차' : '-'}</td>
       <td style="font-size:12px;color:#aaa">${lastRecMap[u.uid]||'없음'}</td>
+      <td><button class="btn-sm btn-sm-primary" onclick="openUserDetail('${u.uid}')">상세보기</button></td>
       <td><button class="btn-sm btn-sm-primary" onclick="openUserManage('${u.uid}','${u.nickname}','${u.groupId||''}')">관리</button></td>
-    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:20px;color:#ccc">검색 결과 없음</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;padding:20px;color:#ccc">검색 결과 없음</td></tr>';
 }
 
 window.filterUsers = () => renderUsers(document.getElementById('user-search').value.trim());
@@ -419,6 +447,161 @@ window.removeMemberFromGroup = async (uid, groupName) => {
     renderUsers();
     showToast('멤버가 그룹에서 제거됐어요');
   } catch(e) { showToast('오류가 발생했어요'); console.error(e); }
+};
+
+// ── 유저 상세보기 ──
+let detailUid = null;
+let detailFilter = 'week';
+
+function localDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function getDateRangeFrom(period) {
+  const now = new Date();
+  if (period === 'week') {
+    const day = now.getDay() || 7;
+    const mon = new Date(now); mon.setDate(now.getDate() - day + 1);
+    return localDateStr(mon);
+  }
+  if (period === 'month') return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+  return '2000-01-01';
+}
+
+function getWeekRange(startDate, weekNum) {
+  const start = new Date(startDate);
+  const from = new Date(start);
+  from.setDate(start.getDate() + (weekNum - 1) * 7);
+  const to = new Date(from);
+  to.setDate(from.getDate() + 6);
+  return { from: localDateStr(from), to: localDateStr(to) };
+}
+
+window.openUserDetail = (uid) => {
+  detailUid = uid;
+  const u = allUsers.find(x => x.uid === uid);
+  if (!u) return;
+  document.getElementById('detail-modal-title').textContent = `${u.nickname} 상세보기`;
+
+  // 필터 버튼 초기화
+  document.querySelectorAll('.detail-filter-btn').forEach(b => b.classList.remove('on'));
+  document.querySelector('.detail-filter-btn').classList.add('on');
+  detailFilter = 'week';
+  document.getElementById('detail-week-picker').style.display = 'none';
+
+  openModal('user-detail-modal');
+  renderUserDetail();
+};
+
+window.setDetailFilter = (val, btn) => {
+  detailFilter = val;
+  document.querySelectorAll('.detail-filter-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+
+  const picker = document.getElementById('detail-week-picker');
+  if (val === 'specific_week') {
+    picker.style.display = 'block';
+    const u = allUsers.find(x => x.uid === detailUid);
+    const myWeek = calcWeek(u?.startDate);
+    const sel = document.getElementById('detail-week-select');
+    sel.innerHTML = '<option value="">주차 선택...</option>';
+    for (let w = myWeek; w >= 1; w--) sel.innerHTML += `<option value="${w}">${w}주차</option>`;
+  } else {
+    picker.style.display = 'none';
+  }
+  renderUserDetail();
+};
+
+window.renderUserDetail = () => {
+  const u = allUsers.find(x => x.uid === detailUid);
+  if (!u) return;
+
+  let recs = allRecords.filter(r => r.uid === detailUid);
+  if (detailFilter === 'specific_week') {
+    const wkVal = document.getElementById('detail-week-select').value;
+    if (wkVal && u.startDate) {
+      const { from, to } = getWeekRange(u.startDate, Number(wkVal));
+      recs = recs.filter(r => r.date >= from && r.date <= to);
+    } else if (!wkVal) {
+      recs = [];
+    }
+  } else {
+    const from = getDateRangeFrom(detailFilter);
+    recs = recs.filter(r => r.date >= from);
+  }
+  recs = [...recs].sort((a,b) => b.date.localeCompare(a.date));
+
+  const n = recs.length;
+  const pct = k => n ? Math.round(recs.filter(r=>r[k]).length/n*100) : 0;
+  const avg = k => n ? Math.round(recs.reduce((a,r)=>a+(r[k]||0),0)/n) : 0;
+  const apps = recs.reduce((a,r)=>a+(r.applications||0),0);
+  const moodAvg = (() => {
+    const m = recs.filter(r=>r.selfEsteem>0);
+    return m.length ? (m.reduce((a,r)=>a+r.selfEsteem,0)/m.length).toFixed(1) : '-';
+  })();
+
+  const content = document.getElementById('user-detail-content');
+
+  if (!n) {
+    content.innerHTML = `<div style="text-align:center;padding:30px;color:#ccc;font-size:14px">선택한 기간에 기록이 없어요</div>`;
+    return;
+  }
+
+  content.innerHTML = `
+    <div class="stat-row" style="margin-bottom:18px">
+      <div class="stat-box"><div class="num">${n}</div><div class="lbl">기록일</div></div>
+      <div class="stat-box"><div class="num">${apps}</div><div class="lbl">지원개수</div></div>
+      <div class="stat-box"><div class="num">${moodAvg}</div><div class="lbl">평균 자존감</div></div>
+      <div class="stat-box"><div class="num">${avg('lecture')}</div><div class="lbl">강의(분/일)</div></div>
+    </div>
+    <div class="sec-label">루틴 달성률</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px">
+      ${[
+        ['gyeong_article','매십경·기사읽기'],['gyeong_opinion','매십경·오피니언'],['gyeong_comment','매십경·댓글'],
+        ['myeon_am','매십면·오전'],['myeon_pm','매십면·오후'],['myeon_feedback','매십면·피드백'],
+        ['routineDok','매십독'],['routineUn','매십운'],['fa5050','FA5050/현장방문'],
+      ].map(([k,label]) => `
+        <div style="background:#f8f8ff;border-radius:8px;padding:8px 10px">
+          <div style="font-size:11px;color:#888;margin-bottom:4px">${label}</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="flex:1;height:6px;background:#eee;border-radius:3px;overflow:hidden">
+              <div style="height:100%;background:var(--main);width:${pct(k)}%"></div>
+            </div>
+            <span style="font-size:11px;font-weight:600;color:var(--main);width:32px;text-align:right">${pct(k)}%</span>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div class="sec-label">취준 활동 일 평균 (분)</div>
+    <div class="stat-row" style="margin-bottom:18px">
+      <div class="stat-box"><div class="num">${avg('jasoseo')}</div><div class="lbl">자소서</div></div>
+      <div class="stat-box"><div class="num">${avg('pilgi')}</div><div class="lbl">필기</div></div>
+      <div class="stat-box"><div class="num">${avg('interview')}</div><div class="lbl">면접</div></div>
+    </div>
+    <div class="sec-label">일별 기록 (${n}개)</div>
+    <div style="max-height:280px;overflow-y:auto;border:1px solid #f0f0f0;border-radius:10px">
+      <table class="user-table" style="font-size:12px">
+        <thead><tr>
+          <th>날짜</th><th>경</th><th>면</th><th>독</th><th>운</th><th>FA</th>
+          <th>강의</th><th>자소서</th><th>지원</th><th>자존감</th>
+        </tr></thead>
+        <tbody>
+          ${recs.map(r => `
+            <tr>
+              <td>${r.date}</td>
+              <td>${r.routineGyeong?'✓':'-'}</td>
+              <td>${r.routineMyeon?'✓':'-'}</td>
+              <td>${r.bookTitle || (r.routineDok?'✓':'-')}</td>
+              <td>${(r.exercises&&r.exercises.length)?r.exercises.join('/'):(r.routineUn?'✓':'-')}</td>
+              <td>${r.fa5050===true?'✓':r.fa5050===false?'X':'-'}</td>
+              <td>${r.lecture||0}</td>
+              <td>${r.jasoseo||0}</td>
+              <td>${r.applications||0}</td>
+              <td>${r.selfEsteem||'-'}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
 };
 
 // ── 유저 관리 모달 ──
