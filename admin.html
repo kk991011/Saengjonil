@@ -241,11 +241,15 @@
         <button class="btn-sm detail-filter-btn" onclick="setDetailFilter('month',this)">이번 달</button>
         <button class="btn-sm detail-filter-btn" onclick="setDetailFilter('all',this)">누적</button>
         <button class="btn-sm detail-filter-btn" onclick="setDetailFilter('specific_week',this)">특정 주차</button>
+        <button class="btn-sm detail-filter-btn" onclick="setDetailFilter('specific_month',this)">특정 월</button>
       </div>
       <div id="detail-week-picker" style="display:none;margin-bottom:14px">
         <select id="detail-week-select" onchange="renderUserDetail()" style="font-size:13px;padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
           <option value="">주차 선택...</option>
         </select>
+      </div>
+      <div id="detail-month-picker" style="display:none;margin-bottom:14px">
+        <input type="month" id="detail-month-select" onchange="renderUserDetail()" style="font-size:13px;padding:6px 12px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
       </div>
       <div id="user-detail-content"></div>
     </div>
@@ -488,6 +492,7 @@ window.openUserDetail = (uid) => {
   document.querySelector('.detail-filter-btn').classList.add('on');
   detailFilter = 'week';
   document.getElementById('detail-week-picker').style.display = 'none';
+  document.getElementById('detail-month-picker').style.display = 'none';
 
   openModal('user-detail-modal');
   renderUserDetail();
@@ -498,16 +503,24 @@ window.setDetailFilter = (val, btn) => {
   document.querySelectorAll('.detail-filter-btn').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
 
-  const picker = document.getElementById('detail-week-picker');
+  const weekPicker = document.getElementById('detail-week-picker');
+  const monthPicker = document.getElementById('detail-month-picker');
+  weekPicker.style.display = 'none';
+  monthPicker.style.display = 'none';
+
   if (val === 'specific_week') {
-    picker.style.display = 'block';
+    weekPicker.style.display = 'block';
     const u = allUsers.find(x => x.uid === detailUid);
     const myWeek = calcWeek(u?.startDate);
     const sel = document.getElementById('detail-week-select');
     sel.innerHTML = '<option value="">주차 선택...</option>';
     for (let w = myWeek; w >= 1; w--) sel.innerHTML += `<option value="${w}">${w}주차</option>`;
-  } else {
-    picker.style.display = 'none';
+  } else if (val === 'specific_month') {
+    monthPicker.style.display = 'block';
+    if (!document.getElementById('detail-month-select').value) {
+      const now = new Date();
+      document.getElementById('detail-month-select').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    }
   }
   renderUserDetail();
 };
@@ -523,6 +536,13 @@ window.renderUserDetail = () => {
       const { from, to } = getWeekRange(u.startDate, Number(wkVal));
       recs = recs.filter(r => r.date >= from && r.date <= to);
     } else if (!wkVal) {
+      recs = [];
+    }
+  } else if (detailFilter === 'specific_month') {
+    const monthVal = document.getElementById('detail-month-select').value; // "YYYY-MM"
+    if (monthVal) {
+      recs = recs.filter(r => r.date.startsWith(monthVal));
+    } else {
       recs = [];
     }
   } else {
