@@ -351,11 +351,6 @@
       <div id="custom-exercise-list" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px"></div>
     </div>
 
-    <div class="field" style="margin-top:10px">
-      <label>루틴 실행 시간 <span style="color:#aaa;font-weight:400">(분)</span></label>
-      <input type="number" id="f-routine-time" min="0" placeholder="예: 45">
-    </div>
-
     <div class="sec-label">취준 활동</div>
     <div class="row2">
       <div class="field"><label>강의 수강 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-lecture" min="0" placeholder="0" oninput="updateTotalTime()"></div>
@@ -427,7 +422,7 @@
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-label">총 기록일</div><div><span class="stat-value" id="s-days">0</span><span class="stat-unit">일</span></div></div>
         <div class="stat-card"><div class="stat-label">총 지원 개수</div><div><span class="stat-value" id="s-apps">0</span><span class="stat-unit">개</span></div></div>
-        <div class="stat-card"><div class="stat-label">총 강의 시간</div><div><span class="stat-value" id="s-lecture">0</span><span class="stat-unit">h</span></div></div>
+        <div class="stat-card"><div class="stat-label">총 취준 시간</div><div><span class="stat-value" id="s-lecture">0</span><span class="stat-unit">h</span></div></div>
         <div class="stat-card"><div class="stat-label">평균 자존감</div><div><span class="stat-value" id="s-mood">-</span><span class="stat-unit">/ 5</span></div></div>
       </div>
       <div class="sec-label">루틴 달성률</div>
@@ -454,9 +449,10 @@
         <div class="stat-card"><div class="stat-label">면접</div><div><span class="stat-value" id="s-int-avg">0</span><span class="stat-unit">분</span></div></div>
       </div>
       <div class="sec-label">집중 활동 분포</div>
-      <div style="position:relative;width:220px;height:220px;margin:0 auto 8px">
+      <div id="focus-donut-wrap" style="position:relative;width:220px;height:220px;margin:0 auto 8px">
         <canvas id="focus-donut" role="img" aria-label="집중 활동 분포 도넛 차트"></canvas>
       </div>
+      <div id="focus-empty" style="display:none;text-align:center;padding:20px;color:#ccc;font-size:13px">집중 활동 기록이 없어요</div>
       <div id="focus-legend" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:8px;font-size:12px;color:#888"></div>
     </div>
   </div>
@@ -786,11 +782,11 @@ window.saveRecord = async () => {
       bookTitle:  document.getElementById('f-book-title').value.trim(),
       routineUn:  getSelectedExercises().length > 0,
       exercises:  getSelectedExercises(),
-      routineTime: Number(document.getElementById('f-routine-time').value) || 0,
       lecture: Number(document.getElementById('f-lecture').value) || 0,
       jasoseo: Number(document.getElementById('f-jasoseo').value) || 0,
       pilgi: Number(document.getElementById('f-pilgi').value) || 0,
       interview: Number(document.getElementById('f-interview').value) || 0,
+      totalTime: (Number(document.getElementById('f-lecture').value)||0) + (Number(document.getElementById('f-jasoseo').value)||0) + (Number(document.getElementById('f-pilgi').value)||0) + (Number(document.getElementById('f-interview').value)||0),
       applications: Number(document.getElementById('f-applications').value) || 0,
       selfEsteem: scoreSelected || 0,
       jobProb: userProfile.jobProb || 0,
@@ -822,13 +818,14 @@ async function loadAllRecords() {
 async function loadSummary() {
   document.getElementById('summary-loading').style.display = 'block';
   document.getElementById('summary-content').style.display = 'none';
-  if (!allRecords.length) await loadAllRecords();
-  const recs = allRecords;
-  const n = recs.length;
-  if (!n) { document.getElementById('summary-loading').style.display='none'; return; }
+  try {
+    if (!allRecords.length) await loadAllRecords();
+    const recs = allRecords;
+    const n = recs.length;
+    if (!n) { return; }
   document.getElementById('s-days').textContent = n;
   document.getElementById('s-apps').textContent = recs.reduce((a,r)=>a+(r.applications||0),0);
-  document.getElementById('s-lecture').textContent = Math.round(recs.reduce((a,r)=>a+(r.lecture||0),0)/60);
+  document.getElementById('s-lecture').textContent = Math.round(recs.reduce((a,r)=>a+(r.totalTime ?? ((r.lecture||0)+(r.jasoseo||0)+(r.pilgi||0)+(r.interview||0))),0)/60);
   const moods = recs.filter(r=>r.selfEsteem>0);
   document.getElementById('s-mood').textContent = moods.length ? (moods.reduce((a,r)=>a+r.selfEsteem,0)/moods.length).toFixed(1) : '-';
   const pct = k => Math.round(recs.filter(r=>r[k]).length/n*100);
@@ -866,8 +863,12 @@ async function loadSummary() {
     `rgba(${r2},${g2},${b2},.2)`,
   ];
   const donutEl = document.getElementById('focus-donut');
+  const donutWrap = document.getElementById('focus-donut-wrap');
+  const emptyEl = document.getElementById('focus-empty');
   const exD = Chart.getChart(donutEl); if(exD) exD.destroy();
   if (focusData.length) {
+    donutWrap.style.display = 'block';
+    emptyEl.style.display = 'none';
     new Chart(donutEl, {
       type: 'doughnut',
       data: { labels: focusLabels, datasets: [{ data: focusData, backgroundColor: palette, borderWidth: 1 }] },
@@ -901,11 +902,16 @@ async function loadSummary() {
         <span style="width:10px;height:10px;border-radius:2px;background:${palette[i]};display:inline-block"></span>${l}
       </span>`).join('');
   } else {
-    donutEl.parentElement.innerHTML = '<div style="text-align:center;padding:20px;color:#ccc;font-size:13px">집중 활동 기록이 없어요</div>';
+    donutWrap.style.display = 'none';
+    emptyEl.style.display = 'block';
+    document.getElementById('focus-legend').innerHTML = '';
   }
-
-  document.getElementById('summary-loading').style.display = 'none';
-  document.getElementById('summary-content').style.display = 'block';
+  } catch(e) {
+    console.error('누적 요약 로딩 오류:', e);
+  } finally {
+    document.getElementById('summary-loading').style.display = 'none';
+    document.getElementById('summary-content').style.display = 'block';
+  }
 }
 
 // ── 추이 차트 ──
@@ -1154,7 +1160,6 @@ window.editTodayRecord = () => {
   renderCustomExercises();
   updateExerciseStatus();
 
-  document.getElementById('f-routine-time').value = r.routineTime || '';
   document.getElementById('f-lecture').value      = r.lecture || 0;
   document.getElementById('f-jasoseo').value      = r.jasoseo || 0;
   document.getElementById('f-pilgi').value        = r.pilgi || 0;
@@ -1251,8 +1256,8 @@ window.downloadMyExcel = () => {
   if (!recs.length) { showToast('선택한 기간에 기록이 없어요'); return; }
 
   const headers = [
-    '날짜', '매십경', '매십면', '매십독(책제목)', '매십운(운동종류)', '루틴시간(분)',
-    '강의(분)', '자소서(분)', '필기(분)', '면접(분)', '지원개수',
+    '날짜', '매십경', '매십면', '매십독(책제목)', '매십운(운동종류)',
+    '강의(분)', '자소서(분)', '필기(분)', '면접(분)', '총취준시간(분)', '지원개수',
     '자존감(1-5)', '취업확률(%)', 'FA5050/현장방문', '집중활동'
   ];
 
@@ -1262,11 +1267,11 @@ window.downloadMyExcel = () => {
     r.routineMyeon  ? 'O' : 'X',
     r.bookTitle     || (r.routineDok ? 'O' : 'X'),
     (r.exercises && r.exercises.length) ? r.exercises.join('/') : (r.routineUn ? 'O' : 'X'),
-    r.routineTime   || 0,
     r.lecture       || 0,
     r.jasoseo       || 0,
     r.pilgi         || 0,
     r.interview     || 0,
+    r.totalTime || ((r.lecture||0)+(r.jasoseo||0)+(r.pilgi||0)+(r.interview||0)),
     r.applications  || 0,
     r.selfEsteem    || '',
     r.jobProb       || '',
