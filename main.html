@@ -233,7 +233,8 @@
 <!-- 탭 네비게이션 -->
 <nav class="tab-nav">
   <div class="tab-nav-inner">
-    <button class="tab-btn active" onclick="switchTab('input', this)">오늘 입력</button>
+    <button class="tab-btn active" onclick="switchTab('dashboard', this)">대시보드</button>
+    <button class="tab-btn" onclick="switchTab('input', this)">오늘 입력</button>
     <button class="tab-btn" onclick="switchTab('goal', this)">이번 주 목표</button>
     <button class="tab-btn" onclick="switchTab('summary', this)">누적 요약</button>
     <button class="tab-btn" onclick="switchTab('trend', this)">추이</button>
@@ -244,8 +245,25 @@
 <!-- 본문 -->
 <main class="content">
 
+  <!-- ── 대시보드 ── -->
+  <div class="tab-panel active" id="tab-dashboard">
+    <div class="sec-label">내 추이</div>
+    <div style="position:relative;height:200px;margin-bottom:8px"><canvas id="dash-my-chart" role="img" aria-label="내 주차별 매십경 매십독 지원수 추이"></canvas></div>
+    <div style="font-size:11px;color:#aaa;margin-bottom:20px;text-align:center">매십경·매십독 달성률(%) · 지원수(개) — 주차별</div>
+
+    <div class="sec-label">조별 추이 <span id="dash-group-name" style="color:var(--main);font-weight:600;text-transform:none;letter-spacing:0"></span></div>
+    <div style="position:relative;height:200px;margin-bottom:8px"><canvas id="dash-group-chart" role="img" aria-label="조별 주차별 매십경 매십독 지원수 추이"></canvas></div>
+    <div style="font-size:11px;color:#aaa;margin-bottom:8px;text-align:center">조원 평균 매십경·매십독 달성률(%) · 지원수(개) — 주차별</div>
+
+    <div style="display:flex;justify-content:center;gap:16px;font-size:11px;color:#888;margin-top:4px">
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:var(--main);display:inline-block"></span>매십경</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:var(--main-mid);display:inline-block"></span>매십독</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#bbb;display:inline-block"></span>지원수(개)</span>
+    </div>
+  </div>
+
   <!-- ── 오늘 입력 ── -->
-  <div class="tab-panel active" id="tab-input">
+  <div class="tab-panel" id="tab-input">
     <div class="row2">
       <div class="field"><label>닉네임</label><input type="text" id="f-nickname" readonly></div>
       <div class="field"><label>기록 날짜</label><input type="date" id="f-date" readonly style="background:#f8f8ff;cursor:not-allowed;color:#888"></div>
@@ -340,10 +358,14 @@
 
     <div class="sec-label">취준 활동</div>
     <div class="row2">
-      <div class="field"><label>강의 수강 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-lecture" min="0" placeholder="0"></div>
-      <div class="field"><label>자소서 작성 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-jasoseo" min="0" placeholder="0"></div>
-      <div class="field"><label>필기 학습 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-pilgi" min="0" placeholder="0"></div>
-      <div class="field"><label>면접 대비 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-interview" min="0" placeholder="0"></div>
+      <div class="field"><label>강의 수강 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-lecture" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+      <div class="field"><label>자소서 작성 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-jasoseo" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+      <div class="field"><label>필기 학습 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-pilgi" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+      <div class="field"><label>면접 대비 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-interview" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+    </div>
+    <div style="background:var(--main-xlight);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:12px;color:var(--main);font-weight:500">취준 활동 총 시간</span>
+      <span style="font-size:16px;font-weight:700;color:var(--main)"><span id="total-time-display">0</span>분</span>
     </div>
     <div class="field"><label>지원 개수</label><input type="number" id="f-applications" min="0" placeholder="0"></div>
 
@@ -560,6 +582,7 @@ const db = getFirestore(app);
 let user = null, userProfile = null;
 let scoreSelected = 0, faSelected = null;
 let allRecords = [], allGoals = [];
+let groupRecords = [], groupUsers = [];
 
 // ── 인증 확인 ──
 onAuthStateChanged(auth, async u => {
@@ -571,7 +594,8 @@ onAuthStateChanged(auth, async u => {
   initHeader();
   initInputForm();
   loadGoals();
-  loadAllRecords();
+  await loadAllRecords();
+  loadDashboard();
 });
 
 function applyTheme(color) {
@@ -619,6 +643,7 @@ window.switchTab = (id, btn) => {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
   btn.classList.add('active');
+  if (id === 'dashboard') loadDashboard();
   if (id === 'summary') loadSummary();
   if (id === 'trend') loadTrend();
   if (id === 'records') loadRecords();
@@ -705,6 +730,15 @@ window.updateDokStatus = () => {
   } else {
     statusEl.textContent = title.length > 12 ? title.slice(0,12) + '…' : title;
   }
+};
+
+// 취준 활동 총 시간 자동 합산
+window.updateTotalTime = () => {
+  const lecture = Number(document.getElementById('f-lecture').value) || 0;
+  const jasoseo = Number(document.getElementById('f-jasoseo').value) || 0;
+  const pilgi = Number(document.getElementById('f-pilgi').value) || 0;
+  const interview = Number(document.getElementById('f-interview').value) || 0;
+  document.getElementById('total-time-display').textContent = lecture + jasoseo + pilgi + interview;
 };
 
 // ── 점수 선택 ──
@@ -923,7 +957,108 @@ async function loadTrend() {
   }
 }
 
-// ── 기록 목록 ──
+// ── 대시보드 ──
+let dashMyChartInst, dashGroupChartInst;
+
+async function loadDashboard() {
+  if (!allRecords.length) await loadAllRecords();
+  if (userProfile.groupId) await loadGroupRecords();
+
+  const myWeek = calcWeek(userProfile.startDate);
+  const fromWeek = Math.max(1, myWeek - 7);
+  const weekLabels = [];
+  for (let w = fromWeek; w <= myWeek; w++) weekLabels.push(w);
+
+  const color = getComputedStyle(document.documentElement).getPropertyValue('--main').trim() || '#534AB7';
+  const colorMid = getComputedStyle(document.documentElement).getPropertyValue('--main-mid').trim() || '#7F77DD';
+
+  // 내 추이: 주차별 매십경·매십독 달성률(%) + 지원수(개)
+  const myStats = weekLabels.map(w => calcWeekStats(allRecords, userProfile.startDate, w));
+  renderDashChart('dash-my-chart', weekLabels, myStats, color, colorMid);
+
+  // 조별 추이
+  if (userProfile.groupId && groupUsers.length) {
+    const groupName = (await getGroupName(userProfile.groupId)) || '내 그룹';
+    document.getElementById('dash-group-name').textContent = `(${groupName})`;
+
+    const groupStats = weekLabels.map(w => {
+      // 그룹 내 각 멤버의 본인 시작일 기준 N주차(w) 통계를 평균
+      const memberStats = groupUsers.map(u => calcWeekStats(groupRecords.filter(r=>r.uid===u.uid), u.startDate, w));
+      const n = memberStats.length || 1;
+      return {
+        gyeong: Math.round(memberStats.reduce((a,s)=>a+s.gyeong,0)/n),
+        dok: Math.round(memberStats.reduce((a,s)=>a+s.dok,0)/n),
+        apps: Math.round(memberStats.reduce((a,s)=>a+s.apps,0)/n*10)/10,
+      };
+    });
+    renderDashChart('dash-group-chart', weekLabels, groupStats, color, colorMid);
+  } else {
+    document.getElementById('dash-group-name').textContent = '';
+    const el = document.getElementById('dash-group-chart');
+    if (el) { const ex = Chart.getChart(el); if (ex) ex.destroy(); }
+  }
+}
+
+// 특정 주차(w)에 해당하는 날짜 범위의 기록으로부터 매십경·매십독 달성률, 지원수 계산
+function calcWeekStats(recs, startDate, weekNum) {
+  if (!startDate || !weekNum) return { gyeong: 0, dok: 0, apps: 0 };
+  const start = new Date(startDate);
+  const from = new Date(start); from.setDate(start.getDate() + (weekNum - 1) * 7);
+  const to = new Date(from); to.setDate(from.getDate() + 6);
+  const fromStr = localDate(from), toStr = localDate(to);
+  const weekRecs = recs.filter(r => r.date >= fromStr && r.date <= toStr);
+  const n = weekRecs.length;
+  if (!n) return { gyeong: 0, dok: 0, apps: 0 };
+  return {
+    gyeong: Math.round(weekRecs.filter(r=>r.routineGyeong).length / n * 100),
+    dok: Math.round(weekRecs.filter(r=>r.routineDok).length / n * 100),
+    apps: weekRecs.reduce((a,r)=>a+(r.applications||0),0),
+  };
+}
+
+function renderDashChart(canvasId, labels, statsArr, color, colorMid) {
+  const el = document.getElementById(canvasId);
+  if (!el) return;
+  const ex = Chart.getChart(el); if (ex) ex.destroy();
+  new Chart(el, {
+    type: 'line',
+    data: {
+      labels: labels.map(w => `${w}주`),
+      datasets: [
+        { label:'매십경', data: statsArr.map(s=>s.gyeong), borderColor:color, borderWidth:2, pointRadius:2, tension:.3, fill:false, yAxisID:'y' },
+        { label:'매십독', data: statsArr.map(s=>s.dok), borderColor:colorMid, borderWidth:2, pointRadius:2, tension:.3, fill:false, yAxisID:'y' },
+        { label:'지원수', data: statsArr.map(s=>s.apps), borderColor:'#bbb', borderWidth:1.5, borderDash:[4,3], pointRadius:2, tension:.3, fill:false, yAxisID:'y1' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display:false } },
+      scales: {
+        x: { ticks:{font:{size:10}}, grid:{display:false} },
+        y: { position:'left', min:0, max:100, ticks:{callback:v=>v+'%',font:{size:10}}, grid:{color:'rgba(0,0,0,.04)'} },
+        y1: { position:'right', min:0, ticks:{font:{size:10}}, grid:{display:false} },
+      }
+    }
+  });
+}
+
+async function loadGroupRecords() {
+  const uSnap = await getDocs(query(collection(db,'users'), where('groupId','==',userProfile.groupId)));
+  groupUsers = uSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
+  const uids = groupUsers.map(u => u.uid);
+  if (!uids.length) { groupRecords = []; return; }
+  // Firestore 'in' 쿼리는 최대 30개 제한 — 그룹 인원이 적으니 우선 단순 처리
+  const rSnap = await getDocs(query(collection(db,'records'), where('uid','in', uids.slice(0,30))));
+  groupRecords = rSnap.docs.map(d => d.data());
+}
+
+async function getGroupName(groupId) {
+  try {
+    const gDoc = await getDoc(doc(db, 'groups', groupId));
+    return gDoc.exists() ? gDoc.data().name : null;
+  } catch(e) { return null; }
+}
+
 window.loadRecords = async () => {
   if (!allRecords.length) await loadAllRecords();
   const filter = document.getElementById('rec-filter').value;
@@ -1025,6 +1160,7 @@ window.editTodayRecord = () => {
   document.getElementById('f-pilgi').value        = r.pilgi || 0;
   document.getElementById('f-interview').value    = r.interview || 0;
   document.getElementById('f-applications').value = r.applications || 0;
+  updateTotalTime();
   scoreSelected = r.selfEsteem || 0;
   document.querySelectorAll('.score-btn').forEach((btn,i) => btn.classList.toggle('selected', i+1 === r.selfEsteem));
   if (r.fa5050 !== null && r.fa5050 !== undefined) selectFA(r.fa5050);
