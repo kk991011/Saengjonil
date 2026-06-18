@@ -4,6 +4,44 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>생존일지 — 커리어PT</title>
+<script>
+// ── 인앱 브라우저 감지 → 외부 브라우저로 강제 이동 ──
+// 카카오톡/인스타그램/페이스북/라인 등의 인앱 브라우저는 구글 로그인을 차단하므로
+// 감지 즉시 안드로이드는 Chrome 인텐트로, iOS는 안내 후 새 창으로 유도합니다.
+(function() {
+  var ua = navigator.userAgent || '';
+  var isKakao = /KAKAOTALK/i.test(ua);
+  var isInstagram = /Instagram/i.test(ua);
+  var isFacebook = /FBAN|FBAV/i.test(ua);
+  var isLine = /Line\//i.test(ua);
+  var isNaver = /NAVER\(inapp/i.test(ua);
+  var isInApp = isKakao || isInstagram || isFacebook || isLine || isNaver;
+
+  if (isInApp) {
+    var isAndroid = /Android/i.test(ua);
+    var isIOS = /iPhone|iPad|iPod/i.test(ua);
+    var currentUrl = window.location.href;
+
+    if (isAndroid) {
+      // 안드로이드: Chrome 인텐트로 강제 오픈 시도
+      var intentUrl = 'intent://' + currentUrl.replace(/^https?:\/\//,'') +
+        '#Intent;scheme=https;package=com.android.chrome;end';
+      window.location.href = intentUrl;
+    } else if (isIOS) {
+      // iOS: 인텐트 스킴이 없어 자동 전환이 어려움 → 안내 화면 표시
+      document.write(
+        '<div style="display:flex;align-items:center;justify-content:center;height:100vh;' +
+        'font-family:-apple-system,sans-serif;padding:24px;text-align:center;background:#534AB7;color:white">' +
+        '<div><div style="font-size:40px;margin-bottom:16px">🌱</div>' +
+        '<div style="font-size:16px;font-weight:600;margin-bottom:10px">앱 내 브라우저에서는 로그인이 제한돼요</div>' +
+        '<div style="font-size:14px;opacity:.9;line-height:1.6">우측 상단 <b>···</b> 또는 <b>공유</b> 버튼을 눌러<br>' +
+        '<b>"Safari로 열기"</b>를 선택해주세요</div></div></div>'
+      );
+      throw new Error('in-app browser blocked');
+    }
+  }
+})();
+</script>
 <style>
   :root {
     --main: #534AB7;
