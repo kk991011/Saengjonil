@@ -7,7 +7,7 @@
 <script>
 // ── 인앱 브라우저 감지 → 외부 브라우저로 강제 이동 ──
 // 카카오톡/인스타그램/페이스북/라인 등의 인앱 브라우저는 구글 로그인을 차단하므로
-// 감지 즉시 안드로이드는 Chrome 인텐트로, iOS는 안내 후 새 창으로 유도합니다.
+// 감지 즉시 안드로이드는 Chrome 인텐트로, iOS는 Safari 강제 오픈을 시도합니다.
 (function() {
   var ua = navigator.userAgent || '';
   var isKakao = /KAKAOTALK/i.test(ua);
@@ -28,15 +28,21 @@
         '#Intent;scheme=https;package=com.android.chrome;end';
       window.location.href = intentUrl;
     } else if (isIOS) {
-      // iOS: 인텐트 스킴이 없어 자동 전환이 어려움 → 안내 화면 표시
+      // iOS: x-web-search:// 스킴으로 Safari 강제 오픈 시도 (카카오톡 인앱 브라우저에서 동작)
+      // 동작하지 않는 구버전 대비, 안내 화면 + 수동 버튼도 함께 표시
       document.write(
         '<div style="display:flex;align-items:center;justify-content:center;height:100vh;' +
         'font-family:-apple-system,sans-serif;padding:24px;text-align:center;background:#534AB7;color:white">' +
         '<div><div style="font-size:40px;margin-bottom:16px">🌱</div>' +
-        '<div style="font-size:16px;font-weight:600;margin-bottom:10px">앱 내 브라우저에서는 로그인이 제한돼요</div>' +
-        '<div style="font-size:14px;opacity:.9;line-height:1.6">우측 상단 <b>···</b> 또는 <b>공유</b> 버튼을 눌러<br>' +
-        '<b>"Safari로 열기"</b>를 선택해주세요</div></div></div>'
+        '<div style="font-size:16px;font-weight:600;margin-bottom:10px">Safari로 연결하는 중...</div>' +
+        '<div style="font-size:14px;opacity:.9;line-height:1.6;margin-bottom:20px">화면이 바뀌지 않으면 아래 버튼을 눌러주세요</div>' +
+        '<button onclick="window.location.href=\'x-web-search://?\'+encodeURIComponent(window.location.href)" ' +
+        'style="background:white;color:#534AB7;border:none;padding:12px 24px;border-radius:10px;font-size:15px;font-weight:600;font-family:inherit">Safari로 열기</button>' +
+        '<div style="font-size:12px;opacity:.75;margin-top:20px;line-height:1.6">버튼이 안 눌리면 우측 상단 <b>···</b> 또는 <b>공유</b> 버튼을 눌러<br>"Safari로 열기"를 선택해주세요</div>' +
+        '</div></div>'
       );
+      // 자동 시도
+      window.location.href = 'x-web-search://?' + encodeURIComponent(currentUrl);
       throw new Error('in-app browser blocked');
     }
   }
