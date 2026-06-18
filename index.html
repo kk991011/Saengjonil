@@ -235,7 +235,7 @@
 <!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, collection, getDocs }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
@@ -286,16 +286,28 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 // 구글 로그인
+// 이 시점에는 이미 인앱 브라우저 감지를 통과해 일반 브라우저(Chrome/Safari)에 있으므로
+// signInWithPopup을 우선 사용합니다. (signInWithRedirect는 Safari ITP에서 결과가 누락되는 문제가 있음)
 window.loginWithGoogle = async () => {
   try {
-    document.getElementById('login-section').style.display = 'none';
-    document.getElementById('loading').style.display = 'block';
-    await signInWithRedirect(auth, provider);
+    await signInWithPopup(auth, provider);
   } catch (e) {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('login-section').style.display = 'block';
-    alert('로그인에 실패했어요. 다시 시도해주세요.');
-    console.error(e);
+    console.error('팝업 로그인 오류:', e);
+    // 팝업이 차단된 경우(팝업 차단 설정 등) 리다이렉트로 재시도
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request') {
+      try {
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('loading').style.display = 'block';
+        await signInWithRedirect(auth, provider);
+      } catch (e2) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('login-section').style.display = 'block';
+        alert('로그인에 실패했어요. 다시 시도해주세요.');
+        console.error(e2);
+      }
+    } else if (e.code !== 'auth/popup-closed-by-user') {
+      alert('로그인에 실패했어요. 다시 시도해주세요.\n(' + e.code + ')');
+    }
   }
 };
 
