@@ -191,7 +191,7 @@
 <!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithRedirect, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, collection, getDocs }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
@@ -236,8 +236,12 @@ onAuthStateChanged(auth, async (user) => {
 // 구글 로그인
 window.loginWithGoogle = async () => {
   try {
-    await signInWithPopup(auth, provider);
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
+    await signInWithRedirect(auth, provider);
   } catch (e) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('login-section').style.display = 'block';
     alert('로그인에 실패했어요. 다시 시도해주세요.');
     console.error(e);
   }
