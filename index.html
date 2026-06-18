@@ -313,6 +313,7 @@ window.loginWithGoogle = async () => {
 
 // 온보딩 표시
 async function showOnboarding(user) {
+  document.getElementById('login-section').style.display = 'none';
   document.getElementById('onboarding-section').style.display = 'block';
   // 구글 이름을 닉네임 기본값으로
   const nameInput = document.getElementById('ob-nickname');
