@@ -235,7 +235,7 @@
 <!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithRedirect, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, collection, getDocs }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
@@ -258,6 +258,14 @@ const provider = new GoogleAuthProvider();
 let currentUser = null;
 let selectedGroupId = null;
 let currentStep = 1;
+
+// 리다이렉트 로그인 결과를 먼저 명시적으로 처리 (Safari 등에서 onAuthStateChanged만으론 누락될 수 있음)
+getRedirectResult(auth).catch((e) => {
+  console.error('리다이렉트 로그인 오류:', e);
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('login-section').style.display = 'block';
+  alert('로그인 중 문제가 발생했어요. 다시 시도해주세요.\n(' + (e.code || e.message) + ')');
+});
 
 // 인증 상태 감지
 onAuthStateChanged(auth, async (user) => {
