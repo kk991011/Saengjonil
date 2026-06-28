@@ -448,6 +448,13 @@
         <div class="stat-card"><div class="stat-label">필기</div><div><span class="stat-value" id="s-pil-avg">0</span><span class="stat-unit">분</span></div></div>
         <div class="stat-card"><div class="stat-label">면접</div><div><span class="stat-value" id="s-int-avg">0</span><span class="stat-unit">분</span></div></div>
       </div>
+      <div class="sec-label">취준 활동 누적 합계</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">강의</div><div><span class="stat-value" id="s-lec-total">0</span><span class="stat-unit">분</span></div></div>
+        <div class="stat-card"><div class="stat-label">자소서</div><div><span class="stat-value" id="s-jas-total">0</span><span class="stat-unit">분</span></div></div>
+        <div class="stat-card"><div class="stat-label">필기</div><div><span class="stat-value" id="s-pil-total">0</span><span class="stat-unit">분</span></div></div>
+        <div class="stat-card"><div class="stat-label">면접</div><div><span class="stat-value" id="s-int-total">0</span><span class="stat-unit">분</span></div></div>
+      </div>
       <div class="sec-label">집중 활동 분포</div>
       <div id="focus-donut-wrap" style="position:relative;width:220px;height:220px;margin:0 auto 8px">
         <canvas id="focus-donut" role="img" aria-label="집중 활동 분포 도넛 차트"></canvas>
@@ -843,10 +850,15 @@ async function loadSummary() {
   setPct('p-un','pb-un',pct('routineUn'));
   setPct('p-fa','pb-fa',pct('fa5050'));
   const avg = k => n ? Math.round(recs.reduce((a,r)=>a+(r[k]||0),0)/n) : 0;
+  const total = k => recs.reduce((a,r)=>a+(r[k]||0),0);
   document.getElementById('s-lec-avg').textContent = avg('lecture');
   document.getElementById('s-jas-avg').textContent = avg('jasoseo');
   document.getElementById('s-pil-avg').textContent = avg('pilgi');
   document.getElementById('s-int-avg').textContent = avg('interview');
+  document.getElementById('s-lec-total').textContent = total('lecture');
+  document.getElementById('s-jas-total').textContent = total('jasoseo');
+  document.getElementById('s-pil-total').textContent = total('pilgi');
+  document.getElementById('s-int-total').textContent = total('interview');
 
   // 집중 활동 분포 도넛 차트
   const focusCount = { '자소서':0, '필기':0, '면접':0, 'FA5050/현장방문':0, '골고루':0 };
