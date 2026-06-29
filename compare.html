@@ -429,7 +429,7 @@ let currentContext = 'default';
 function initHeader() {
   const wk = calcWeek(userProfile.startDate);
   document.getElementById('user-name').textContent = userProfile.nickname;
-  document.getElementById('week-badge').textContent = `${wk}주차`;
+  document.getElementById('week-badge').textContent = `${wk}`;
   const av = document.getElementById('avatar');
   if (user.photoURL) av.innerHTML = `<img src="${user.photoURL}" alt="프로필">`;
   else av.textContent = userProfile.nickname[0];
@@ -566,7 +566,7 @@ function renderGyeongDetail() {
       if (separated) html += `<div style="text-align:center;font-size:11px;color:#ccc;padding:2px 0">⋯</div>`;
       html += `<div class="rank-row ${isMe?'me':''}">
         <div class="rank-num ${numCls}">${rank}</div>
-        <div class="rank-name">${u.nickname}<span class="rank-week">${wk}주차</span></div>
+        <div class="rank-name">${u.nickname}<span class="rank-week">${wk}</span></div>
         ${isMe?'<span class="me-tag">나</span>':''}
         <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
         <div class="rank-val">${val}%</div>
@@ -605,7 +605,7 @@ function renderMyeonDetail() {
       if (separated) html += `<div style="text-align:center;font-size:11px;color:#ccc;padding:2px 0">⋯</div>`;
       html += `<div class="rank-row ${isMe?'me':''}">
         <div class="rank-num ${numCls}">${rank}</div>
-        <div class="rank-name">${u.nickname}<span class="rank-week">${wk}주차</span></div>
+        <div class="rank-name">${u.nickname}<span class="rank-week">${wk}</span></div>
         ${isMe?'<span class="me-tag">나</span>':''}
         <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
         <div class="rank-val">${val}%</div>
@@ -748,7 +748,7 @@ function renderRank() {
       if (separated) html += `<div style="text-align:center;font-size:11px;color:#ccc;padding:2px 0">⋯</div>`;
       html += `<div class="rank-row ${isMe?'me':''}">
         <div class="rank-num ${numClass}">${rank}</div>
-        <div class="rank-name">${u.nickname}<span class="rank-week">${wk}주차</span></div>
+        <div class="rank-name">${u.nickname}<span class="rank-week">${wk}</span></div>
         ${isMe?'<span class="me-tag">나</span>':''}
         <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
         <div class="rank-val">${val}${item.unit}</div>
@@ -900,7 +900,7 @@ window.showGroupDetail = (groupId) => {
       <div class="member-rank ${i<3?'top':''}">${i+1}</div>
       <div class="member-av">${m.nickname[0]}</div>
       <div class="member-name">${m.nickname}${isMe?' <span style="font-size:10px;color:var(--main);font-weight:600">나</span>':''}<br>
-        <span style="font-size:10px;color:#aaa">${wk}주차</span>
+        <span style="font-size:10px;color:#aaa">${wk}</span>
       </div>
       <div class="member-bars">
         <div class="mini-bar-row"><span class="mini-bar-label">경</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${s.gyeong}%"></div></div><span class="mini-bar-pct">${s.gyeong}%</span></div>

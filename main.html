@@ -510,7 +510,6 @@
         <div class="stat-card"><div class="stat-label">총 기록일</div><div><span class="stat-value" id="s-days">0</span><span class="stat-unit">일</span></div></div>
         <div class="stat-card"><div class="stat-label">총 지원 개수</div><div><span class="stat-value" id="s-apps">0</span><span class="stat-unit">개</span></div></div>
         <div class="stat-card"><div class="stat-label">총 취준 시간</div><div><span class="stat-value" id="s-lecture">0</span><span class="stat-unit">h</span></div></div>
-        <div class="stat-card"><div class="stat-label">평균 자존감</div><div><span class="stat-value" id="s-mood">-</span><span class="stat-unit">/ 5</span></div></div>
       </div>
       <div class="sec-label">루틴 달성률</div>
       <div style="background:var(--main-xlight);border-radius:10px;padding:10px 12px;margin-bottom:8px">
@@ -1038,8 +1037,6 @@ async function loadSummary() {
   document.getElementById('s-days').textContent = n;
   document.getElementById('s-apps').textContent = recs.reduce((a,r)=>a+(r.applications||0),0);
   document.getElementById('s-lecture').textContent = Math.round(recs.reduce((a,r)=>a+(r.totalTime ?? ((r.lecture||0)+(r.jasoseo||0)+(r.pilgi||0)+(r.interview||0))),0)/60);
-  const moods = recs.filter(r=>r.selfEsteem>0);
-  document.getElementById('s-mood').textContent = moods.length ? (moods.reduce((a,r)=>a+r.selfEsteem,0)/moods.length).toFixed(1) : '-';
   const pct = k => Math.round(recs.filter(r=>r[k]).length/n*100);
   const setPct = (id,pb,v) => { document.getElementById(id).textContent=v+'%'; document.getElementById(pb).style.width=v+'%'; };
   // 매십경 세부
@@ -1450,9 +1447,7 @@ window.loadPastMonthGoal = async () => {
        </div>`
       + g.map(x => `
         <div class="goal-item ${x.done?'done':''}">
-          <div class="chk-box ${x.done?'checked':''}">
-            ${x.done?'<span style="color:white;font-size:12px;font-weight:700">✓</span>':''}
-          </div>
+          <div class="chk-box ${x.done?'checked':''}"></div>
           <div class="goal-text">${x.text}</div>
         </div>`).join('')
     : '<div style="font-size:13px;color:#ccc;text-align:center;padding:20px">이 달 목표 기록이 없어요</div>';
@@ -1465,9 +1460,7 @@ function renderGoals() {
   document.getElementById('goal-prog').style.width = pct + '%';
   document.getElementById('goal-list').innerHTML = goals.map((g,i) => `
     <div class="goal-item ${g.done?'done':''}" >
-      <div class="chk-box ${g.done?'checked':''}" onclick="toggleGoal(${i})" style="cursor:pointer">
-        ${g.done?'<span style="color:white;font-size:12px;font-weight:700">✓</span>':''}
-      </div>
+      <div class="chk-box ${g.done?'checked':''}" onclick="toggleGoal(${i})" style="cursor:pointer"></div>
       <div class="goal-text">${g.text}</div>
       <button class="goal-del" onclick="removeGoal(${i})">×</button>
     </div>`).join('');
@@ -1480,9 +1473,7 @@ function renderMonthGoals() {
   document.getElementById('goal-month-prog').style.width = pct + '%';
   document.getElementById('goal-month-list').innerHTML = monthGoals.map((g,i) => `
     <div class="goal-item ${g.done?'done':''}">
-      <div class="chk-box ${g.done?'checked':''}" onclick="toggleMonthGoal(${i})" style="cursor:pointer">
-        ${g.done?'<span style="color:white;font-size:12px;font-weight:700">✓</span>':''}
-      </div>
+      <div class="chk-box ${g.done?'checked':''}" onclick="toggleMonthGoal(${i})" style="cursor:pointer"></div>
       <div class="goal-text">${g.text}</div>
       <button class="goal-del" onclick="removeMonthGoal(${i})">×</button>
     </div>`).join('');
@@ -1558,7 +1549,7 @@ window.loadPastGoal = async () => {
   const done = g.filter(x=>x.done).length;
   document.getElementById('past-goal-list').innerHTML = g.length
     ? `<div style="font-size:13px;color:#aaa;margin-bottom:10px">${wk}주차 달성률: <strong style="color:var(--main)">${g.length?Math.round(done/g.length*100):0}%</strong></div>`
-      + g.map(x=>`<div class="goal-item ${x.done?'done':''}"><div class="chk-box ${x.done?'checked':''}">${x.done?'<span style="color:white;font-size:12px;font-weight:700">✓</span>':''}</div><div class="goal-text">${x.text}</div></div>`).join('')
+      + g.map(x=>`<div class="goal-item ${x.done?'done':''}"><div class="chk-box ${x.done?'checked':''}"></div><div class="goal-text">${x.text}</div></div>`).join('')
     : '<div style="font-size:13px;color:#ccc;text-align:center;padding:20px">이 주차 기록이 없어요</div>';
 };
 
