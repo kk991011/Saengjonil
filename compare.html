@@ -544,40 +544,55 @@ function calcStats(uid, period) {
   };
 }
 
-// ── 매십경 상세 렌더 ──
+// 공통 랭킹 카드 HTML 생성 (내 행 고정 상단, 나머지 스크롤)
+function buildRankCardHtml(sorted, statsMap, item, unit, context, cardStyle) {
+  const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
+  const rows = buildRankRows(sorted);
+  const myRow = rows.find(r => r.isMe);
+  const othersRows = rows.filter(r => !r.isMe);
+
+  const rowHtml = (u, rank, isMe) => {
+    const val = statsMap[u.uid]?.[item.key] || 0;
+    const wk = calcWeekForUser(u, context);
+    const numCls = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
+    return `<div class="rank-row ${isMe?'me':''}">
+      <div class="rank-num ${numCls}">${rank}</div>
+      <div class="rank-name">${u.nickname}<span class="rank-week">${wk}</span></div>
+      ${isMe?'<span class="me-tag">나</span>':''}
+      <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
+      <div class="rank-val">${val}${unit}</div>
+    </div>`;
+  };
+
+  let html = `<div class="rank-card" ${cardStyle||''}>
+    <div class="rank-card-title">${item.label}</div>`;
+  // 내 행 상단 고정 (스크롤 밖)
+  if (myRow) {
+    html += `<div style="border-bottom:1px solid var(--main-light)">
+      ${rowHtml(myRow.u, myRow.rank, true)}
+    </div>`;
+  }
+  // 나머지 전체 스크롤
+  html += `<div style="max-height:260px;overflow-y:auto;overflow-x:hidden">`;
+  othersRows.forEach(({u, rank}) => { html += rowHtml(u, rank, false); });
+  html += `</div></div>`;
+  return html;
+}
 function renderGyeongDetail() {
   const users = getGroupUsers(filters.gyscope || 'all', filters.gyprogfilter || 'all');
   const period = filters.gyperiod || 'week';
   const statsMap = {};
   users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
-
   const items = [
-    { key:'gyeongAvg', label:'종합 달성률', highlight:true },
-    { key:'gyeong_article', label:'기사 읽기' },
-    { key:'gyeong_opinion', label:'오피니언 작성' },
-    { key:'gyeong_comment', label:'댓글 작성' },
+    { key:'gyeongAvg', label:'매십경 — 종합 달성률', highlight:true },
+    { key:'gyeong_article', label:'매십경 — 기사 읽기' },
+    { key:'gyeong_opinion', label:'매십경 — 오피니언 작성' },
+    { key:'gyeong_comment', label:'매십경 — 댓글 작성' },
   ];
-
   let html = '';
   items.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
-    const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
-    html += `<div class="rank-card" ${item.highlight?'style="border:1.5px solid var(--main-mid)"':''}><div class="rank-card-title">매십경 — ${item.label}</div>
-      <div style="max-height:280px;overflow-y:auto">`;
-    buildRankRows(sorted).forEach(({u, rank, isMe, pinned}) => {
-      const val = statsMap[u.uid]?.[item.key] || 0;
-      const wk = calcWeekForUser(u, currentContext);
-      const numCls = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
-      const pinnedStyle = pinned ? 'position:sticky;top:0;z-index:1;border-bottom:1px solid var(--main-light);' : '';
-      html += `<div class="rank-row ${isMe?'me':''}" style="${pinnedStyle}">
-        <div class="rank-num ${numCls}">${rank}</div>
-        <div class="rank-name">${u.nickname}<span class="rank-week">${wk}</span></div>
-        ${isMe?'<span class="me-tag">나</span>':''}
-        <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
-        <div class="rank-val">${val}%</div>
-      </div>`;
-    });
-    html += '</div></div>';
+    html += buildRankCardHtml(sorted, statsMap, item, '%', currentContext, item.highlight?'style="border:1.5px solid var(--main-mid)"':'');
   });
   document.getElementById('gyeong-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
 }
@@ -588,37 +603,18 @@ function renderMyeonDetail() {
   const period = filters.myperiod || 'week';
   const statsMap = {};
   users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
-
   const items = [
-    { key:'myeonAvg', label:'종합 달성률', highlight:true },
-    { key:'myeon_am', label:'오전' },
-    { key:'myeon_pm', label:'오후' },
-    { key:'myeon_feedback', label:'동료 피드백' },
+    { key:'myeonAvg', label:'매십면 — 종합 달성률', highlight:true },
+    { key:'myeon_am', label:'매십면 — 오전' },
+    { key:'myeon_pm', label:'매십면 — 오후' },
+    { key:'myeon_feedback', label:'매십면 — 동료 피드백' },
   ];
-
   let html = '';
   items.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
-    const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
-    html += `<div class="rank-card" ${item.highlight?'style="border:1.5px solid var(--main-mid)"':''}><div class="rank-card-title">매십면 — ${item.label}</div>
-      <div style="max-height:280px;overflow-y:auto">`;
-    buildRankRows(sorted).forEach(({u, rank, isMe, pinned}) => {
-      const val = statsMap[u.uid]?.[item.key] || 0;
-      const wk = calcWeekForUser(u, currentContext);
-      const numCls = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
-      const pinnedStyle = pinned ? 'position:sticky;top:0;z-index:1;border-bottom:1px solid var(--main-light);' : '';
-      html += `<div class="rank-row ${isMe?'me':''}" style="${pinnedStyle}">
-        <div class="rank-num ${numCls}">${rank}</div>
-        <div class="rank-name">${u.nickname}<span class="rank-week">${wk}</span></div>
-        ${isMe?'<span class="me-tag">나</span>':''}
-        <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
-        <div class="rank-val">${val}%</div>
-      </div>`;
-    });
-    html += '</div></div>';
+    html += buildRankCardHtml(sorted, statsMap, item, '%', currentContext, item.highlight?'style="border:1.5px solid var(--main-mid)"':'');
   });
   document.getElementById('myeon-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
-
 }
 
 // ── 탭 전환 ──
@@ -742,24 +738,7 @@ function renderRank() {
   let html = '';
   RANK_ITEMS.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
-    const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
-    html += `<div class="rank-card"><div class="rank-card-title">${item.label}</div>
-      <div style="max-height:280px;overflow-y:auto">`;
-    const rows = buildRankRows(sorted);
-    rows.forEach(({u, rank, isMe, pinned}) => {
-      const val = statsMap[u.uid]?.[item.key] || 0;
-      const wk = calcWeekForUser(u, currentContext);
-      const numClass = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
-      const pinnedStyle = pinned ? 'position:sticky;top:0;z-index:1;border-bottom:1px solid var(--main-light);' : '';
-      html += `<div class="rank-row ${isMe?'me':''}" style="${pinnedStyle}">
-        <div class="rank-num ${numClass}">${rank}</div>
-        <div class="rank-name">${u.nickname}<span class="rank-week">${wk}</span></div>
-        ${isMe?'<span class="me-tag">나</span>':''}
-        <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
-        <div class="rank-val">${val}${item.unit}</div>
-      </div>`;
-    });
-    html += '</div></div>';
+    html += buildRankCardHtml(sorted, statsMap, item, item.unit, currentContext, '');
   });
 
   document.getElementById('rank-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
