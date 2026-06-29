@@ -506,13 +506,19 @@ function getGroupUsers(scope, progfilter) {
 }
 
 // 상위 N명 + 내 순위가 N위 밖이면 내 행도 별도로 추가
-function buildRankRows(sorted, topN) {
+// 내 행을 상단에 고정하고 나머지를 순위대로 정렬 (전체 표시)
+function buildRankRows(sorted) {
   const myIdx = sorted.findIndex(u => u.uid === user.uid);
-  const top = sorted.slice(0, topN).map((u, i) => ({ u, rank: i + 1 }));
-  if (myIdx >= topN) {
-    top.push({ u: sorted[myIdx], rank: myIdx + 1, separated: true });
+  const rows = [];
+  // 1) 내 행 먼저 (고정)
+  if (myIdx !== -1) {
+    rows.push({ u: sorted[myIdx], rank: myIdx + 1, isMe: true, pinned: true });
   }
-  return top;
+  // 2) 나머지 전체 (순위순)
+  sorted.forEach((u, i) => {
+    if (u.uid !== user.uid) rows.push({ u, rank: i + 1, isMe: false });
+  });
+  return rows;
 }
 
 // ── 유저별 통계 계산 ──
@@ -556,15 +562,14 @@ function renderGyeongDetail() {
   items.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
     const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
-    html += `<div class="rank-card" ${item.highlight?'style="border:1.5px solid var(--main-mid)"':''}><div class="rank-card-title">매십경 — ${item.label}</div>`;
-    const rows = buildRankRows(sorted, 10);
-    rows.forEach(({u, rank, separated}) => {
+    html += `<div class="rank-card" ${item.highlight?'style="border:1.5px solid var(--main-mid)"':''}><div class="rank-card-title">매십경 — ${item.label}</div>
+      <div style="max-height:280px;overflow-y:auto">`;
+    buildRankRows(sorted).forEach(({u, rank, isMe, pinned}) => {
       const val = statsMap[u.uid]?.[item.key] || 0;
       const wk = calcWeekForUser(u, currentContext);
-      const isMe = u.uid === user.uid;
       const numCls = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
-      if (separated) html += `<div style="text-align:center;font-size:11px;color:#ccc;padding:2px 0">⋯</div>`;
-      html += `<div class="rank-row ${isMe?'me':''}">
+      const pinnedStyle = pinned ? 'position:sticky;top:0;z-index:1;border-bottom:1px solid var(--main-light);' : '';
+      html += `<div class="rank-row ${isMe?'me':''}" style="${pinnedStyle}">
         <div class="rank-num ${numCls}">${rank}</div>
         <div class="rank-name">${u.nickname}<span class="rank-week">${wk}</span></div>
         ${isMe?'<span class="me-tag">나</span>':''}
@@ -572,7 +577,7 @@ function renderGyeongDetail() {
         <div class="rank-val">${val}%</div>
       </div>`;
     });
-    html += '</div>';
+    html += '</div></div>';
   });
   document.getElementById('gyeong-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
 }
@@ -595,15 +600,14 @@ function renderMyeonDetail() {
   items.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
     const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
-    html += `<div class="rank-card" ${item.highlight?'style="border:1.5px solid var(--main-mid)"':''}><div class="rank-card-title">매십면 — ${item.label}</div>`;
-    const rows = buildRankRows(sorted, 10);
-    rows.forEach(({u, rank, separated}) => {
+    html += `<div class="rank-card" ${item.highlight?'style="border:1.5px solid var(--main-mid)"':''}><div class="rank-card-title">매십면 — ${item.label}</div>
+      <div style="max-height:280px;overflow-y:auto">`;
+    buildRankRows(sorted).forEach(({u, rank, isMe, pinned}) => {
       const val = statsMap[u.uid]?.[item.key] || 0;
       const wk = calcWeekForUser(u, currentContext);
-      const isMe = u.uid === user.uid;
       const numCls = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
-      if (separated) html += `<div style="text-align:center;font-size:11px;color:#ccc;padding:2px 0">⋯</div>`;
-      html += `<div class="rank-row ${isMe?'me':''}">
+      const pinnedStyle = pinned ? 'position:sticky;top:0;z-index:1;border-bottom:1px solid var(--main-light);' : '';
+      html += `<div class="rank-row ${isMe?'me':''}" style="${pinnedStyle}">
         <div class="rank-num ${numCls}">${rank}</div>
         <div class="rank-name">${u.nickname}<span class="rank-week">${wk}</span></div>
         ${isMe?'<span class="me-tag">나</span>':''}
@@ -611,9 +615,10 @@ function renderMyeonDetail() {
         <div class="rank-val">${val}%</div>
       </div>`;
     });
-    html += '</div>';
+    html += '</div></div>';
   });
   document.getElementById('myeon-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
+
 }
 
 // ── 탭 전환 ──
@@ -738,15 +743,15 @@ function renderRank() {
   RANK_ITEMS.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
     const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
-    html += `<div class="rank-card"><div class="rank-card-title">${item.label}</div>`;
-    const rows = buildRankRows(sorted, 5);
-    rows.forEach(({u, rank, separated}, idx) => {
+    html += `<div class="rank-card"><div class="rank-card-title">${item.label}</div>
+      <div style="max-height:280px;overflow-y:auto">`;
+    const rows = buildRankRows(sorted);
+    rows.forEach(({u, rank, isMe, pinned}) => {
       const val = statsMap[u.uid]?.[item.key] || 0;
       const wk = calcWeekForUser(u, currentContext);
-      const isMe = u.uid === user.uid;
       const numClass = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
-      if (separated) html += `<div style="text-align:center;font-size:11px;color:#ccc;padding:2px 0">⋯</div>`;
-      html += `<div class="rank-row ${isMe?'me':''}">
+      const pinnedStyle = pinned ? 'position:sticky;top:0;z-index:1;border-bottom:1px solid var(--main-light);' : '';
+      html += `<div class="rank-row ${isMe?'me':''}" style="${pinnedStyle}">
         <div class="rank-num ${numClass}">${rank}</div>
         <div class="rank-name">${u.nickname}<span class="rank-week">${wk}</span></div>
         ${isMe?'<span class="me-tag">나</span>':''}
@@ -754,7 +759,7 @@ function renderRank() {
         <div class="rank-val">${val}${item.unit}</div>
       </div>`;
     });
-    html += '</div>';
+    html += '</div></div>';
   });
 
   document.getElementById('rank-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
