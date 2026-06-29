@@ -393,7 +393,7 @@
         <div class="field"><label>수강 시간 <span style="color:#aaa;font-weight:400">(분)</span></label>
           <input type="number" id="f-lecture" min="0" placeholder="0" oninput="updateTotalTime()"></div>
         <div class="field"><label>수강 항목</label>
-          <input type="text" id="f-lecture-item" placeholder="예: 생존 자소서 클래스"></div>
+          <input type="text" id="f-lecture-item" placeholder="예: 재무제표 분석"></div>
       </div>
     </div>
 
@@ -493,6 +493,12 @@
       <option value="">주차 선택...</option>
     </select>
     <div id="past-goal-list" style="margin-top:12px"></div>
+
+    <div class="sec-label" style="margin-top:24px">지난 달 돌아보기</div>
+    <select id="past-month-sel" onchange="loadPastMonthGoal()" style="width:100%;padding:10px 14px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:14px;font-family:inherit;outline:none;color:#222;background:white">
+      <option value="">월 선택...</option>
+    </select>
+    <div id="past-month-goal-list" style="margin-top:12px"></div>
   </div>
 
   <!-- ── 누적 요약 ── -->
@@ -606,6 +612,24 @@
         </div>
       </div>
 
+      <!-- 매십경 시작일 (커리어PT이거나 매십경 포함일 때) -->
+      <div class="field" id="pm-gyeong-date-wrap">
+        <label>매십경 시작일 <span style="color:#aaa;font-weight:400">(PT와 다를 경우)</span></label>
+        <input type="date" id="pm-gyeong-startdate" onchange="pmCalcProgramWeek('gyeong')">
+        <div id="pm-gyeong-week-preview" style="margin-top:6px;padding:8px 12px;background:var(--main-light);border-radius:8px;font-size:12px;color:var(--main-dark);display:none">
+          매십경 현재 <strong id="pm-gyeong-week-num"></strong>주차
+        </div>
+      </div>
+
+      <!-- 매십면 시작일 (커리어PT이거나 매십면 포함일 때) -->
+      <div class="field" id="pm-myeon-date-wrap">
+        <label>매십면 시작일 <span style="color:#aaa;font-weight:400">(PT와 다를 경우)</span></label>
+        <input type="date" id="pm-myeon-startdate" onchange="pmCalcProgramWeek('myeon')">
+        <div id="pm-myeon-week-preview" style="margin-top:6px;padding:8px 12px;background:var(--main-light);border-radius:8px;font-size:12px;color:var(--main-dark);display:none">
+          매십면 현재 <strong id="pm-myeon-week-num"></strong>주차
+        </div>
+      </div>
+
       <!-- 취업 확률 -->
       <div class="field">
         <label>현재 예상 취업 확률 (%)</label>
@@ -692,15 +716,39 @@ function applyTheme(color) {
 }
 
 function calcWeek(startDate) {
+  if (!startDate) return 1;
   const diff = Math.floor((new Date() - new Date(startDate)) / 86400000);
   return Math.max(1, Math.floor(diff / 7) + 1);
 }
 
-function initHeader() {
+// 컨텍스트에 따라 적절한 주차 표시 반환
+// context: 'default'(커리어PT 기준), 'gyeong'(매십경), 'myeon'(매십면)
+function getWeekByContext(profile, context) {
+  if (context === 'gyeong' && profile.gyeongStartDate) {
+    return { week: calcWeek(profile.gyeongStartDate), label: '경' };
+  }
+  if (context === 'myeon' && profile.myeonStartDate) {
+    return { week: calcWeek(profile.myeonStartDate), label: '면' };
+  }
+  return { week: calcWeek(profile.startDate), label: 'PT' };
+}
+
+// 현재 탭에 맞는 주차 컨텍스트
+function getTabContext(tabId) {
+  if (tabId === 'gyeong' || tabId === 'maesipgyeong') return 'gyeong';
+  if (tabId === 'myeon' || tabId === 'maesipmyeon') return 'myeon';
+  return 'default';
+}
+
+function initHeader(context) {
   const p = userProfile;
-  const wk = calcWeek(p.startDate);
+  const ctx = context || 'default';
+  const { week, label } = getWeekByContext(p, ctx);
   document.getElementById('user-name').textContent = p.nickname;
-  document.getElementById('week-badge').textContent = `${wk}주차`;
+  // 커리어PT는 레이블 없이 주차만, 전용은 경/면 레이블 붙임
+  const type = p.programType || 'careerpt';
+  const showLabel = type !== 'careerpt' || ctx !== 'default';
+  document.getElementById('week-badge').textContent = showLabel ? `${label}${week}주차` : `${week}주차`;
   const av = document.getElementById('avatar');
   if (user.photoURL) av.innerHTML = `<img src="${user.photoURL}" alt="프로필">`;
   else av.textContent = p.nickname[0];
@@ -741,6 +789,13 @@ function applyProgramType(type) {
     show('section-dok', false);
     show('section-un', false);
     show('section-jwijun', false);
+  } else if (type === 'maesipboth') {
+    // 매십경 + 매십면
+    show('section-gyeong', true);
+    show('section-myeon', true);
+    show('section-dok', false);
+    show('section-un', false);
+    show('section-jwijun', false);
   } else {
     // 커리어PT — 전체
     show('section-gyeong', true);
@@ -757,6 +812,8 @@ window.switchTab = (id, btn) => {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
   btn.classList.add('active');
+  // 탭에 따라 헤더 주차 자동 전환
+  initHeader(getTabContext(id));
   if (id === 'dashboard') loadDashboard();
   if (id === 'summary') loadSummary();
   if (id === 'trend') loadTrend();
@@ -1363,7 +1420,43 @@ async function loadGoals() {
   renderGoals();
   renderMonthGoals();
   populatePastWeeks(wk);
+  populatePastMonths(now);
 }
+
+function populatePastMonths(now) {
+  const sel = document.getElementById('past-month-sel');
+  sel.innerHTML = '<option value="">월 선택...</option>';
+  // 최근 12개월
+  for (let i = 1; i <= 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    sel.innerHTML += `<option value="${ym}">${d.getFullYear()}년 ${d.getMonth()+1}월</option>`;
+  }
+}
+
+window.loadPastMonthGoal = async () => {
+  const ym = document.getElementById('past-month-sel').value;
+  const listEl = document.getElementById('past-month-goal-list');
+  if (!ym) { listEl.innerHTML = ''; return; }
+  const snap = await getDoc(doc(db, 'weekly_goals', `${user.uid}_month_${ym}`));
+  const g = snap.exists() ? (snap.data().goals || []) : [];
+  const done = g.filter(x => x.done).length;
+  const [year, month] = ym.split('-');
+  listEl.innerHTML = g.length
+    ? `<div style="font-size:13px;color:#aaa;margin-bottom:10px">
+        ${year}년 ${Number(month)}월 달성률:
+        <strong style="color:var(--main)">${g.length ? Math.round(done/g.length*100) : 0}%</strong>
+        (${done} / ${g.length})
+       </div>`
+      + g.map(x => `
+        <div class="goal-item ${x.done?'done':''}">
+          <div class="chk-box ${x.done?'checked':''}">
+            ${x.done?'<span style="color:white;font-size:12px;font-weight:700">✓</span>':''}
+          </div>
+          <div class="goal-text">${x.text}</div>
+        </div>`).join('')
+    : '<div style="font-size:13px;color:#ccc;text-align:center;padding:20px">이 달 목표 기록이 없어요</div>';
+};
 
 function renderGoals() {
   const done = goals.filter(g=>g.done).length;
@@ -1561,6 +1654,21 @@ window.openProfile = async () => {
   document.getElementById('pm-jobprob').value = p.jobProb || '';
   pmCalcWeek();
 
+  // 매십경/매십면 시작일 표시 여부 (프로그램 유형에 따라)
+  const type = p.programType || 'careerpt';
+  const showGyeong = ['careerpt','maesipgyeong','maesipboth'].includes(type);
+  const showMyeon  = ['careerpt','maesipmyeon','maesipboth'].includes(type);
+  document.getElementById('pm-gyeong-date-wrap').style.display = showGyeong ? '' : 'none';
+  document.getElementById('pm-myeon-date-wrap').style.display  = showMyeon  ? '' : 'none';
+  if (showGyeong) {
+    document.getElementById('pm-gyeong-startdate').value = p.gyeongStartDate || '';
+    if (p.gyeongStartDate) pmCalcProgramWeek('gyeong');
+  }
+  if (showMyeon) {
+    document.getElementById('pm-myeon-startdate').value = p.myeonStartDate || '';
+    if (p.myeonStartDate) pmCalcProgramWeek('myeon');
+  }
+
   // 현재 테마 컬러
   pmSelectedColor = p.themeColor || '#534AB7';
   document.getElementById('pm-hex').value = pmSelectedColor;
@@ -1617,6 +1725,20 @@ window.pmCalcWeek = () => {
   document.getElementById('pm-week-preview').style.display = 'block';
 };
 
+window.pmCalcProgramWeek = (prog) => {
+  const idMap = {
+    gyeong: ['pm-gyeong-startdate', 'pm-gyeong-week-num', 'pm-gyeong-week-preview'],
+    myeon:  ['pm-myeon-startdate',  'pm-myeon-week-num',  'pm-myeon-week-preview'],
+  };
+  const [inputId, numId, previewId] = idMap[prog] || [];
+  if (!inputId) return;
+  const val = document.getElementById(inputId).value;
+  if (!val) return;
+  const diff = Math.floor((new Date() - new Date(val)) / 86400000);
+  document.getElementById(numId).textContent = Math.max(1, Math.floor(diff/7)+1);
+  document.getElementById(previewId).style.display = 'block';
+};
+
 async function loadPmGroups(currentGroupId) {
   pmSelectedGroupId = currentGroupId;
   const listEl = document.getElementById('pm-group-list');
@@ -1646,6 +1768,8 @@ window.saveProfile = async () => {
   const nickname = document.getElementById('pm-nickname').value.trim();
   const startDate = document.getElementById('pm-startdate').value;
   const jobProb = Number(document.getElementById('pm-jobprob').value) || 0;
+  const gyeongStartDate = document.getElementById('pm-gyeong-startdate').value || '';
+  const myeonStartDate  = document.getElementById('pm-myeon-startdate').value  || '';
   if (!nickname) { showToast('닉네임을 입력해주세요'); return; }
   if (!startDate) { showToast('참여 시작일을 선택해주세요'); return; }
   if (!pmSelectedGroupId) { showToast('그룹을 선택해주세요'); return; }
@@ -1659,15 +1783,14 @@ window.saveProfile = async () => {
       ...userProfile,
       nickname,
       startDate,
+      gyeongStartDate,
+      myeonStartDate,
       jobProb,
       groupId: pmSelectedGroupId,
       themeColor: color,
     });
 
-    // 로컬 프로필 업데이트
-    userProfile = { ...userProfile, nickname, startDate, jobProb, groupId: pmSelectedGroupId, themeColor: color };
-
-    // UI 즉시 반영
+    userProfile = { ...userProfile, nickname, startDate, gyeongStartDate, myeonStartDate, jobProb, groupId: pmSelectedGroupId, themeColor: color };
     applyTheme(color);
     initHeader();
     document.getElementById('f-nickname').value = nickname;

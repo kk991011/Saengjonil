@@ -200,17 +200,22 @@
       <button class="filter-btn" onclick="setFilter('progfilter','careerpt',this)">커리어PT</button>
       <button class="filter-btn" onclick="setFilter('progfilter','maesipgyeong',this)">매십경</button>
       <button class="filter-btn" onclick="setFilter('progfilter','maesipmyeon',this)">매십면</button>
+      <button class="filter-btn" onclick="setFilter('progfilter','maesipboth',this)">매십경+매십면</button>
     </div>
     <div class="filter-row">
       <button class="filter-btn on" onclick="setFilter('period','week',this)">이번 주</button>
       <button class="filter-btn" onclick="setFilter('period','month',this)">이번 달</button>
       <button class="filter-btn" onclick="setFilter('period','all',this)">누적</button>
       <button class="filter-btn" onclick="setFilter('period','specific_week',this)">특정 주차</button>
+      <button class="filter-btn" onclick="setFilter('period','specific_month',this)">특정 월</button>
     </div>
     <div class="filter-row" id="rank-week-picker" style="display:none">
       <select onchange="setWeekFilter(this.value,'rank')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
         <option value="">주차 선택...</option>
       </select>
+    </div>
+    <div class="filter-row" id="rank-month-picker" style="display:none">
+      <input type="month" id="rank-month-input" onchange="setMonthFilter(this.value,'rank')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
     </div>
     <div id="rank-content"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
   </div>
@@ -222,15 +227,25 @@
       <button class="filter-btn" onclick="setFilter('gyscope','mine',this)">내 그룹</button>
     </div>
     <div class="filter-row">
+      <button class="filter-btn on" onclick="setFilter('gyprogfilter','all',this)">전체 프로그램</button>
+      <button class="filter-btn" onclick="setFilter('gyprogfilter','careerpt',this)">커리어PT</button>
+      <button class="filter-btn" onclick="setFilter('gyprogfilter','maesipgyeong',this)">매십경</button>
+      <button class="filter-btn" onclick="setFilter('gyprogfilter','maesipboth',this)">매십경+매십면</button>
+    </div>
+    <div class="filter-row">
       <button class="filter-btn on" onclick="setFilter('gyperiod','week',this)">이번 주</button>
       <button class="filter-btn" onclick="setFilter('gyperiod','month',this)">이번 달</button>
       <button class="filter-btn" onclick="setFilter('gyperiod','all',this)">누적</button>
       <button class="filter-btn" onclick="setFilter('gyperiod','specific_week',this)">특정 주차</button>
+      <button class="filter-btn" onclick="setFilter('gyperiod','specific_month',this)">특정 월</button>
     </div>
     <div class="filter-row" id="gyeong-week-picker" style="display:none">
       <select onchange="setWeekFilter(this.value,'gyeong')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
         <option value="">주차 선택...</option>
       </select>
+    </div>
+    <div class="filter-row" id="gyeong-month-picker" style="display:none">
+      <input type="month" id="gyeong-month-input" onchange="setMonthFilter(this.value,'gyeong')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
     </div>
     <div id="gyeong-content"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
   </div>
@@ -242,15 +257,25 @@
       <button class="filter-btn" onclick="setFilter('myscope','mine',this)">내 그룹</button>
     </div>
     <div class="filter-row">
+      <button class="filter-btn on" onclick="setFilter('myprogfilter','all',this)">전체 프로그램</button>
+      <button class="filter-btn" onclick="setFilter('myprogfilter','careerpt',this)">커리어PT</button>
+      <button class="filter-btn" onclick="setFilter('myprogfilter','maesipmyeon',this)">매십면</button>
+      <button class="filter-btn" onclick="setFilter('myprogfilter','maesipboth',this)">매십경+매십면</button>
+    </div>
+    <div class="filter-row">
       <button class="filter-btn on" onclick="setFilter('myperiod','week',this)">이번 주</button>
       <button class="filter-btn" onclick="setFilter('myperiod','month',this)">이번 달</button>
       <button class="filter-btn" onclick="setFilter('myperiod','all',this)">누적</button>
       <button class="filter-btn" onclick="setFilter('myperiod','specific_week',this)">특정 주차</button>
+      <button class="filter-btn" onclick="setFilter('myperiod','specific_month',this)">특정 월</button>
     </div>
     <div class="filter-row" id="myeon-week-picker" style="display:none">
       <select onchange="setWeekFilter(this.value,'myeon')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
         <option value="">주차 선택...</option>
       </select>
+    </div>
+    <div class="filter-row" id="myeon-month-picker" style="display:none">
+      <input type="month" id="myeon-month-input" onchange="setMonthFilter(this.value,'myeon')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
     </div>
     <div id="myeon-content"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
   </div>
@@ -266,11 +291,15 @@
       <button class="filter-btn" onclick="setFilter('cperiod','month',this)">이번 달</button>
       <button class="filter-btn" onclick="setFilter('cperiod','all',this)">누적</button>
       <button class="filter-btn" onclick="setFilter('cperiod','specific_week',this)">특정 주차</button>
+      <button class="filter-btn" onclick="setFilter('cperiod','specific_month',this)">특정 월</button>
     </div>
     <div class="filter-row" id="compare-week-picker" style="display:none">
       <select onchange="setWeekFilter(this.value,'compare')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
         <option value="">주차 선택...</option>
       </select>
+    </div>
+    <div class="filter-row" id="compare-month-picker" style="display:none">
+      <input type="month" id="compare-month-input" onchange="setMonthFilter(this.value,'compare')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
     </div>
     <button class="dl-btn" onclick="downloadExcel()">
       ↓ 엑셀 다운로드
@@ -308,11 +337,15 @@
         <button class="filter-btn" onclick="setFilter('gperiod','month',this)">이번 달</button>
         <button class="filter-btn" onclick="setFilter('gperiod','all',this)">누적</button>
         <button class="filter-btn" onclick="setFilter('gperiod','specific_week',this)">특정 주차</button>
+        <button class="filter-btn" onclick="setFilter('gperiod','specific_month',this)">특정 월</button>
       </div>
       <div class="filter-row" id="group-week-picker" style="display:none">
         <select onchange="setWeekFilter(this.value,'group')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
           <option value="">주차 선택...</option>
         </select>
+      </div>
+      <div class="filter-row" id="group-month-picker" style="display:none">
+        <input type="month" id="group-month-input" onchange="setMonthFilter(this.value,'group')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
       </div>
       <div id="group-grid-wrap"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
     </div>
@@ -350,7 +383,7 @@ const db = getFirestore(app);
 
 let user = null, userProfile = null;
 let allUsers = [], allRecords = [], allGroups = [], allGoals = [];
-let filters = { scope:'all', period:'week', progfilter:'all', gyscope:'all', gyperiod:'week', myscope:'all', myperiod:'week', cscope:'all', cperiod:'week', gperiod:'week' };
+let filters = { scope:'all', period:'week', progfilter:'all', gyscope:'all', gyperiod:'week', gyprogfilter:'all', myscope:'all', myperiod:'week', myprogfilter:'all', cscope:'all', cperiod:'week', gperiod:'week', selectedWeek: null, selectedMonth: null };
 let currentTab = 'rank';
 
 // ── 인증 ──
@@ -379,6 +412,19 @@ function calcWeek(startDate) {
   const diff = Math.floor((new Date() - new Date(startDate)) / 86400000);
   return Math.max(1, Math.floor(diff / 7) + 1);
 }
+
+// 탭 컨텍스트에 따라 유저의 주차 레이블 반환
+function calcWeekForUser(u, context) {
+  if (context === 'gyeong' && u.gyeongStartDate) {
+    return `경${calcWeek(u.gyeongStartDate)}주차`;
+  }
+  if (context === 'myeon' && u.myeonStartDate) {
+    return `면${calcWeek(u.myeonStartDate)}주차`;
+  }
+  return `${calcWeek(u.startDate)}주차`;
+}
+
+let currentContext = 'default';
 
 function initHeader() {
   const wk = calcWeek(userProfile.startDate);
@@ -439,6 +485,9 @@ function filterRecords(recs, period, startDate) {
     const { from, to } = getWeekRange(startDate, Number(filters.selectedWeek));
     return recs.filter(r => r.date >= from && r.date <= to);
   }
+  if (period === 'specific_month' && filters.selectedMonth) {
+    return recs.filter(r => r.date.startsWith(filters.selectedMonth));
+  }
   const from = getDateRange(period);
   return recs.filter(r => r.date >= from);
 }
@@ -491,7 +540,7 @@ function calcStats(uid, period) {
 
 // ── 매십경 상세 렌더 ──
 function renderGyeongDetail() {
-  const users = getGroupUsers(filters.gyscope || 'all', filters.progfilter);
+  const users = getGroupUsers(filters.gyscope || 'all', filters.gyprogfilter || 'all');
   const period = filters.gyperiod || 'week';
   const statsMap = {};
   users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
@@ -511,7 +560,7 @@ function renderGyeongDetail() {
     const rows = buildRankRows(sorted, 10);
     rows.forEach(({u, rank, separated}) => {
       const val = statsMap[u.uid]?.[item.key] || 0;
-      const wk = calcWeek(u.startDate);
+      const wk = calcWeekForUser(u, currentContext);
       const isMe = u.uid === user.uid;
       const numCls = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
       if (separated) html += `<div style="text-align:center;font-size:11px;color:#ccc;padding:2px 0">⋯</div>`;
@@ -530,7 +579,7 @@ function renderGyeongDetail() {
 
 // ── 매십면 상세 렌더 ──
 function renderMyeonDetail() {
-  const users = getGroupUsers(filters.myscope || 'all', filters.progfilter);
+  const users = getGroupUsers(filters.myscope || 'all', filters.myprogfilter || 'all');
   const period = filters.myperiod || 'week';
   const statsMap = {};
   users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
@@ -550,7 +599,7 @@ function renderMyeonDetail() {
     const rows = buildRankRows(sorted, 10);
     rows.forEach(({u, rank, separated}) => {
       const val = statsMap[u.uid]?.[item.key] || 0;
-      const wk = calcWeek(u.startDate);
+      const wk = calcWeekForUser(u, currentContext);
       const isMe = u.uid === user.uid;
       const numCls = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
       if (separated) html += `<div style="text-align:center;font-size:11px;color:#ccc;padding:2px 0">⋯</div>`;
@@ -574,6 +623,10 @@ window.switchTab = (id, btn) => {
   document.getElementById('tab-'+id).classList.add('active');
   btn.classList.add('active');
   currentTab = id;
+  // 탭에 따라 주차 컨텍스트 설정
+  if (id === 'gyeong') currentContext = 'gyeong';
+  else if (id === 'myeon') currentContext = 'myeon';
+  else currentContext = 'default';
   if (id==='rank') renderRank();
   if (id==='gyeong') renderGyeongDetail();
   if (id==='myeon') renderMyeonDetail();
@@ -583,6 +636,8 @@ window.switchTab = (id, btn) => {
 
 // ── 필터 ──
 const WEEK_PICKER_MAP = { period:'rank-week-picker', gyperiod:'gyeong-week-picker', myperiod:'myeon-week-picker', cperiod:'compare-week-picker', gperiod:'group-week-picker' };
+const MONTH_PICKER_MAP = { period:'rank-month-picker', gyperiod:'gyeong-month-picker', myperiod:'myeon-month-picker', cperiod:'compare-month-picker', gperiod:'group-month-picker' };
+const MONTH_INPUT_MAP = { period:'rank-month-input', gyperiod:'gyeong-month-input', myperiod:'myeon-month-input', cperiod:'compare-month-input', gperiod:'group-month-input' };
 const TAB_KEY_MAP = { rank:'period', gyeong:'gyperiod', myeon:'myperiod', compare:'cperiod', group:'gperiod' };
 
 window.setFilter = (key, val, btn) => {
@@ -591,18 +646,48 @@ window.setFilter = (key, val, btn) => {
   row.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
 
-  // 특정 주차 선택 시 드롭다운 표시
-  const pickerId = WEEK_PICKER_MAP[key];
-  if (pickerId) {
-    const picker = document.getElementById(pickerId);
+  // 주차/월 선택 피커 표시 처리
+  const weekPickerId = WEEK_PICKER_MAP[key];
+  const monthPickerId = MONTH_PICKER_MAP[key];
+  if (weekPickerId) {
+    const weekPicker = document.getElementById(weekPickerId);
+    const monthPicker = monthPickerId ? document.getElementById(monthPickerId) : null;
     if (val === 'specific_week') {
-      picker.style.display = 'flex';
-      populateWeekPicker(picker.querySelector('select'));
+      weekPicker.style.display = 'flex';
+      if (monthPicker) monthPicker.style.display = 'none';
+      populateWeekPicker(weekPicker.querySelector('select'));
+    } else if (val === 'specific_month') {
+      weekPicker.style.display = 'none';
+      if (monthPicker) {
+        monthPicker.style.display = 'flex';
+        // 기본값: 이번 달
+        const inputId = MONTH_INPUT_MAP[key];
+        const inputEl = inputId ? document.getElementById(inputId) : null;
+        if (inputEl && !inputEl.value) {
+          const now = new Date();
+          inputEl.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        }
+        // 선택된 월로 바로 필터 적용
+        if (inputEl) {
+          filters.selectedMonth = inputEl.value;
+        }
+      }
     } else {
-      picker.style.display = 'none';
+      weekPicker.style.display = 'none';
+      if (monthPicker) monthPicker.style.display = 'none';
     }
   }
 
+  if (currentTab==='rank') renderRank();
+  if (currentTab==='gyeong') renderGyeongDetail();
+  if (currentTab==='myeon') renderMyeonDetail();
+  if (currentTab==='compare') renderCompare();
+  if (currentTab==='group') renderGroups();
+};
+
+// 월 선택 변경 시 호출
+window.setMonthFilter = (monthVal, tabKey) => {
+  filters.selectedMonth = monthVal;
   if (currentTab==='rank') renderRank();
   if (currentTab==='gyeong') renderGyeongDetail();
   if (currentTab==='myeon') renderMyeonDetail();
@@ -657,7 +742,7 @@ function renderRank() {
     const rows = buildRankRows(sorted, 5);
     rows.forEach(({u, rank, separated}, idx) => {
       const val = statsMap[u.uid]?.[item.key] || 0;
-      const wk = calcWeek(u.startDate);
+      const wk = calcWeekForUser(u, currentContext);
       const isMe = u.uid === user.uid;
       const numClass = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
       if (separated) html += `<div style="text-align:center;font-size:11px;color:#ccc;padding:2px 0">⋯</div>`;
