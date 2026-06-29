@@ -184,6 +184,7 @@
       <div class="step-dot active" id="sd1"></div>
       <div class="step-dot" id="sd2"></div>
       <div class="step-dot" id="sd3"></div>
+      <div class="step-dot" id="sd4"></div>
     </div>
 
     <!-- 스텝 1: 기본 정보 -->
@@ -207,8 +208,31 @@
       </div>
     </div>
 
-    <!-- 스텝 2: 그룹 선택 -->
+    <!-- 스텝 2: 프로그램 유형 선택 -->
     <div class="ob-step" id="step2">
+      <h3>참여 프로그램을 선택해주세요</h3>
+      <p class="hint">본인이 참여하는 프로그램을 선택해주세요. 입력 항목이 달라져요.</p>
+      <div id="program-list" style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+        <div class="program-card" id="prog-careerpt" onclick="selectProgram('careerpt')"
+          style="border:2px solid #e8e8e8;border-radius:14px;padding:14px 16px;cursor:pointer;transition:.2s">
+          <div style="font-size:15px;font-weight:600;color:#333;margin-bottom:4px">🎯 커리어PT</div>
+          <div style="font-size:12px;color:#888">매십경·매십면·매십독·매십운·취준활동 전체 기록</div>
+        </div>
+        <div class="program-card" id="prog-maesipgyeong" onclick="selectProgram('maesipgyeong')"
+          style="border:2px solid #e8e8e8;border-radius:14px;padding:14px 16px;cursor:pointer;transition:.2s">
+          <div style="font-size:15px;font-weight:600;color:#333;margin-bottom:4px">📰 매십경 전용</div>
+          <div style="font-size:12px;color:#888">기사읽기·오피니언작성·댓글 작성만 기록</div>
+        </div>
+        <div class="program-card" id="prog-maesipmyeon" onclick="selectProgram('maesipmyeon')"
+          style="border:2px solid #e8e8e8;border-radius:14px;padding:14px 16px;cursor:pointer;transition:.2s">
+          <div style="font-size:15px;font-weight:600;color:#333;margin-bottom:4px">🎤 매십면 전용</div>
+          <div style="font-size:12px;color:#888">오전말하기·오후연습·피드백만 기록</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 스텝 3: 그룹 선택 -->
+    <div class="ob-step" id="step3">
       <h3>내 그룹을 선택해주세요</h3>
       <p class="hint">소속된 조를 선택해주세요. 그룹별 현황 비교 기능에 사용됩니다.</p>
       <div class="group-list" id="group-list">
@@ -216,8 +240,8 @@
       </div>
     </div>
 
-    <!-- 스텝 3: 완료 -->
-    <div class="ob-step" id="step3">
+    <!-- 스텝 4: 완료 -->
+    <div class="ob-step" id="step4">
       <div class="complete-area">
         <div class="complete-icon">🎉</div>
         <h3>설정 완료!</h3>
@@ -257,9 +281,10 @@ const provider = new GoogleAuthProvider();
 
 let currentUser = null;
 let selectedGroupId = null;
+let selectedProgram = null;
 let currentStep = 1;
 
-// 리다이렉트 로그인 결과를 먼저 명시적으로 처리 (Safari 등에서 onAuthStateChanged만으론 누락될 수 있음)
+// 리다이렉트 로그인 결과를 먼저 명시적으로 처리
 getRedirectResult(auth).catch((e) => {
   console.error('리다이렉트 로그인 오류:', e);
   document.getElementById('loading').style.display = 'none';
@@ -274,10 +299,8 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     if (userDoc.exists() && userDoc.data().onboardingDone) {
-      // 온보딩 완료 → 메인으로
       window.location.href = '/Saengjonil/main.html';
     } else {
-      // 온보딩 시작
       showOnboarding(user);
     }
   } else {
@@ -286,14 +309,11 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 // 구글 로그인
-// 이 시점에는 이미 인앱 브라우저 감지를 통과해 일반 브라우저(Chrome/Safari)에 있으므로
-// signInWithPopup을 우선 사용합니다. (signInWithRedirect는 Safari ITP에서 결과가 누락되는 문제가 있음)
 window.loginWithGoogle = async () => {
   try {
     await signInWithPopup(auth, provider);
   } catch (e) {
     console.error('팝업 로그인 오류:', e);
-    // 팝업이 차단된 경우(팝업 차단 설정 등) 리다이렉트로 재시도
     if (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request') {
       try {
         document.getElementById('login-section').style.display = 'none';
@@ -303,7 +323,6 @@ window.loginWithGoogle = async () => {
         document.getElementById('loading').style.display = 'none';
         document.getElementById('login-section').style.display = 'block';
         alert('로그인에 실패했어요. 다시 시도해주세요.');
-        console.error(e2);
       }
     } else if (e.code !== 'auth/popup-closed-by-user') {
       alert('로그인에 실패했어요. 다시 시도해주세요.\n(' + e.code + ')');
@@ -315,10 +334,8 @@ window.loginWithGoogle = async () => {
 async function showOnboarding(user) {
   document.getElementById('login-section').style.display = 'none';
   document.getElementById('onboarding-section').style.display = 'block';
-  // 구글 이름을 닉네임 기본값으로
   const nameInput = document.getElementById('ob-nickname');
   if (user.displayName) nameInput.value = user.displayName.split(' ')[0];
-  // 그룹 목록 로드
   await loadGroups();
 }
 
@@ -358,7 +375,21 @@ window.calcWeek = () => {
   document.getElementById('week-preview').style.display = 'block';
 };
 
-// 온보딩 스텝 이동
+// 프로그램 유형 선택
+window.selectProgram = (type) => {
+  selectedProgram = type;
+  document.querySelectorAll('.program-card').forEach(c => {
+    c.style.borderColor = '#e8e8e8';
+    c.style.background = 'white';
+  });
+  const sel = document.getElementById('prog-' + type);
+  if (sel) {
+    sel.style.borderColor = 'var(--main)';
+    sel.style.background = 'var(--main-xlight, #F5F4FF)';
+  }
+};
+
+// 온보딩 스텝 이동 (4스텝: 기본정보 → 프로그램 → 그룹 → 완료)
 window.obNext = async () => {
   if (currentStep === 1) {
     const nick = document.getElementById('ob-nickname').value.trim();
@@ -367,12 +398,14 @@ window.obNext = async () => {
     if (!start) { alert('참여 시작일을 선택해주세요.'); return; }
     gotoStep(2);
   } else if (currentStep === 2) {
-    if (!selectedGroupId) { alert('그룹을 선택해주세요.'); return; }
+    if (!selectedProgram) { alert('참여 프로그램을 선택해주세요.'); return; }
     gotoStep(3);
-    // 저장
+  } else if (currentStep === 3) {
+    if (!selectedGroupId) { alert('그룹을 선택해주세요.'); return; }
+    gotoStep(4);
     await saveOnboarding();
     document.getElementById('btn-next').textContent = '내 일지 시작하기 →';
-  } else if (currentStep === 3) {
+  } else if (currentStep === 4) {
     window.location.href = '/Saengjonil/main.html';
   }
 };
@@ -389,7 +422,7 @@ function gotoStep(n) {
   document.getElementById(`step${n}`).classList.add('active');
   document.getElementById(`sd${n}`).classList.add('active');
   document.getElementById('btn-back').style.display = n > 1 ? 'block' : 'none';
-  if (n === 3) document.getElementById('btn-back').style.display = 'none';
+  if (n === 4) document.getElementById('btn-back').style.display = 'none';
 }
 
 async function saveOnboarding() {
@@ -400,6 +433,7 @@ async function saveOnboarding() {
     nickname: nick,
     startDate: start,
     groupId: selectedGroupId,
+    programType: selectedProgram,
     jobProb,
     email: currentUser.email,
     photoURL: currentUser.photoURL || '',
@@ -407,8 +441,9 @@ async function saveOnboarding() {
     onboardingDone: true,
     createdAt: new Date().toISOString(),
   });
+  const programLabel = { careerpt:'커리어PT', maesipgyeong:'매십경', maesipmyeon:'매십면' }[selectedProgram] || '';
   document.getElementById('complete-msg').textContent =
-    `${nick}님, 이제 생존일지를 시작할 수 있어요!\n매일 꾸준히 기록해서 함께 취업에 성공해요!`;
+    `${nick}님, ${programLabel} 프로그램으로 생존일지를 시작할 수 있어요!\n매일 꾸준히 기록해서 함께 취업에 성공해요!`;
 }
 </script>
 </body>

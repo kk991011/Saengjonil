@@ -196,6 +196,12 @@
       <button class="filter-btn" onclick="setFilter('scope','mine',this)" id="btn-mygroup">내 그룹</button>
     </div>
     <div class="filter-row">
+      <button class="filter-btn on" onclick="setFilter('progfilter','all',this)">전체 프로그램</button>
+      <button class="filter-btn" onclick="setFilter('progfilter','careerpt',this)">커리어PT</button>
+      <button class="filter-btn" onclick="setFilter('progfilter','maesipgyeong',this)">매십경</button>
+      <button class="filter-btn" onclick="setFilter('progfilter','maesipmyeon',this)">매십면</button>
+    </div>
+    <div class="filter-row">
       <button class="filter-btn on" onclick="setFilter('period','week',this)">이번 주</button>
       <button class="filter-btn" onclick="setFilter('period','month',this)">이번 달</button>
       <button class="filter-btn" onclick="setFilter('period','all',this)">누적</button>
@@ -344,7 +350,7 @@ const db = getFirestore(app);
 
 let user = null, userProfile = null;
 let allUsers = [], allRecords = [], allGroups = [], allGoals = [];
-let filters = { scope:'all', period:'week', cscope:'all', cperiod:'week', gperiod:'week', dscope:'all' };
+let filters = { scope:'all', period:'week', progfilter:'all', gyscope:'all', gyperiod:'week', myscope:'all', myperiod:'week', cscope:'all', cperiod:'week', gperiod:'week' };
 let currentTab = 'rank';
 
 // ── 인증 ──
@@ -442,9 +448,12 @@ function getUserRecords(uid, period) {
   return filterRecords(allRecords.filter(r => r.uid === uid), period, u?.startDate);
 }
 
-function getGroupUsers(scope) {
-  if (scope === 'mine') return allUsers.filter(u => u.groupId === userProfile.groupId);
-  return allUsers;
+function getGroupUsers(scope, progfilter) {
+  let users = allUsers;
+  if (scope === 'mine') users = users.filter(u => u.groupId === userProfile.groupId);
+  const pf = progfilter || filters.progfilter || 'all';
+  if (pf !== 'all') users = users.filter(u => (u.programType || 'careerpt') === pf);
+  return users;
 }
 
 // 상위 N명 + 내 순위가 N위 밖이면 내 행도 별도로 추가
@@ -482,7 +491,7 @@ function calcStats(uid, period) {
 
 // ── 매십경 상세 렌더 ──
 function renderGyeongDetail() {
-  const users = getGroupUsers(filters.gyscope || 'all');
+  const users = getGroupUsers(filters.gyscope || 'all', filters.progfilter);
   const period = filters.gyperiod || 'week';
   const statsMap = {};
   users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
@@ -521,7 +530,7 @@ function renderGyeongDetail() {
 
 // ── 매십면 상세 렌더 ──
 function renderMyeonDetail() {
-  const users = getGroupUsers(filters.myscope || 'all');
+  const users = getGroupUsers(filters.myscope || 'all', filters.progfilter);
   const period = filters.myperiod || 'week';
   const statsMap = {};
   users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
@@ -621,7 +630,7 @@ window.setWeekFilter = (weekVal, tabKey) => {
 
 // ── 랭킹 렌더 ──
 function renderRank() {
-  const users = getGroupUsers(filters.scope);
+  const users = getGroupUsers(filters.scope, filters.progfilter);
   const period = filters.period;
 
   const RANK_ITEMS = [
@@ -668,7 +677,7 @@ function renderRank() {
 
 // ── 항목 비교 렌더 ──
 function renderCompare() {
-  const users = getGroupUsers(filters.cscope);
+  const users = getGroupUsers(filters.cscope, filters.progfilter);
   const period = filters.cperiod;
   const statsMap = {};
   users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });

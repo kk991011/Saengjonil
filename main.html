@@ -235,7 +235,7 @@
   <div class="tab-nav-inner">
     <button class="tab-btn active" onclick="switchTab('dashboard', this)">대시보드</button>
     <button class="tab-btn" onclick="switchTab('input', this)">오늘 입력</button>
-    <button class="tab-btn" onclick="switchTab('goal', this)">이번 주 목표</button>
+    <button class="tab-btn" onclick="switchTab('goal', this)">이번 달 & 이번 주 목표</button>
     <button class="tab-btn" onclick="switchTab('summary', this)">누적 요약</button>
     <button class="tab-btn" onclick="switchTab('trend', this)">추이</button>
     <button class="tab-btn" onclick="switchTab('records', this)">기록</button>
@@ -269,65 +269,96 @@
       <div class="field"><label>기록 날짜</label><input type="date" id="f-date" readonly style="background:#f8f8ff;cursor:not-allowed;color:#888"></div>
     </div>
 
+    <!-- 22시 완료 기준 안내 -->
+    <div style="background:#FFF8E1;border:1px solid #FFD54F;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#856404;display:flex;align-items:center;gap:8px">
+      <span style="font-size:16px">⏰</span>
+      <span>모든 미션은 <strong>22시 완료</strong> 기준으로 기록해주세요</span>
+    </div>
 
     <div class="sec-label">매일 루틴</div>
 
-    <!-- 매십경 -->
-    <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:6px">
+    <!-- 매십경 (커리어PT + 매십경 전용) -->
+    <div id="section-gyeong" style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:6px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:13px;font-weight:600;color:var(--main)">매십경</div>
         <div style="font-size:11px;color:var(--main)" id="gyeong-pct">0 / 3</div>
       </div>
       <div class="routine-row" onclick="toggleSubRoutine(this,'r-gyeong-1')" style="margin-bottom:4px">
         <div class="chk-box" id="r-gyeong-1"></div>
-        <div class="routine-info"><div class="routine-name">기사 읽기</div></div>
+        <div class="routine-info">
+          <div class="routine-name">기사 읽기</div>
+          <div class="routine-sub">10분 정독</div>
+        </div>
       </div>
       <div class="routine-row" onclick="toggleSubRoutine(this,'r-gyeong-2')" style="margin-bottom:4px">
         <div class="chk-box" id="r-gyeong-2"></div>
-        <div class="routine-info"><div class="routine-name">오피니언 작성</div></div>
+        <div class="routine-info">
+          <div class="routine-name">오피니언 작성</div>
+          <div class="routine-sub">3줄 이상</div>
+        </div>
       </div>
       <div class="routine-row" onclick="toggleSubRoutine(this,'r-gyeong-3')">
         <div class="chk-box" id="r-gyeong-3"></div>
-        <div class="routine-info"><div class="routine-name">댓글 작성</div></div>
+        <div class="routine-info">
+          <div class="routine-name">댓글 작성</div>
+          <div class="routine-sub">다른 생존이 글 읽고 댓글 2개</div>
+        </div>
       </div>
     </div>
 
-    <!-- 매십면 -->
-    <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:6px">
+    <!-- 매십면 (커리어PT + 매십면 전용) -->
+    <div id="section-myeon" style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:6px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:13px;font-weight:600;color:var(--main)">매십면</div>
         <div style="font-size:11px;color:var(--main)" id="myeon-pct">0 / 3</div>
       </div>
       <div class="routine-row" onclick="toggleSubRoutine(this,'r-myeon-1')" style="margin-bottom:4px">
         <div class="chk-box" id="r-myeon-1"></div>
-        <div class="routine-info"><div class="routine-name">오전</div></div>
+        <div class="routine-info">
+          <div class="routine-name">오전 말하기</div>
+          <div class="routine-sub">주제에 대해 편안하게 생각 없이 말하기</div>
+        </div>
       </div>
       <div class="routine-row" onclick="toggleSubRoutine(this,'r-myeon-2')" style="margin-bottom:4px">
         <div class="chk-box" id="r-myeon-2"></div>
-        <div class="routine-info"><div class="routine-name">오후</div></div>
+        <div class="routine-info">
+          <div class="routine-name">오후 연습</div>
+          <div class="routine-sub">말하기 연습 2회 (각 1분)</div>
+        </div>
       </div>
       <div class="routine-row" onclick="toggleSubRoutine(this,'r-myeon-3')">
         <div class="chk-box" id="r-myeon-3"></div>
-        <div class="routine-info"><div class="routine-name">동료 피드백</div></div>
+        <div class="routine-info">
+          <div class="routine-name">피드백</div>
+          <div class="routine-sub">2명에게 피드백 받기</div>
+        </div>
       </div>
     </div>
 
-    <!-- 매십독: 완료 체크 + 책 이름 작성 -->
-    <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:6px">
-      <div class="routine-row" onclick="toggleRoutine(this, 'r-dok')" style="background:transparent;margin-bottom:8px;padding:4px 0">
+    <!-- 매십독: 커리어PT만 -->
+    <div id="section-dok" style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:6px">
+      <div style="font-size:13px;font-weight:600;color:var(--main);margin-bottom:8px">매십독</div>
+      <div class="routine-row" onclick="toggleRoutine(this,'r-dok')" style="background:transparent;margin-bottom:6px;padding:4px 0">
         <div class="chk-box" id="r-dok"></div>
         <div class="routine-info">
-          <div class="routine-name">매십독</div>
+          <div class="routine-name">책 읽기</div>
           <div class="routine-sub">하루 10분 독서</div>
         </div>
         <div style="font-size:11px;color:var(--main)" id="dok-status">미입력</div>
       </div>
       <input type="text" id="f-book-title" placeholder="오늘 읽은 책 이름을 입력해주세요" oninput="updateDokStatus()"
-        style="width:100%;font-size:13px;padding:8px 12px;border:1.5px solid #e8e8e8;border-radius:8px;font-family:inherit;outline:none;background:white">
+        style="width:100%;font-size:13px;padding:8px 12px;border:1.5px solid #e8e8e8;border-radius:8px;font-family:inherit;outline:none;background:white;margin-bottom:8px">
+      <div class="routine-row" onclick="toggleRoutine(this,'r-pilsa')" style="background:transparent;padding:4px 0">
+        <div class="chk-box" id="r-pilsa"></div>
+        <div class="routine-info">
+          <div class="routine-name">필사</div>
+          <div class="routine-sub">1줄 필사</div>
+        </div>
+      </div>
     </div>
 
-    <!-- 매십운: 운동 종류 선택 -->
-    <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:6px">
+    <!-- 매십운: 커리어PT만 -->
+    <div id="section-un" style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:6px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:13px;font-weight:600;color:var(--main)">매십운</div>
         <div style="font-size:11px;color:var(--main)" id="un-status">선택 안 함</div>
@@ -351,30 +382,59 @@
       <div id="custom-exercise-list" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px"></div>
     </div>
 
+    <!-- 취준 활동: 커리어PT만 -->
+    <div id="section-jwijun">
     <div class="sec-label">취준 활동</div>
-    <div class="row2">
-      <div class="field"><label>강의 수강 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-lecture" min="0" placeholder="0" oninput="updateTotalTime()"></div>
-      <div class="field"><label>자소서 작성 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-jasoseo" min="0" placeholder="0" oninput="updateTotalTime()"></div>
-      <div class="field"><label>필기 학습 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-pilgi" min="0" placeholder="0" oninput="updateTotalTime()"></div>
-      <div class="field"><label>면접 대비 <span style="color:#aaa;font-weight:400">(분)</span></label><input type="number" id="f-interview" min="0" placeholder="0" oninput="updateTotalTime()"></div>
-    </div>
-    <div style="background:var(--main-xlight);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
-      <span style="font-size:12px;color:var(--main);font-weight:500">취준 활동 총 시간</span>
-      <span style="font-size:16px;font-weight:700;color:var(--main)"><span id="total-time-display">0</span>분</span>
-    </div>
-    <div class="field"><label>지원 개수</label><input type="number" id="f-applications" min="0" placeholder="0"></div>
 
-    <div class="sec-label">오늘의 상태</div>
-    <div class="field">
-      <label>자존감 점수</label>
-      <div class="score-row" id="score-row">
-        <button class="score-btn" onclick="selectScore(this,1)">1</button>
-        <button class="score-btn" onclick="selectScore(this,2)">2</button>
-        <button class="score-btn" onclick="selectScore(this,3)">3</button>
-        <button class="score-btn" onclick="selectScore(this,4)">4</button>
-        <button class="score-btn" onclick="selectScore(this,5)">5</button>
+    <!-- 클래스 수강 -->
+    <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:600;color:var(--main);margin-bottom:8px">클래스 수강</div>
+      <div class="row2" style="margin-bottom:6px">
+        <div class="field"><label>수강 시간 <span style="color:#aaa;font-weight:400">(분)</span></label>
+          <input type="number" id="f-lecture" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+        <div class="field"><label>수강 항목</label>
+          <input type="text" id="f-lecture-item" placeholder="예: 재무제표 분석"></div>
       </div>
     </div>
+
+    <!-- 자소서 -->
+    <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:600;color:var(--main);margin-bottom:8px">자소서 작성</div>
+      <div class="row2">
+        <div class="field"><label>작성 문항 수</label>
+          <input type="number" id="f-jasoseo-count" min="0" placeholder="0"></div>
+        <div class="field"><label>작성 시간 <span style="color:#aaa;font-weight:400">(분)</span></label>
+          <input type="number" id="f-jasoseo" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+      </div>
+    </div>
+
+    <!-- 필기/인적성 + 면접 준비 -->
+    <div class="row2">
+      <div class="field"><label>필기/인적성 <span style="color:#aaa;font-weight:400">(분)</span></label>
+        <input type="number" id="f-pilgi" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+      <div class="field"><label>면접 준비 <span style="color:#aaa;font-weight:400">(분)</span></label>
+        <input type="number" id="f-interview" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+    </div>
+
+    <!-- 총 취준 시간: 자동 합산 + 직접 수정 가능 -->
+    <div style="background:var(--main-xlight);border-radius:10px;padding:10px 14px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--main);font-weight:500">취준 활동 총 시간</span>
+        <button onclick="toggleTotalTimeEdit()" id="total-time-edit-btn"
+          style="font-size:11px;color:var(--main);background:none;border:1px solid var(--main-mid);border-radius:6px;padding:2px 8px;cursor:pointer;font-family:inherit">직접 수정</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span id="total-time-display-wrap" style="font-size:20px;font-weight:700;color:var(--main)"><span id="total-time-display">0</span>분</span>
+        <input type="number" id="f-total-time-manual" min="0" placeholder="직접 입력"
+          style="display:none;width:100px;font-size:14px;padding:6px 10px;border:1.5px solid var(--main-mid);border-radius:8px;font-family:inherit;outline:none">
+      </div>
+      <div style="font-size:11px;color:#aaa;margin-top:4px" id="total-time-hint">수강+자소서+필기+면접 자동 합산</div>
+    </div>
+
+    <div class="field"><label>지원 개수</label><input type="number" id="f-applications" min="0" placeholder="0"></div>
+    </div><!-- /section-jwijun -->
+
+    <div class="sec-label">오늘의 상태</div>
     <div class="field">
       <label>FA5050/현장방문</label>
       <div class="fa-row">
@@ -395,18 +455,39 @@
     <button class="save-btn" onclick="saveRecord()">오늘 기록 저장하기</button>
   </div>
 
-  <!-- ── 이번 주 목표 ── -->
+  <!-- ── 이번 달 & 이번 주 목표 ── -->
   <div class="tab-panel" id="tab-goal">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-size:16px;font-weight:600;color:#222" id="goal-week-label">15주차 목표</div>
-      <div style="font-size:13px;color:var(--main);font-weight:500" id="goal-pct-label">0 / 0 달성</div>
+
+    <!-- 이번 달 목표 -->
+    <div style="margin-bottom:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:15px;font-weight:600;color:#222" id="goal-month-label">월 목표</div>
+        <div style="font-size:12px;color:var(--main);font-weight:500" id="goal-month-pct-label">0 / 0 달성</div>
+      </div>
+      <div class="prog-track" style="margin-bottom:14px"><div class="prog-fill" id="goal-month-prog" style="width:0%"></div></div>
+      <div id="goal-month-list"></div>
+      <div class="goal-add-row">
+        <input type="text" id="goal-month-input" placeholder="이번 달 목표 입력 (예: 자소서 5편 완성)" maxlength="40" onkeydown="if(event.key==='Enter')addMonthGoal()">
+        <button class="goal-add-btn" onclick="addMonthGoal()">추가</button>
+      </div>
     </div>
-    <div class="prog-track" style="margin-bottom:20px"><div class="prog-fill" id="goal-prog" style="width:0%"></div></div>
-    <div id="goal-list"></div>
-    <div class="goal-add-row">
-      <input type="text" id="goal-input" placeholder="새 목표 입력 (예: 자소서 2편 완성)" maxlength="40" onkeydown="if(event.key==='Enter')addGoal()">
-      <button class="goal-add-btn" onclick="addGoal()">추가</button>
+
+    <div style="border-top:1px solid #f0f0f0;margin-bottom:20px"></div>
+
+    <!-- 이번 주 목표 -->
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:15px;font-weight:600;color:#222" id="goal-week-label">주차 목표</div>
+        <div style="font-size:12px;color:var(--main);font-weight:500" id="goal-pct-label">0 / 0 달성</div>
+      </div>
+      <div class="prog-track" style="margin-bottom:14px"><div class="prog-fill" id="goal-prog" style="width:0%"></div></div>
+      <div id="goal-list"></div>
+      <div class="goal-add-row">
+        <input type="text" id="goal-input" placeholder="새 목표 입력 (예: 자소서 2편 완성)" maxlength="40" onkeydown="if(event.key==='Enter')addGoal()">
+        <button class="goal-add-btn" onclick="addGoal()">추가</button>
+      </div>
     </div>
+
     <div class="sec-label" style="margin-top:24px">지난 주차 보기</div>
     <select id="past-week-sel" onchange="loadPastGoal()" style="width:100%;padding:10px 14px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:14px;font-family:inherit;outline:none;color:#222;background:white">
       <option value="">주차 선택...</option>
@@ -634,10 +715,40 @@ function localDate(d) {
 
 function initInputForm() {
   document.getElementById('f-nickname').value = userProfile.nickname;
-  // 로컬 시간 기준 오늘 날짜 (UTC 변환 오류 방지)
-  const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  // 로컬 시간 기준 오늘 날짜
+  const today = localDate();
   document.getElementById('f-date').value = today;
+  applyProgramType(userProfile.programType || 'careerpt');
+}
+
+// programType에 따라 입력 섹션 표시/숨김
+function applyProgramType(type) {
+  const show = (id, visible) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = visible ? '' : 'none';
+  };
+  if (type === 'maesipgyeong') {
+    // 매십경만
+    show('section-gyeong', true);
+    show('section-myeon', false);
+    show('section-dok', false);
+    show('section-un', false);
+    show('section-jwijun', false);
+  } else if (type === 'maesipmyeon') {
+    // 매십면만
+    show('section-gyeong', false);
+    show('section-myeon', true);
+    show('section-dok', false);
+    show('section-un', false);
+    show('section-jwijun', false);
+  } else {
+    // 커리어PT — 전체
+    show('section-gyeong', true);
+    show('section-myeon', true);
+    show('section-dok', true);
+    show('section-un', true);
+    show('section-jwijun', true);
+  }
 }
 
 // ── 탭 전환 ──
@@ -737,11 +848,39 @@ window.updateDokStatus = () => {
 
 // 취준 활동 총 시간 자동 합산
 window.updateTotalTime = () => {
+  const manualInput = document.getElementById('f-total-time-manual');
+  if (manualInput && manualInput.style.display !== 'none') return; // 수동 모드일 때는 합산 안 함
   const lecture = Number(document.getElementById('f-lecture').value) || 0;
   const jasoseo = Number(document.getElementById('f-jasoseo').value) || 0;
   const pilgi = Number(document.getElementById('f-pilgi').value) || 0;
   const interview = Number(document.getElementById('f-interview').value) || 0;
-  document.getElementById('total-time-display').textContent = lecture + jasoseo + pilgi + interview;
+  const total = lecture + jasoseo + pilgi + interview;
+  document.getElementById('total-time-display').textContent = total;
+};
+
+// 총 취준 시간 직접 수정 토글
+window.toggleTotalTimeEdit = () => {
+  const displayWrap = document.getElementById('total-time-display-wrap');
+  const manualInput = document.getElementById('f-total-time-manual');
+  const btn = document.getElementById('total-time-edit-btn');
+  const hint = document.getElementById('total-time-hint');
+  const isManual = manualInput.style.display !== 'none';
+  if (isManual) {
+    // 자동 합산으로 복귀
+    manualInput.style.display = 'none';
+    displayWrap.style.display = '';
+    btn.textContent = '직접 수정';
+    hint.textContent = '수강+자소서+필기+면접 자동 합산';
+    updateTotalTime();
+  } else {
+    // 직접 수정 모드
+    const cur = document.getElementById('total-time-display').textContent;
+    manualInput.value = cur;
+    manualInput.style.display = '';
+    displayWrap.style.display = 'none';
+    btn.textContent = '자동 합산';
+    hint.textContent = '직접 총 시간을 입력해주세요 (분)';
+  }
 };
 
 // ── 점수 선택 ──
@@ -786,14 +925,23 @@ window.saveRecord = async () => {
       routineGyeong: chk('r-gyeong-1') && chk('r-gyeong-2') && chk('r-gyeong-3'),
       routineMyeon:  chk('r-myeon-1')  && chk('r-myeon-2')  && chk('r-myeon-3'),
       routineDok: chk('r-dok'),
+      routinePilsa: chk('r-pilsa'),
       bookTitle:  document.getElementById('f-book-title').value.trim(),
       routineUn:  getSelectedExercises().length > 0,
       exercises:  getSelectedExercises(),
       lecture: Number(document.getElementById('f-lecture').value) || 0,
+      lectureItem: document.getElementById('f-lecture-item').value.trim(),
       jasoseo: Number(document.getElementById('f-jasoseo').value) || 0,
+      jasoseoCount: Number(document.getElementById('f-jasoseo-count').value) || 0,
       pilgi: Number(document.getElementById('f-pilgi').value) || 0,
       interview: Number(document.getElementById('f-interview').value) || 0,
-      totalTime: (Number(document.getElementById('f-lecture').value)||0) + (Number(document.getElementById('f-jasoseo').value)||0) + (Number(document.getElementById('f-pilgi').value)||0) + (Number(document.getElementById('f-interview').value)||0),
+      totalTime: (() => {
+        const manualInput = document.getElementById('f-total-time-manual');
+        if (manualInput && manualInput.style.display !== 'none') {
+          return Number(manualInput.value) || 0;
+        }
+        return (Number(document.getElementById('f-lecture').value)||0) + (Number(document.getElementById('f-jasoseo').value)||0) + (Number(document.getElementById('f-pilgi').value)||0) + (Number(document.getElementById('f-interview').value)||0);
+      })(),
       applications: Number(document.getElementById('f-applications').value) || 0,
       selfEsteem: scoreSelected || 0,
       jobProb: userProfile.jobProb || 0,
@@ -1142,18 +1290,23 @@ window.editTodayRecord = () => {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-input').classList.add('active');
   document.querySelectorAll('.tab-btn')[0].classList.add('active');
-  ['r-gyeong-1','r-gyeong-2','r-gyeong-3','r-myeon-1','r-myeon-2','r-myeon-3','r-dok'].forEach(id => {
+  ['r-gyeong-1','r-gyeong-2','r-gyeong-3','r-myeon-1','r-myeon-2','r-myeon-3','r-dok','r-pilsa'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) { el.classList.remove('checked'); el.closest('.routine-row').classList.remove('checked'); }
+    if (el) { el.classList.remove('checked'); el.closest('.routine-row')?.classList.remove('checked'); }
   });
   if (r.gyeong_article) { document.getElementById('r-gyeong-1').classList.add('checked'); document.getElementById('r-gyeong-1').closest('.routine-row').classList.add('checked'); }
   if (r.gyeong_opinion) { document.getElementById('r-gyeong-2').classList.add('checked'); document.getElementById('r-gyeong-2').closest('.routine-row').classList.add('checked'); }
   if (r.gyeong_comment) { document.getElementById('r-gyeong-3').classList.add('checked'); document.getElementById('r-gyeong-3').closest('.routine-row').classList.add('checked'); }
-  if (r.myeon_am)       { document.getElementById('r-myeon-1').classList.add('checked'); document.getElementById('r-myeon-1').closest('.routine-row').classList.add('checked'); }
-  if (r.myeon_pm)       { document.getElementById('r-myeon-2').classList.add('checked'); document.getElementById('r-myeon-2').closest('.routine-row').classList.add('checked'); }
-  if (r.myeon_feedback) { document.getElementById('r-myeon-3').classList.add('checked'); document.getElementById('r-myeon-3').closest('.routine-row').classList.add('checked'); }
-  if (r.routineDok)     { document.getElementById('r-dok').classList.add('checked'); document.getElementById('r-dok').closest('.routine-row').classList.add('checked'); }
+  if (r.myeon_am)        { document.getElementById('r-myeon-1').classList.add('checked'); document.getElementById('r-myeon-1').closest('.routine-row').classList.add('checked'); }
+  if (r.myeon_pm)        { document.getElementById('r-myeon-2').classList.add('checked'); document.getElementById('r-myeon-2').closest('.routine-row').classList.add('checked'); }
+  if (r.myeon_feedback)  { document.getElementById('r-myeon-3').classList.add('checked'); document.getElementById('r-myeon-3').closest('.routine-row').classList.add('checked'); }
+  if (r.routineDok)      { document.getElementById('r-dok').classList.add('checked'); document.getElementById('r-dok').closest('.routine-row').classList.add('checked'); }
+  if (r.routinePilsa)    { document.getElementById('r-pilsa').classList.add('checked'); document.getElementById('r-pilsa').closest('.routine-row').classList.add('checked'); }
   document.getElementById('f-book-title').value = r.bookTitle || '';
+  const lectureItemEl = document.getElementById('f-lecture-item');
+  if (lectureItemEl) lectureItemEl.value = r.lectureItem || '';
+  const jasoseoCountEl = document.getElementById('f-jasoseo-count');
+  if (jasoseoCountEl) jasoseoCountEl.value = r.jasoseoCount || '';
   updateDokStatus();
   updateGyeongPct();
   updateMyeonPct();
@@ -1188,13 +1341,27 @@ window.editTodayRecord = () => {
 
 // ── 주간 목표 ──
 let goals = [], currentWeekKey = '';
+let monthGoals = [], currentMonthKey = '';
+
 async function loadGoals() {
   const wk = calcWeek(userProfile.startDate);
   currentWeekKey = `${user.uid}_week${wk}`;
   document.getElementById('goal-week-label').textContent = `${wk}주차 목표`;
-  const snap = await getDoc(doc(db, 'weekly_goals', currentWeekKey));
-  goals = snap.exists() ? (snap.data().goals || []) : [];
+
+  // 월 목표 키 (YYYY-MM)
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  currentMonthKey = `${user.uid}_month_${ym}`;
+  document.getElementById('goal-month-label').textContent = `${now.getFullYear()}년 ${now.getMonth()+1}월 목표`;
+
+  const [weekSnap, monthSnap] = await Promise.all([
+    getDoc(doc(db, 'weekly_goals', currentWeekKey)),
+    getDoc(doc(db, 'weekly_goals', currentMonthKey)),
+  ]);
+  goals = weekSnap.exists() ? (weekSnap.data().goals || []) : [];
+  monthGoals = monthSnap.exists() ? (monthSnap.data().goals || []) : [];
   renderGoals();
+  renderMonthGoals();
   populatePastWeeks(wk);
 }
 
@@ -1213,6 +1380,21 @@ function renderGoals() {
     </div>`).join('');
 }
 
+function renderMonthGoals() {
+  const done = monthGoals.filter(g=>g.done).length;
+  const pct = monthGoals.length ? Math.round(done/monthGoals.length*100) : 0;
+  document.getElementById('goal-month-pct-label').textContent = `${done} / ${monthGoals.length} 달성 (${pct}%)`;
+  document.getElementById('goal-month-prog').style.width = pct + '%';
+  document.getElementById('goal-month-list').innerHTML = monthGoals.map((g,i) => `
+    <div class="goal-item ${g.done?'done':''}">
+      <div class="chk-box ${g.done?'checked':''}" onclick="toggleMonthGoal(${i})" style="cursor:pointer">
+        ${g.done?'<span style="color:white;font-size:12px;font-weight:700">✓</span>':''}
+      </div>
+      <div class="goal-text">${g.text}</div>
+      <button class="goal-del" onclick="removeMonthGoal(${i})">×</button>
+    </div>`).join('');
+}
+
 window.addGoal = async () => {
   const inp = document.getElementById('goal-input');
   const text = inp.value.trim();
@@ -1224,10 +1406,27 @@ window.addGoal = async () => {
   renderGoals();
 };
 
+window.addMonthGoal = async () => {
+  const inp = document.getElementById('goal-month-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  if (monthGoals.length >= 15) { showToast('월 목표는 최대 15개까지 추가할 수 있어요'); return; }
+  monthGoals.push({ text, done: false });
+  inp.value = '';
+  await saveMonthGoals();
+  renderMonthGoals();
+};
+
 window.toggleGoal = async (i) => {
   goals[i].done = !goals[i].done;
   await saveGoals();
   renderGoals();
+};
+
+window.toggleMonthGoal = async (i) => {
+  monthGoals[i].done = !monthGoals[i].done;
+  await saveMonthGoals();
+  renderMonthGoals();
 };
 
 window.removeGoal = async (i) => {
@@ -1236,8 +1435,18 @@ window.removeGoal = async (i) => {
   renderGoals();
 };
 
+window.removeMonthGoal = async (i) => {
+  monthGoals.splice(i, 1);
+  await saveMonthGoals();
+  renderMonthGoals();
+};
+
 async function saveGoals() {
   await setDoc(doc(db, 'weekly_goals', currentWeekKey), { goals, updatedAt: new Date().toISOString() });
+}
+
+async function saveMonthGoals() {
+  await setDoc(doc(db, 'weekly_goals', currentMonthKey), { goals: monthGoals, updatedAt: new Date().toISOString() });
 }
 
 function populatePastWeeks(curWk) {

@@ -214,8 +214,16 @@
         <label>소속 그룹 변경</label>
         <select id="user-group-select" class="field input"></select>
       </div>
+      <div class="field" style="margin-top:10px">
+        <label>참여 프로그램 변경</label>
+        <select id="user-program-select" class="field input">
+          <option value="careerpt">🎯 커리어PT</option>
+          <option value="maesipgyeong">📰 매십경 전용</option>
+          <option value="maesipmyeon">🎤 매십면 전용</option>
+        </select>
+      </div>
       <input type="hidden" id="manage-user-uid">
-      <button class="btn btn-primary" style="width:100%;padding:12px;margin-bottom:10px" onclick="saveUserGroup()">그룹 변경 저장</button>
+      <button class="btn btn-primary" style="width:100%;padding:12px;margin-bottom:10px" onclick="saveUserGroup()">변경사항 저장</button>
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f0f0">
         <button class="btn btn-danger" style="width:100%;padding:12px" onclick="resetOnboarding()">온보딩 초기화 (그룹 재설정)</button>
         <div style="font-size:11px;color:#aaa;margin-top:6px">초기화하면 다음 로그인 시 온보딩 화면이 다시 표시돼요</div>
@@ -626,25 +634,29 @@ window.renderUserDetail = () => {
 
 // ── 유저 관리 모달 ──
 window.openUserManage = (uid, nickname, currentGroupId) => {
+  const u = allUsers.find(x => x.uid === uid);
   document.getElementById('manage-user-uid').value = uid;
   document.getElementById('user-modal-title').textContent = `${nickname} 관리`;
   const sel = document.getElementById('user-group-select');
   sel.innerHTML = '<option value="">미배정</option>' +
     allGroups.map(g => `<option value="${g.id}" ${g.id===currentGroupId?'selected':''}>${g.name}</option>`).join('');
+  const progSel = document.getElementById('user-program-select');
+  progSel.value = u?.programType || 'careerpt';
   openModal('user-manage-modal');
 };
 
 window.saveUserGroup = async () => {
   const uid = document.getElementById('manage-user-uid').value;
   const groupId = document.getElementById('user-group-select').value;
+  const programType = document.getElementById('user-program-select').value;
   try {
-    await updateDoc(doc(db, 'users', uid), { groupId });
+    await updateDoc(doc(db, 'users', uid), { groupId, programType });
     const u = allUsers.find(x=>x.uid===uid);
-    if (u) u.groupId = groupId;
+    if (u) { u.groupId = groupId; u.programType = programType; }
     closeModal('user-manage-modal');
     renderGroups();
     renderUsers();
-    showToast('그룹이 변경됐어요');
+    showToast('변경사항이 저장됐어요');
   } catch(e) { showToast('오류가 발생했어요'); console.error(e); }
 };
 
