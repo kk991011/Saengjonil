@@ -23,13 +23,19 @@
     var currentUrl = window.location.href;
 
     if (isAndroid) {
-      // 안드로이드: Chrome 인텐트로 강제 오픈
-      // S.browser_fallback_url 추가로 Chrome이 URL로 정확히 인식하도록
+      // 방법 1: googlechrome:// 스킴으로 직접 오픈 시도
+      var chromeUrl = currentUrl.replace(/^https?:\/\//, 'googlechrome://');
+      // 방법 2: intent:// 폴백
       var encoded = encodeURIComponent(currentUrl);
-      var intentUrl = 'intent://' + currentUrl.replace(/^https?:\/\//,'') +
+      var intentUrl = 'intent://' + currentUrl.replace(/^https?:\/\//, '') +
         '#Intent;scheme=https;package=com.android.chrome;' +
         'S.browser_fallback_url=' + encoded + ';end';
-      window.location.href = intentUrl;
+      // googlechrome:// 먼저 시도, 실패 시 intent://로 폴백
+      var fallbackTimer = setTimeout(function() {
+        window.location.href = intentUrl;
+      }, 500);
+      window.addEventListener('blur', function() { clearTimeout(fallbackTimer); });
+      window.location.href = chromeUrl;
     } else if (isIOS) {
       // iOS: x-web-search:// 스킴으로 Safari 강제 오픈 시도 (카카오톡 인앱 브라우저에서 동작)
       // 동작하지 않는 구버전 대비, 안내 화면 + 수동 버튼도 함께 표시
