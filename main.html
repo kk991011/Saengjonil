@@ -223,7 +223,7 @@
       </div>
     </div>
     <div class="header-right">
-      <a href="/Saengjonil/compare.html" class="nav-link">함께 생존 →</a>
+      <a href="compare.html" class="nav-link">함께 생존 →</a>
       <button class="logout-btn" onclick="openProfile()" style="color:rgba(255,255,255,.9);font-size:18px;padding:0 4px" title="프로필 설정">⚙️</button>
       <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
@@ -672,15 +672,8 @@ import { getFirestore, doc, getDoc, setDoc, collection, query,
   where, orderBy, getDocs, deleteDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-// ★ Firebase 설정값 (index.html과 동일하게 입력)
-const firebaseConfig = {
-  apiKey: "AIzaSyDxt2OyXE_ZkYo6NSIHf_AJf2-8IOP5yFk",
-  authDomain: "saengjonil.firebaseapp.com",
-  projectId: "saengjonil",
-  storageBucket: "saengjonil.firebasestorage.app",
-  messagingSenderId: "148403039390",
-  appId: "1:148403039390:web:a1052eede7dcc9d94e9f8f"
-};
+// Firebase 설정은 환경(운영/dev)에 따라 firebase-config.js에서 자동 선택됩니다.
+import { firebaseConfig } from './firebase-config.js';
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -693,10 +686,10 @@ let groupRecords = [], groupUsers = [];
 
 // ── 인증 확인 ──
 onAuthStateChanged(auth, async u => {
-  if (!u) { window.location.href = '/Saengjonil/index.html'; return; }
+  if (!u) { window.location.href = 'index.html'; return; }
   user = u;
   userProfile = (await getDoc(doc(db, 'users', u.uid))).data();
-  if (!userProfile?.onboardingDone) { window.location.href = '/Saengjonil/index.html'; return; }
+  if (!userProfile?.onboardingDone) { window.location.href = 'index.html'; return; }
   applyTheme(userProfile.themeColor || '#534AB7');
   initHeader();
   initInputForm();
@@ -1603,7 +1596,7 @@ window.downloadMyExcel = () => {
 
 // ── 로그아웃 ──
 window.doLogout = async () => {
-  if (confirm('로그아웃 할까요?')) { await signOut(auth); window.location.href = '/Saengjonil/index.html'; }
+  if (confirm('로그아웃 할까요?')) { await signOut(auth); window.location.href = 'index.html'; }
 };
 
 // ── 토스트 ──

@@ -173,7 +173,7 @@
         <span class="week-badge" id="week-badge"></span>
       </div>
     </div>
-    <a href="/Saengjonil/main.html" class="nav-link">← 내 일지</a>
+    <a href="main.html" class="nav-link">← 내 일지</a>
   </div>
 </header>
 
@@ -368,14 +368,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
 import { getFirestore, doc, getDoc, collection, query, where,
   orderBy, getDocs, limit } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDxt2OyXE_ZkYo6NSIHf_AJf2-8IOP5yFk",
-  authDomain: "saengjonil.firebaseapp.com",
-  projectId: "saengjonil",
-  storageBucket: "saengjonil.firebasestorage.app",
-  messagingSenderId: "148403039390",
-  appId: "1:148403039390:web:a1052eede7dcc9d94e9f8f"
-};
+// Firebase 설정은 환경(운영/dev)에 따라 firebase-config.js에서 자동 선택됩니다.
+import { firebaseConfig } from './firebase-config.js';
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -388,10 +382,10 @@ let currentTab = 'rank';
 
 // ── 인증 ──
 onAuthStateChanged(auth, async u => {
-  if (!u) { window.location.href = '/Saengjonil/index.html'; return; }
+  if (!u) { window.location.href = 'index.html'; return; }
   user = u;
   const uSnap = await getDoc(doc(db, 'users', u.uid));
-  if (!uSnap.exists() || !uSnap.data().onboardingDone) { window.location.href = '/Saengjonil/index.html'; return; }
+  if (!uSnap.exists() || !uSnap.data().onboardingDone) { window.location.href = 'index.html'; return; }
   userProfile = uSnap.data();
   applyTheme(userProfile.themeColor || '#534AB7');
   initHeader();

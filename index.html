@@ -329,15 +329,8 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRe
 import { getFirestore, doc, getDoc, setDoc, collection, getDocs }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-// ★ 여기에 본인 Firebase 설정값을 입력하세요
-const firebaseConfig = {
-  apiKey: "AIzaSyDxt2OyXE_ZkYo6NSIHf_AJf2-8IOP5yFk",
-  authDomain: "saengjonil.firebaseapp.com",
-  projectId: "saengjonil",
-  storageBucket: "saengjonil.firebasestorage.app",
-  messagingSenderId: "148403039390",
-  appId: "1:148403039390:web:a1052eede7dcc9d94e9f8f"
-};
+// Firebase 설정은 환경(운영/dev)에 따라 firebase-config.js에서 자동 선택됩니다.
+import { firebaseConfig } from './firebase-config.js';
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -364,7 +357,7 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     if (userDoc.exists() && userDoc.data().onboardingDone) {
-      window.location.href = '/Saengjonil/main.html';
+      window.location.href = 'main.html';
     } else {
       showOnboarding(user);
     }
@@ -526,7 +519,7 @@ window.obNext = async () => {
     await saveOnboarding();
     document.getElementById('btn-next').textContent = '내 일지 시작하기 →';
   } else if (currentStep === 4) {
-    window.location.href = '/Saengjonil/main.html';
+    window.location.href = 'main.html';
   }
 };
 
