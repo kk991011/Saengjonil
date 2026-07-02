@@ -1,0 +1,13 @@
+{
+  "name": "saengjonil-dev-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dev-only tooling (Firestore seed scripts) for saengjonil-dev. Not part of the deployed static site.",
+  "type": "module",
+  "scripts": {
+    "seed:groups": "node scripts/seed-dev-groups.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}

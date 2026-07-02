@@ -1,2 +1,8 @@
 .firebase/
 node_modules/
+
+# service account keys — 절대 커밋 금지 (비밀값)
+*serviceAccount*.json
+*-sa.json
+serviceAccountKey*.json
+.secrets/

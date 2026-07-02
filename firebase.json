@@ -7,7 +7,10 @@
       ".git/**",
       ".firebase/**",
       "**/node_modules/**",
-      "README.md"
+      "README.md",
+      "scripts/**",
+      "package.json",
+      "package-lock.json"
     ]
   }
 }
