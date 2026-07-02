@@ -13,16 +13,15 @@ const PROD = {
   appId: "1:148403039390:web:a1052eede7dcc9d94e9f8f"
 };
 
-// 테스트(dev) — TODO: Firebase 콘솔에서 'saengjonil-dev' 프로젝트를 만든 뒤
-//   프로젝트 설정 > 웹 앱의 구성값을 아래에 붙여넣으세요.
-//   (비워두면 운영 설정으로 자동 폴백하고 콘솔에 경고를 남깁니다)
+// 테스트(dev) — saengjonil-dev 프로젝트. localhost·스테이징에서 사용됩니다.
+// (비워두면 운영 설정으로 자동 폴백하고 콘솔에 경고를 남깁니다)
 const DEV = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
+  apiKey: "AIzaSyDGwiuR-20ETXn_tTzzk5mLv71Ym6RjwHg",
+  authDomain: "saengjonil-dev.firebaseapp.com",
+  projectId: "saengjonil-dev",
+  storageBucket: "saengjonil-dev.firebasestorage.app",
+  messagingSenderId: "93717685236",
+  appId: "1:93717685236:web:3a2f78e1e6cebb5fc80fa1"
 };
 
 // 운영으로 취급할 호스트 목록. 커스텀 도메인을 붙이면 여기에 추가하세요.
