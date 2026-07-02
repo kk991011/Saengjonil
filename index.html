@@ -5,9 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>생존일지 — 커리어PT</title>
 <script>
-// ── 인앱 브라우저 감지 → 외부 브라우저로 강제 이동 ──
-// 카카오톡/인스타그램/페이스북/라인 등의 인앱 브라우저는 구글 로그인을 차단하므로
-// 감지 즉시 안드로이드는 Chrome 인텐트로, iOS는 Safari 강제 오픈을 시도합니다.
+// ── 인앱 브라우저 감지 → 외부 기본 브라우저로 이동 ──
+// 카카오톡/인스타그램/페이스북/라인/네이버 인앱 브라우저는 구글 로그인(OAuth)을 차단합니다.
+//  - 카카오톡: 자체 스킴 kakaotalk://web/openExternal 로 기본 브라우저에서 "실제 URL"을 엽니다.
+//              (iOS·안드로이드 공통 동작. 구 x-web-search:// 방식은 URL을 구글 "검색어"로
+//               넘겨버려 페이지가 안 열리는 문제가 있어 사용하지 않습니다.)
+//  - 그 외 앱: iOS에는 특정 URL을 Safari로 강제로 여는 스킴이 없으므로, 자동 리다이렉트 없이
+//              기본 브라우저로 여는 방법을 수동 안내만 합니다.
 (function() {
   var ua = navigator.userAgent || '';
   var isKakao = /KAKAOTALK/i.test(ua);
@@ -16,45 +20,49 @@
   var isLine = /Line\//i.test(ua);
   var isNaver = /NAVER\(inapp/i.test(ua);
   var isInApp = isKakao || isInstagram || isFacebook || isLine || isNaver;
+  if (!isInApp) return;
 
-  if (isInApp) {
-    var isAndroid = /Android/i.test(ua);
-    var isIOS = /iPhone|iPad|iPod/i.test(ua);
-    var currentUrl = window.location.href;
+  var isIOS = /iPhone|iPad|iPod/i.test(ua);
+  var currentUrl = window.location.href;
 
-    if (isAndroid) {
-      // 방법 1: googlechrome:// 스킴으로 직접 오픈 시도
-      var chromeUrl = currentUrl.replace(/^https?:\/\//, 'googlechrome://');
-      // 방법 2: intent:// 폴백
-      var encoded = encodeURIComponent(currentUrl);
-      var intentUrl = 'intent://' + currentUrl.replace(/^https?:\/\//, '') +
-        '#Intent;scheme=https;package=com.android.chrome;' +
-        'S.browser_fallback_url=' + encoded + ';end';
-      // googlechrome:// 먼저 시도, 실패 시 intent://로 폴백
-      var fallbackTimer = setTimeout(function() {
-        window.location.href = intentUrl;
-      }, 500);
-      window.addEventListener('blur', function() { clearTimeout(fallbackTimer); });
-      window.location.href = chromeUrl;
-    } else if (isIOS) {
-      // iOS: x-web-search:// 스킴으로 Safari 강제 오픈 시도 (카카오톡 인앱 브라우저에서 동작)
-      // 동작하지 않는 구버전 대비, 안내 화면 + 수동 버튼도 함께 표시
-      document.write(
-        '<div style="display:flex;align-items:center;justify-content:center;height:100vh;' +
-        'font-family:-apple-system,sans-serif;padding:24px;text-align:center;background:#534AB7;color:white">' +
-        '<div><div style="font-size:40px;margin-bottom:16px">🌱</div>' +
-        '<div style="font-size:16px;font-weight:600;margin-bottom:10px">Safari로 연결하는 중...</div>' +
-        '<div style="font-size:14px;opacity:.9;line-height:1.6;margin-bottom:20px">화면이 바뀌지 않으면 아래 버튼을 눌러주세요</div>' +
-        '<button onclick="window.location.href=\'x-web-search://?\'+encodeURIComponent(window.location.href)" ' +
-        'style="background:white;color:#534AB7;border:none;padding:12px 24px;border-radius:10px;font-size:15px;font-weight:600;font-family:inherit">Safari로 열기</button>' +
-        '<div style="font-size:12px;opacity:.75;margin-top:20px;line-height:1.6">버튼이 안 눌리면 우측 상단 <b>···</b> 또는 <b>공유</b> 버튼을 눌러<br>"Safari로 열기"를 선택해주세요</div>' +
-        '</div></div>'
-      );
-      // 자동 시도
-      window.location.href = 'x-web-search://?' + encodeURIComponent(currentUrl);
-      throw new Error('in-app browser blocked');
-    }
+  // 전체 화면 안내 렌더러 (🌱 + 본문)
+  function paint(bodyHtml) {
+    document.write(
+      '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;' +
+      'font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:24px;text-align:center;' +
+      'background:#534AB7;color:white">' +
+      '<div style="max-width:340px"><div style="font-size:40px;margin-bottom:16px">🌱</div>' +
+      bodyHtml + '</div></div>'
+    );
   }
+
+  if (isKakao) {
+    // 카카오톡: 자체 스킴으로 기본 브라우저에서 현재 URL을 그대로 엽니다. (iOS·안드로이드 공통)
+    var openExternal = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(currentUrl);
+    paint(
+      '<div style="font-size:16px;font-weight:600;margin-bottom:10px">브라우저로 이동 중...</div>' +
+      '<div style="font-size:14px;opacity:.9;line-height:1.6;margin-bottom:20px">화면이 바뀌지 않으면 아래 버튼을 눌러주세요</div>' +
+      '<button onclick="location.href=\'kakaotalk://web/openExternal?url=\'+encodeURIComponent(location.href)" ' +
+      'style="background:white;color:#534AB7;border:none;padding:12px 24px;border-radius:10px;font-size:15px;font-weight:600;font-family:inherit">브라우저로 열기</button>' +
+      '<div style="font-size:12px;opacity:.75;margin-top:20px;line-height:1.6">버튼이 안 눌리면 우측 상단 <b>···</b> 메뉴에서<br>"다른 브라우저로 열기"를 선택해주세요</div>'
+    );
+    // 자동 이동 시도
+    window.location.href = openExternal;
+    throw new Error('kakao in-app browser: escaping to external browser');
+  }
+
+  // Instagram / Facebook / LINE / Naver 인앱 브라우저
+  // → iOS에는 Safari 강제 오픈 스킴이 없고, 자동 리다이렉트(x-web-search)는 구글 검색으로
+  //   튕기므로 제거. 사용자가 직접 기본 브라우저로 여는 방법을 안내합니다.
+  var menuHint = isIOS
+    ? '우측 상단/하단의 <b>···</b> 또는 <b>공유</b> 버튼을 눌러<br>"Safari로 열기"를 선택해주세요'
+    : '우측 상단의 <b>⋮</b> 메뉴를 눌러<br>"다른 브라우저로 열기"를 선택해주세요';
+  paint(
+    '<div style="font-size:16px;font-weight:600;margin-bottom:10px">기본 브라우저로 열어주세요</div>' +
+    '<div style="font-size:14px;opacity:.9;line-height:1.6;margin-bottom:20px">지금 화면은 앱 안의 미니 브라우저예요.<br>구글 로그인을 위해 기본 브라우저에서 열어주세요.</div>' +
+    '<div style="font-size:13px;opacity:.95;line-height:1.7;background:rgba(255,255,255,.14);border-radius:10px;padding:14px 16px">' + menuHint + '</div>'
+  );
+  throw new Error('in-app browser: manual guide shown');
 })();
 </script>
 <style>
