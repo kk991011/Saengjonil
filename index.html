@@ -23,9 +23,12 @@
     var currentUrl = window.location.href;
 
     if (isAndroid) {
-      // 안드로이드: Chrome 인텐트로 강제 오픈 시도
+      // 안드로이드: Chrome 인텐트로 강제 오픈
+      // S.browser_fallback_url 추가로 Chrome이 URL로 정확히 인식하도록
+      var encoded = encodeURIComponent(currentUrl);
       var intentUrl = 'intent://' + currentUrl.replace(/^https?:\/\//,'') +
-        '#Intent;scheme=https;package=com.android.chrome;end';
+        '#Intent;scheme=https;package=com.android.chrome;' +
+        'S.browser_fallback_url=' + encoded + ';end';
       window.location.href = intentUrl;
     } else if (isIOS) {
       // iOS: x-web-search:// 스킴으로 Safari 강제 오픈 시도 (카카오톡 인앱 브라우저에서 동작)
