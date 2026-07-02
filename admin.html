@@ -290,8 +290,7 @@ const db = getFirestore(app);
 // ★ 관리자 UID 목록 — Firebase 콘솔에서 본인 UID 확인 후 추가
 // Authentication → 사용자 탭에서 UID 확인 가능
 const ADMIN_UIDS = [
-  '2sgGt0pljBX6EgLIiGHrCcEovAr2',
-  'TmgcwrPXokaO2hoGjCrI9mS8MTZ2'
+  '2sgGt0pljBX6EgLIiGHrCcEovAr2'
 ];
 
 let allUsers = [], allGroups = [], allRecords = [];
@@ -322,6 +321,7 @@ async function loadData() {
   ]);
   allUsers = uSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
   allGroups = gSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  allGroups.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
   allRecords = rSnap.docs.map(d => d.data());
 }
 
@@ -406,6 +406,7 @@ window.createGroup = async () => {
   try {
     const ref = await addDoc(collection(db, 'groups'), { name, members: [], createdAt: new Date().toISOString() });
     allGroups.push({ id: ref.id, name, members: [] });
+    allGroups.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     closeModal('create-group-modal');
     renderStats();
     renderGroups();
