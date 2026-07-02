@@ -396,16 +396,18 @@ async function loadGroups() {
     listEl.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;font-size:14px">아직 등록된 그룹이 없어요.<br>관리자에게 문의해주세요.</div>';
     return;
   }
-  snap.forEach(d => {
-    const g = d.data();
+  // 이름 기준 오름차순 정렬
+  const groups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  groups.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+  groups.forEach(g => {
     const el = document.createElement('div');
     el.className = 'group-option';
-    el.dataset.id = d.id;
+    el.dataset.id = g.id;
     el.innerHTML = `<div class="g-icon">${g.name[0]}</div><div><div class="g-name">${g.name}</div><div class="g-count">멤버 ${(g.members||[]).length}명</div></div>`;
     el.onclick = () => {
       document.querySelectorAll('.group-option').forEach(o => o.classList.remove('selected'));
       el.classList.add('selected');
-      selectedGroupId = d.id;
+      selectedGroupId = g.id;
     };
     listEl.appendChild(el);
   });
