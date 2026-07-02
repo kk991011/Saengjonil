@@ -5,9 +5,10 @@
   "description": "Dev-only tooling (Firestore seed scripts) for saengjonil-dev. Not part of the deployed static site.",
   "type": "module",
   "scripts": {
-    "seed:groups": "node scripts/seed-dev-groups.mjs"
+    "seed:groups": "node scripts/seed-dev-groups.mjs",
+    "seed:dev": "node scripts/seed-dev-data.mjs"
   },
   "dependencies": {
-    "firebase-admin": "^13.0.0"
+    "firebase-admin": "^13.10.0"
   }
 }
