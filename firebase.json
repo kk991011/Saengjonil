@@ -11,7 +11,8 @@
       "scripts/**",
       "package.json",
       "package-lock.json",
-      "firestore.indexes.json"
+      "firestore.indexes.json",
+      "firestore.rules"
     ],
     "headers": [
       {
@@ -21,6 +22,7 @@
     ]
   },
   "firestore": {
+    "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   }
 }

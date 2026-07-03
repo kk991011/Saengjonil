@@ -14,17 +14,16 @@ const db = getFirestore(app);
 
 // ★ 관리자 UID 목록 — Firebase 콘솔에서 본인 UID 확인 후 추가
 // Authentication → 사용자 탭에서 UID 확인 가능
-const ADMIN_UIDS = [
-  '2sgGt0pljBX6EgLIiGHrCcEovAr2'
-];
-
+// 관리자 판정은 users 문서의 isAdmin === true (아래 onAuthStateChanged 참고)
 let allUsers = [], allGroups = [], allRecords = [];
 
 // ── 인증 ──
 onAuthStateChanged(auth, async u => {
   if (!u) { window.location.href = 'index.html'; return; }
 
-  if (!ADMIN_UIDS.includes(u.uid)) {
+  // 관리자 여부: 본인 users 문서의 isAdmin === true (필드 없으면 비관리자)
+  const meSnap = await getDoc(doc(db, 'users', u.uid));
+  if (!meSnap.exists() || meSnap.data().isAdmin !== true) {
     document.getElementById('access-denied').style.display = 'block';
     return;
   }
@@ -404,7 +403,7 @@ window.deleteUser = async () => {
   const uid = document.getElementById('manage-user-uid').value;
   const u = allUsers.find(x=>x.uid===uid);
   if (!u) return;
-  if (ADMIN_UIDS.includes(uid)) { showToast('관리자 계정은 삭제할 수 없어요'); return; }
+  if (u.isAdmin === true) { showToast('관리자 계정은 삭제할 수 없어요'); return; }
 
   const ok1 = confirm(`"${u.nickname}" 회원을 삭제할까요?\n이 회원의 모든 기록(${allRecords.filter(r=>r.uid===uid).length}개)도 함께 삭제됩니다.`);
   if (!ok1) return;

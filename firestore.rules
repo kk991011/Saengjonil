@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() { return request.auth != null; }
+
+    // 관리자: 본인 users 문서의 isAdmin == true (필드 없으면 false로 안전 처리).
+    // 첫 관리자는 콘솔에서 수동으로 isAdmin=true 설정(규칙 우회) → 부트스트랩.
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isAdmin', false) == true;
+    }
+
+    // users — 로그인 사용자는 모두 읽기(랭킹/멤버수 집계).
+    //   본인 문서만 생성/수정, 단 isAdmin 자가 변경 금지(권한 상승 방지). 관리자는 전체 쓰기/삭제.
+    //   (own 체크를 먼저 둬 일반 쓰기 시 isAdmin() get() 호출을 피함 — 읽기비용 절약)
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if (isSignedIn() && request.auth.uid == userId
+                        && request.resource.data.get('isAdmin', false) == false)
+                    || isAdmin();
+      allow update: if (isSignedIn() && request.auth.uid == userId
+                        && request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false))
+                    || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // groups — 모두 읽기. 쓰기(생성/수정/삭제)는 관리자만.
+    match /groups/{groupId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // records — 모두 읽기(랭킹/비교). 본인 기록(uid 일치)만 생성/수정/삭제. 관리자는 전체 삭제.
+    match /records/{recId} {
+      allow read: if isSignedIn();
+      allow create, update: if (isSignedIn() && request.resource.data.uid == request.auth.uid)
+                            || isAdmin();
+      allow delete: if (isSignedIn() && resource.data.uid == request.auth.uid)
+                    || isAdmin();
+    }
+
+    // weekly_goals — 문서ID 접두(uid_...)가 본인 것일 때만 읽기/쓰기. 관리자는 전체 허용.
+    match /weekly_goals/{goalId} {
+      allow read, write: if (isSignedIn() && goalId.split('_')[0] == request.auth.uid)
+                         || isAdmin();
+    }
+  }
+}
