@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "seed:groups": "node scripts/seed-dev-groups.mjs",
-    "seed:dev": "node scripts/seed-dev-data.mjs"
+    "seed:dev": "node scripts/seed-dev-data.mjs",
+    "seed:user": "node scripts/seed-dev-user.mjs"
   },
   "dependencies": {
     "firebase-admin": "^13.10.0"
