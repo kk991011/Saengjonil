@@ -152,8 +152,8 @@ window.selectProgram = (type) => {
 
   // 시작일 입력 섹션 표시/숨김
   const show = (id, v) => { const el=document.getElementById(id); if(el) el.style.display=v?'block':'none'; };
-  const showDates = type !== 'careerpt'; // 커리어PT는 이미 step1에서 입력
-  document.getElementById('program-dates').style.display = showDates || type === 'careerpt' ? 'block' : 'none';
+  document.getElementById('program-dates').style.display = 'block';
+  show('date-careerpt-section', type === 'careerpt'); // 커리어PT 시작일은 커리어PT 선택 시에만
 
   if (type === 'careerpt') {
     // 커리어PT: 매십경/면 시작일 선택사항
@@ -201,12 +201,14 @@ window.calcProgramWeek = (prog) => {
 window.obNext = async () => {
   if (currentStep === 1) {
     const nick = document.getElementById('ob-nickname').value.trim();
-    const start = document.getElementById('ob-startdate').value;
     if (!nick) { alert('닉네임을 입력해주세요.'); return; }
-    if (!start) { alert('참여 시작일을 선택해주세요.'); return; }
     gotoStep(2);
   } else if (currentStep === 2) {
     if (!selectedProgram) { alert('참여 프로그램을 선택해주세요.'); return; }
+    // 커리어PT 참여자는 커리어PT 시작일 필수
+    if (selectedProgram === 'careerpt' && !document.getElementById('ob-startdate').value) {
+      alert('커리어PT 참여 시작일을 입력해주세요.'); return;
+    }
     // 전용 참여자는 해당 시작일 필수
     if (selectedProgram === 'maesipgyeong' || selectedProgram === 'maesipboth') {
       if (!document.getElementById('ob-gyeong-only-start').value) { alert('매십경 시작일을 입력해주세요.'); return; }

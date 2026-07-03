@@ -412,8 +412,8 @@
         <input type="text" id="pm-nickname" maxlength="12" placeholder="서비스 내 표시 이름">
       </div>
 
-      <!-- 참여 시작일 -->
-      <div class="field">
+      <!-- 참여 시작일 (커리어PT 참여자만) -->
+      <div class="field" id="pm-startdate-wrap">
         <label>커리어PT 참여 시작일</label>
         <input type="date" id="pm-startdate" onchange="pmCalcWeek()">
         <div id="pm-week-preview" style="margin-top:6px;padding:8px 12px;background:var(--main-light);border-radius:8px;font-size:12px;color:var(--main-dark);display:none">
@@ -423,7 +423,7 @@
 
       <!-- 매십경 시작일 (커리어PT이거나 매십경 포함일 때) -->
       <div class="field" id="pm-gyeong-date-wrap">
-        <label>매십경 시작일 <span style="color:#aaa;font-weight:400">(PT와 다를 경우)</span></label>
+        <label>매십경 시작일 <span id="pm-gyeong-pt-note" style="color:#aaa;font-weight:400">(PT와 다를 경우)</span></label>
         <input type="date" id="pm-gyeong-startdate" onchange="pmCalcProgramWeek('gyeong')">
         <div id="pm-gyeong-week-preview" style="margin-top:6px;padding:8px 12px;background:var(--main-light);border-radius:8px;font-size:12px;color:var(--main-dark);display:none">
           매십경 현재 <strong id="pm-gyeong-week-num"></strong>주차
@@ -432,7 +432,7 @@
 
       <!-- 매십면 시작일 (커리어PT이거나 매십면 포함일 때) -->
       <div class="field" id="pm-myeon-date-wrap">
-        <label>매십면 시작일 <span style="color:#aaa;font-weight:400">(PT와 다를 경우)</span></label>
+        <label>매십면 시작일 <span id="pm-myeon-pt-note" style="color:#aaa;font-weight:400">(PT와 다를 경우)</span></label>
         <input type="date" id="pm-myeon-startdate" onchange="pmCalcProgramWeek('myeon')">
         <div id="pm-myeon-week-preview" style="margin-top:6px;padding:8px 12px;background:var(--main-light);border-radius:8px;font-size:12px;color:var(--main-dark);display:none">
           매십면 현재 <strong id="pm-myeon-week-num"></strong>주차

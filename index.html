@@ -122,17 +122,10 @@
     <!-- 스텝 1: 기본 정보 -->
     <div class="ob-step active" id="step1">
       <h3>기본 정보를 입력해주세요</h3>
-      <p class="hint">서비스 내에서 사용할 닉네임과 커리어PT를 시작한 날짜를 입력해주세요.</p>
+      <p class="hint">서비스 내에서 사용할 닉네임과 현재 예상 취업 확률을 입력해주세요.</p>
       <div class="field">
         <label>닉네임</label>
         <input type="text" id="ob-nickname" placeholder="예: 취준킹민준" maxlength="12">
-      </div>
-      <div class="field">
-        <label>커리어PT 참여 시작일</label>
-        <input type="date" id="ob-startdate" onchange="calcWeek()">
-        <div class="week-preview" id="week-preview">
-          현재 <strong id="week-num">1</strong>주차예요!
-        </div>
       </div>
       <div class="field">
         <label>현재 예상 취업 확률 <span style="color:#aaa;font-weight:400">(%)</span></label>
@@ -169,6 +162,16 @@
 
       <!-- 프로그램별 시작일 입력 (선택 후 표시) -->
       <div id="program-dates" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid #f0f0f0">
+        <!-- 커리어PT 참여자: 커리어PT 참여 시작일 (필수) -->
+        <div id="date-careerpt-section" style="display:none">
+          <div class="field">
+            <label>커리어PT 참여 시작일 <span style="color:#e53e3e;font-weight:400">*</span></label>
+            <input type="date" id="ob-startdate" onchange="calcWeek()">
+            <div class="week-preview" id="week-preview" style="display:none">
+              현재 <strong id="week-num">1</strong>주차예요!
+            </div>
+          </div>
+        </div>
         <!-- 커리어PT 참여자: 매십경/매십면 추가 시작일 (선택사항) -->
         <div id="date-gyeong-section" style="display:none">
           <div class="field">

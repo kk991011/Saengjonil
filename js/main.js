@@ -78,6 +78,19 @@ function getWeekByContext(profile, context) {
   if (context === 'myeon' && profile.myeonStartDate) {
     return { week: calcWeek(profile.myeonStartDate), label: '면' };
   }
+  // 기본 컨텍스트: 프로그램별 시작일 기준으로 주차 계산 (레이블은 상단 뱃지에서 사용하지 않음)
+  const type = profile.programType || 'careerpt';
+  if (type === 'maesipboth') {
+    // 매십경·매십면 중 더 이른 시작일 기준 (전체 참여 기간 반영)
+    const earliest = [profile.gyeongStartDate, profile.myeonStartDate].filter(Boolean).sort()[0];
+    return { week: calcWeek(earliest || profile.startDate), label: '' };
+  }
+  if (type === 'maesipgyeong') {
+    return { week: calcWeek(profile.gyeongStartDate || profile.startDate), label: '경' };
+  }
+  if (type === 'maesipmyeon') {
+    return { week: calcWeek(profile.myeonStartDate || profile.startDate), label: '면' };
+  }
   return { week: calcWeek(profile.startDate), label: 'PT' };
 }
 
@@ -91,12 +104,10 @@ function getTabContext(tabId) {
 function initHeader(context) {
   const p = userProfile;
   const ctx = context || 'default';
-  const { week, label } = getWeekByContext(p, ctx);
+  const { week } = getWeekByContext(p, ctx);
   document.getElementById('user-name').textContent = p.nickname;
-  // 커리어PT는 레이블 없이 주차만, 전용은 경/면 레이블 붙임
-  const type = p.programType || 'careerpt';
-  const showLabel = type !== 'careerpt' || ctx !== 'default';
-  document.getElementById('week-badge').textContent = showLabel ? `${label}${week}주차` : `${week}주차`;
+  // 상단 뱃지는 레이블 없이 주차만 표시 (탭 전환 시 해당 프로그램 시작일 기준으로 숫자만 바뀜)
+  document.getElementById('week-badge').textContent = `${week}주차`;
   const av = document.getElementById('avatar');
   if (user.photoURL) av.innerHTML = `<img src="${user.photoURL}" alt="프로필">`;
   else av.textContent = p.nickname[0];
@@ -1049,8 +1060,13 @@ window.openProfile = async () => {
   const type = p.programType || 'careerpt';
   const showGyeong = ['careerpt','maesipgyeong','maesipboth'].includes(type);
   const showMyeon  = ['careerpt','maesipmyeon','maesipboth'].includes(type);
+  document.getElementById('pm-startdate-wrap').style.display = type === 'careerpt' ? '' : 'none';
   document.getElementById('pm-gyeong-date-wrap').style.display = showGyeong ? '' : 'none';
   document.getElementById('pm-myeon-date-wrap').style.display  = showMyeon  ? '' : 'none';
+  // "(PT와 다를 경우)" 안내는 커리어PT 참여자에게만 의미가 있음
+  const ptNoteDisplay = type === 'careerpt' ? '' : 'none';
+  document.getElementById('pm-gyeong-pt-note').style.display = ptNoteDisplay;
+  document.getElementById('pm-myeon-pt-note').style.display = ptNoteDisplay;
   if (showGyeong) {
     document.getElementById('pm-gyeong-startdate').value = p.gyeongStartDate || '';
     if (p.gyeongStartDate) pmCalcProgramWeek('gyeong');
@@ -1162,10 +1178,15 @@ async function loadPmGroups(currentGroupId) {
 
 window.saveProfile = async () => {
   const nickname = document.getElementById('pm-nickname').value.trim();
-  const startDate = document.getElementById('pm-startdate').value;
   const jobProb = Number(document.getElementById('pm-jobprob').value) || 0;
   const gyeongStartDate = document.getElementById('pm-gyeong-startdate').value || '';
   const myeonStartDate  = document.getElementById('pm-myeon-startdate').value  || '';
+  // 커리어PT는 커리어PT 시작일을, 매십 전용은 해당 매십 시작일을 startDate로 사용
+  const type = userProfile.programType || 'careerpt';
+  let startDate;
+  if (type === 'careerpt') startDate = document.getElementById('pm-startdate').value;
+  else if (type === 'maesipmyeon') startDate = myeonStartDate;
+  else startDate = gyeongStartDate; // maesipgyeong, maesipboth
   if (!nickname) { showToast('닉네임을 입력해주세요'); return; }
   if (!startDate) { showToast('참여 시작일을 선택해주세요'); return; }
   if (!pmSelectedGroupId) { showToast('그룹을 선택해주세요'); return; }
