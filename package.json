@@ -7,7 +7,8 @@
   "scripts": {
     "seed:groups": "node scripts/seed-dev-groups.mjs",
     "seed:dev": "node scripts/seed-dev-data.mjs",
-    "seed:user": "node scripts/seed-dev-user.mjs"
+    "seed:user": "node scripts/seed-dev-user.mjs",
+    "inspect": "node scripts/inspect-dev.mjs"
   },
   "dependencies": {
     "firebase-admin": "^13.10.0"

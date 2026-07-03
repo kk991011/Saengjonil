@@ -5,7 +5,11 @@ import { readFileSync } from 'node:fs';
 export const EXPECTED_PROJECT = 'saengjonil-dev';
 export const SEED = 20260703;
 export const GROUPS = ['1조', '2조', '3조', '4조'];
-export const groupIdOf = (name) => 'grp-' + name.trim().replace(/\s+/g, '-');
+// 조 이름('1조') 또는 이미 만들어진 ID('grp-1조') 둘 다 받아 동일한 ID로 정규화(이중 접두 방지)
+export const groupIdOf = (name) => {
+  const t = name.trim().replace(/\s+/g, '-');
+  return t.startsWith('grp-') ? t : 'grp-' + t;
+};
 
 // ── 결정론적 PRNG (mulberry32) + 헬퍼 ────────────────────────────────────
 export function rng(seed) {
