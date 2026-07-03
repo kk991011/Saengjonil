@@ -100,6 +100,9 @@ function initHeader(context) {
   const av = document.getElementById('avatar');
   if (user.photoURL) av.innerHTML = `<img src="${user.photoURL}" alt="프로필">`;
   else av.textContent = p.nickname[0];
+  // 관리자에게만 관리자 페이지 링크 노출 (실제 접근 통제는 admin.js/규칙이 담당 — 이건 편의용)
+  const adminLink = document.getElementById('admin-link');
+  if (adminLink) adminLink.style.display = p.isAdmin === true ? '' : 'none';
   const jp = document.getElementById('jobprob-display');
   if (jp) jp.textContent = (p.jobProb || 0) + '%';
 }
