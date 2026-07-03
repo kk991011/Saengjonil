@@ -84,7 +84,7 @@ async function loadGroups() {
   }
   // 이름 기준 오름차순 정렬
   const groups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  groups.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+  groups.sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true }));
   groups.forEach(g => {
     const el = document.createElement('div');
     el.className = 'group-option';

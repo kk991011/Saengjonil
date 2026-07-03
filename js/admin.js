@@ -46,7 +46,7 @@ async function loadData() {
   ]);
   allUsers = uSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
   allGroups = gSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  allGroups.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+  allGroups.sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true }));
   allRecords = rSnap.docs.map(d => d.data());
 }
 
@@ -131,7 +131,7 @@ window.createGroup = async () => {
   try {
     const ref = await addDoc(collection(db, 'groups'), { name, members: [], createdAt: new Date().toISOString() });
     allGroups.push({ id: ref.id, name, members: [] });
-    allGroups.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+    allGroups.sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true }));
     closeModal('create-group-modal');
     renderStats();
     renderGroups();

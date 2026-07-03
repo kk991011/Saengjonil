@@ -1105,16 +1105,17 @@ async function loadPmGroups(currentGroupId) {
     listEl.innerHTML = '<div style="font-size:13px;color:#ccc;padding:8px 0">등록된 그룹이 없어요. 관리자에게 문의해주세요.</div>';
     return;
   }
-  snap.forEach(d => {
-    const g = d.data();
+  const groups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  groups.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko', { numeric: true }));
+  groups.forEach(g => {
     const opt = document.createElement('div');
-    opt.className = 'pm-group-option' + (d.id === currentGroupId ? ' selected' : '');
-    opt.dataset.id = d.id;
+    opt.className = 'pm-group-option' + (g.id === currentGroupId ? ' selected' : '');
+    opt.dataset.id = g.id;
     opt.innerHTML = `<div class="g-icon">${g.name[0]}</div><div><div class="g-name">${g.name}</div><div class="g-count">멤버 ${(g.members||[]).length}명</div></div>`;
     opt.onclick = () => {
       document.querySelectorAll('.pm-group-option').forEach(o => o.classList.remove('selected'));
       opt.classList.add('selected');
-      pmSelectedGroupId = d.id;
+      pmSelectedGroupId = g.id;
     };
     listEl.appendChild(opt);
   });
