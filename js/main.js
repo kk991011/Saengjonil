@@ -477,9 +477,35 @@ async function loadTrend() {
     {label:'필기',data:recs.map(r=>r.pilgi||0),borderColor:color+'66',borderWidth:1.5,pointRadius:2,tension:.3,fill:false},
     {label:'면접',data:recs.map(r=>r.interview||0),borderColor:color+'44',borderWidth:1.5,borderDash:[4,3],pointRadius:2,tension:.3,fill:false},
   ]);
-  moodChartInst = mkChart('mood-chart',[
-    {label:'자존감',data:recs.map(r=>r.selfEsteem||null),borderColor:color,borderWidth:2,pointRadius:3,pointBackgroundColor:color,tension:.3,fill:true,backgroundColor:color+'15',spanGaps:true},
-  ],{scales:{x:{ticks:{font:{size:10}},grid:{display:false}},y:{min:0,max:5,ticks:{stepSize:1,font:{size:10}},grid:{color:'rgba(0,0,0,.04)'}}}});
+  // 매십면·매십운·매십독·FA5050 주차별 달성률 (각 항목별 그래프)
+  const iWk = calcWeek(userProfile.startDate);
+  const iFrom = Math.max(1, iWk - 7);
+  const itemWeekly = (field) => {
+    const ls = [], ds = [];
+    for (let w = iFrom; w <= iWk; w++) {
+      const st = new Date(userProfile.startDate);
+      const f = new Date(st); f.setDate(st.getDate() + (w - 1) * 7);
+      const t = new Date(f); t.setDate(f.getDate() + 6);
+      const fs = localDate(f), ts = localDate(t);
+      const wr = allRecords.filter(r => r.date >= fs && r.date <= ts);
+      ls.push(`${w}주차`);
+      ds.push(wr.length ? Math.round(wr.filter(r => r[field]).length / wr.length * 100) : null);
+    }
+    return { ls, ds };
+  };
+  const mkRateChart = (id, field) => {
+    const el = document.getElementById(id); if (!el) return;
+    const ex = Chart.getChart(el); if (ex) ex.destroy();
+    const { ls, ds } = itemWeekly(field);
+    new Chart(el, { type:'line', data:{ labels:ls, datasets:[{ data:ds, borderColor:color, borderWidth:2, pointRadius:3, pointBackgroundColor:color, tension:.3, fill:true, backgroundColor:color+'15', spanGaps:true }]},
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } },
+        scales:{ x:{ ticks:{ font:{ size:10 } }, grid:{ display:false } },
+          y:{ min:0, max:100, ticks:{ callback:v=>v+'%', font:{ size:10 } }, grid:{ color:'rgba(0,0,0,.04)' } } } } });
+  };
+  mkRateChart('itrend-myeon', 'routineMyeon');
+  mkRateChart('itrend-un', 'routineUn');
+  mkRateChart('itrend-dok', 'routineDok');
+  mkRateChart('itrend-fa', 'fa5050');
 
   // 주간 목표 달성률 차트
   const wk = calcWeek(userProfile.startDate);
