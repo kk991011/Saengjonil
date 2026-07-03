@@ -13,18 +13,26 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 숫자 입력에 음수/범위초과 방지 — min·max 속성 기준 실시간 clamp
-// (캡처 단계로 등록: 요소의 인라인 oninput(예: updateTotalTime)보다 먼저 실행되어 clamp된 값으로 계산됨)
+// 오늘 날짜(로컬, YYYY-MM-DD) — 미래 날짜 선택 방지에 사용
+const _todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+// 모든 날짜 입력의 max를 오늘로 → 달력에서 미래 날짜 비활성화
+document.querySelectorAll('input[type="date"]').forEach(el => { if (!el.max) el.max = _todayStr; });
+
+// 숫자(min/max) · 날짜(미래) 입력 clamp — 캡처 단계(요소의 인라인 oninput(예: updateTotalTime)보다 먼저 실행)
 document.addEventListener('input', (e) => {
   const el = e.target;
-  if (!(el instanceof HTMLInputElement) || el.type !== 'number') return;
-  if (el.value === '' || el.value === '-') return;      // 빈값/입력 중 '-' 는 허용
-  const v = Number(el.value);
-  if (Number.isNaN(v)) return;
-  const min = el.min !== '' ? Number(el.min) : null;
-  const max = el.max !== '' ? Number(el.max) : null;
-  if (min !== null && v < min) el.value = String(min);
-  else if (max !== null && v > max) el.value = String(max);
+  if (!(el instanceof HTMLInputElement)) return;
+  if (el.type === 'number') {
+    if (el.value === '' || el.value === '-') return;      // 빈값/입력 중 '-' 는 허용
+    const v = Number(el.value);
+    if (Number.isNaN(v)) return;
+    const min = el.min !== '' ? Number(el.min) : null;
+    const max = el.max !== '' ? Number(el.max) : null;
+    if (min !== null && v < min) el.value = String(min);
+    else if (max !== null && v > max) el.value = String(max);
+  } else if (el.type === 'date') {
+    if (el.max && el.value && el.value > el.max) el.value = el.max;  // 미래 → 오늘로 보정
+  }
 }, true);
 
 let user = null, userProfile = null;
