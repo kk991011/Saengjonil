@@ -2,7 +2,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc, collection, getDocs }
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, getCountFromServer }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 // Firebase 설정은 환경(운영/dev)에 따라 firebase-config.js에서 자동 선택됩니다.
@@ -107,11 +107,15 @@ async function loadGroups() {
   // 이름 기준 오름차순 정렬
   const groups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   groups.sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true }));
-  groups.forEach(g => {
+  // 멤버 수는 users.groupId 기준으로 집계 (group.members 배열은 앱이 갱신하지 않아 부정확)
+  const counts = await Promise.all(groups.map(g =>
+    getCountFromServer(query(collection(db, 'users'), where('groupId', '==', g.id)))
+      .then(s => s.data().count).catch(() => 0)));
+  groups.forEach((g, i) => {
     const el = document.createElement('div');
     el.className = 'group-option';
     el.dataset.id = g.id;
-    el.innerHTML = `<div class="g-icon">${g.name[0]}</div><div><div class="g-name">${g.name}</div><div class="g-count">멤버 ${(g.members||[]).length}명</div></div>`;
+    el.innerHTML = `<div class="g-icon">${g.name[0]}</div><div><div class="g-name">${g.name}</div><div class="g-count">멤버 ${counts[i]}명</div></div>`;
     el.onclick = () => {
       document.querySelectorAll('.group-option').forEach(o => o.classList.remove('selected'));
       el.classList.add('selected');
