@@ -367,13 +367,17 @@ async function loadSummary() {
   const pct = k => Math.round(recs.filter(r=>r[k]).length/n*100);
   const setPct = (id,pb,v) => { document.getElementById(id).textContent=v+'%'; document.getElementById(pb).style.width=v+'%'; };
   // 매십경 세부
-  setPct('p-gyeong-1','pb-gyeong-1',pct('gyeong_article'));
-  setPct('p-gyeong-2','pb-gyeong-2',pct('gyeong_opinion'));
-  setPct('p-gyeong-3','pb-gyeong-3',pct('gyeong_comment'));
+  const gA = pct('gyeong_article'), gO = pct('gyeong_opinion'), gC = pct('gyeong_comment');
+  setPct('p-gyeong-all','pb-gyeong-all',Math.round((gA+gO+gC)/3));  // 종합 = 세 항목 평균
+  setPct('p-gyeong-1','pb-gyeong-1',gA);
+  setPct('p-gyeong-2','pb-gyeong-2',gO);
+  setPct('p-gyeong-3','pb-gyeong-3',gC);
   // 매십면 세부
-  setPct('p-myeon-1','pb-myeon-1',pct('myeon_am'));
-  setPct('p-myeon-2','pb-myeon-2',pct('myeon_pm'));
-  setPct('p-myeon-3','pb-myeon-3',pct('myeon_feedback'));
+  const mA = pct('myeon_am'), mP = pct('myeon_pm'), mF = pct('myeon_feedback');
+  setPct('p-myeon-all','pb-myeon-all',Math.round((mA+mP+mF)/3));  // 종합 = 세 항목 평균
+  setPct('p-myeon-1','pb-myeon-1',mA);
+  setPct('p-myeon-2','pb-myeon-2',mP);
+  setPct('p-myeon-3','pb-myeon-3',mF);
   // 나머지
   setPct('p-dok','pb-dok',pct('routineDok'));
   setPct('p-un','pb-un',pct('routineUn'));
