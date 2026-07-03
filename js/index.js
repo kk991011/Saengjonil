@@ -11,6 +11,19 @@ import { firebaseConfig } from '../firebase-config.js';
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// 숫자 입력에 음수/범위초과 방지 — min·max 속성 기준 실시간 clamp
+document.addEventListener('input', (e) => {
+  const el = e.target;
+  if (!(el instanceof HTMLInputElement) || el.type !== 'number') return;
+  if (el.value === '' || el.value === '-') return;      // 빈값/입력 중 '-' 는 허용
+  const v = Number(el.value);
+  if (Number.isNaN(v)) return;
+  const min = el.min !== '' ? Number(el.min) : null;
+  const max = el.max !== '' ? Number(el.max) : null;
+  if (min !== null && v < min) el.value = String(min);
+  else if (max !== null && v > max) el.value = String(max);
+}, true);
 const provider = new GoogleAuthProvider();
 
 let currentUser = null;
