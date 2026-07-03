@@ -10,7 +10,11 @@
       "README.md",
       "scripts/**",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "firestore.indexes.json"
     ]
+  },
+  "firestore": {
+    "indexes": "firestore.indexes.json"
   }
 }
