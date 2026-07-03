@@ -1,0 +1,85 @@
+
+  :root {
+    --main: #534AB7;
+    --main-dark: #3C3489;
+    --main-mid: #7F77DD;
+    --main-light: #EEEDFE;
+    --main-xlight: #F5F4FF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f5f4ff; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .login-wrap { width: 100%; max-width: 420px; padding: 24px; }
+  .logo-area { text-align: center; margin-bottom: 40px; }
+  .logo-icon { width: 64px; height: 64px; background: var(--main); border-radius: 20px;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
+    font-size: 28px; color: white; }
+  .logo-title { font-size: 28px; font-weight: 700; color: var(--main-dark); }
+  .logo-sub { font-size: 14px; color: #888; margin-top: 4px; }
+  .login-card { background: white; border-radius: 20px; padding: 32px; box-shadow: 0 4px 24px rgba(83,74,183,0.08); }
+  .login-card h2 { font-size: 18px; font-weight: 600; color: #222; margin-bottom: 8px; }
+  .login-card p { font-size: 14px; color: #666; margin-bottom: 28px; line-height: 1.6; }
+  .google-btn { width: 100%; padding: 14px; border: 1.5px solid #e0e0e0; border-radius: 12px;
+    background: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    gap: 12px; font-size: 15px; font-weight: 500; color: #333; transition: background .15s, border-color .15s; }
+  .google-btn:hover { background: #f8f8f8; border-color: #ccc; }
+  .google-btn svg { flex-shrink: 0; }
+  .divider { text-align: center; font-size: 12px; color: #bbb; margin: 20px 0; }
+  .feature-list { margin-top: 24px; }
+  .feature-item { display: flex; align-items: center; gap: 10px; padding: 8px 0;
+    font-size: 13px; color: #555; border-bottom: 1px solid #f0f0f0; }
+  .feature-item:last-child { border-bottom: none; }
+  .feat-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--main); flex-shrink: 0; }
+
+  /* 온보딩 */
+  .onboarding-wrap { width: 100%; max-width: 480px; padding: 24px; display: none; }
+  .ob-header { background: var(--main); border-radius: 16px 16px 0 0; padding: 20px 24px; color: white; }
+  .ob-header h1 { font-size: 18px; font-weight: 600; }
+  .ob-header p { font-size: 13px; opacity: .8; margin-top: 4px; }
+  .ob-body { background: white; border-radius: 0 0 16px 16px; padding: 24px;
+    box-shadow: 0 4px 24px rgba(83,74,183,0.08); }
+  .step-indicator { display: flex; gap: 6px; margin-bottom: 24px; }
+  .step-dot { flex: 1; height: 4px; border-radius: 2px; background: #eee; transition: background .3s; }
+  .step-dot.done { background: var(--main); }
+  .step-dot.active { background: var(--main-mid); }
+  .ob-step { display: none; }
+  .ob-step.active { display: block; }
+  .ob-step h3 { font-size: 16px; font-weight: 600; color: #222; margin-bottom: 6px; }
+  .ob-step .hint { font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.5; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12px; font-weight: 500; color: #666; margin-bottom: 6px; }
+  .field input, .field select { width: 100%; padding: 11px 14px; border: 1.5px solid #e8e8e8;
+    border-radius: 10px; font-size: 14px; color: #222; outline: none; transition: border-color .15s;
+    font-family: inherit; }
+  .field input:focus, .field select:focus { border-color: var(--main); }
+  .week-preview { background: var(--main-light); border-radius: 8px; padding: 10px 14px;
+    font-size: 13px; color: var(--main-dark); margin-top: 8px; display: none; }
+  .week-preview strong { font-weight: 600; }
+  .group-list { display: flex; flex-direction: column; gap: 8px; }
+  .group-option { border: 1.5px solid #e8e8e8; border-radius: 10px; padding: 12px 16px;
+    cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 10px; }
+  .group-option:hover { border-color: var(--main-mid); background: var(--main-xlight); }
+  .group-option.selected { border-color: var(--main); background: var(--main-light); }
+  .group-option .g-name { font-size: 14px; font-weight: 500; color: #222; }
+  .group-option .g-count { font-size: 12px; color: #888; margin-top: 2px; }
+  .g-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--main);
+    display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+  .ob-footer { display: flex; gap: 10px; margin-top: 24px; }
+  .btn-back { padding: 12px 20px; border: 1.5px solid #e0e0e0; border-radius: 10px;
+    background: white; cursor: pointer; font-size: 14px; color: #666; font-family: inherit; }
+  .btn-next { flex: 1; padding: 12px; border: none; border-radius: 10px;
+    background: var(--main); color: white; cursor: pointer; font-size: 14px; font-weight: 600;
+    font-family: inherit; transition: background .15s; }
+  .btn-next:hover { background: var(--main-dark); }
+  .btn-next:disabled { background: #ccc; cursor: not-allowed; }
+  .complete-area { text-align: center; padding: 20px 0; }
+  .complete-icon { width: 64px; height: 64px; background: var(--main-light); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px; }
+  .complete-area h3 { font-size: 18px; font-weight: 600; color: #222; margin-bottom: 8px; }
+  .complete-area p { font-size: 14px; color: #666; line-height: 1.6; }
+
+  .loading { text-align: center; padding: 60px 20px; }
+  .loading p { font-size: 14px; color: #888; margin-top: 12px; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--main-light);
+    border-top-color: var(--main); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
