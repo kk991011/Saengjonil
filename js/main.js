@@ -482,6 +482,16 @@ async function loadSummary() {
   }
 }
 
+// ── 차트 계열 색 (테마와 독립된 고정 팔레트 — 항목 구분용) ──
+const ITEM_COLORS = {
+  gyeong: '#3B5BDB', // 매십경 — 블루
+  myeon:  '#0CA678', // 매십면 — 틸
+  dok:    '#E64980', // 매십독 — 마젠타
+  un:     '#F59E0B', // 매십운 — 앰버
+  fa:     '#7950F2', // FA5050 — 바이올렛
+  apps:   '#868E96', // 지원수 — 그레이
+};
+
 // ── 추이 차트 ──
 let trendChartInst, moodChartInst, goalChartInst;
 async function loadTrend() {
@@ -516,20 +526,20 @@ async function loadTrend() {
     }
     return { ls, ds };
   };
-  const mkRateChart = (id, field) => {
+  const mkRateChart = (id, field, c) => {
     const el = document.getElementById(id); if (!el) return;
     const ex = Chart.getChart(el); if (ex) ex.destroy();
     const { ls, ds } = itemWeekly(field);
-    new Chart(el, { type:'line', data:{ labels:ls, datasets:[{ data:ds, borderColor:color, borderWidth:2, pointRadius:3, pointBackgroundColor:color, tension:.3, fill:true, backgroundColor:color+'15', spanGaps:true }]},
+    new Chart(el, { type:'line', data:{ labels:ls, datasets:[{ data:ds, borderColor:c, borderWidth:2, pointRadius:3, pointBackgroundColor:c, tension:.3, fill:true, backgroundColor:c+'15', spanGaps:true }]},
       options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } },
         scales:{ x:{ ticks:{ font:{ size:10 } }, grid:{ display:false } },
           y:{ min:0, max:100, ticks:{ callback:v=>v+'%', font:{ size:10 } }, grid:{ color:'rgba(0,0,0,.04)' } } } } });
   };
-  mkRateChart('itrend-myeon', 'routineMyeon');
-  mkRateChart('itrend-gyeong', 'routineGyeong');
-  mkRateChart('itrend-un', 'routineUn');
-  mkRateChart('itrend-dok', 'routineDok');
-  mkRateChart('itrend-fa', 'fa5050');
+  mkRateChart('itrend-myeon', 'routineMyeon', ITEM_COLORS.myeon);
+  mkRateChart('itrend-gyeong', 'routineGyeong', ITEM_COLORS.gyeong);
+  mkRateChart('itrend-un', 'routineUn', ITEM_COLORS.un);
+  mkRateChart('itrend-dok', 'routineDok', ITEM_COLORS.dok);
+  mkRateChart('itrend-fa', 'fa5050', ITEM_COLORS.fa);
 
   // 주간 목표 달성률 차트
   const wk = calcWeek(userProfile.startDate);
@@ -630,11 +640,11 @@ function renderDashChart(canvasId, labels, statsArr, color, colorMid) {
     data: {
       labels: labels.map(w => `${w}주`),
       datasets: [
-        { label:'매십경', data: statsArr.map(s=>s.gyeong), borderColor:color, borderWidth:2, pointRadius:2, tension:.3, fill:false, yAxisID:'y' },
-        { label:'매십면', data: statsArr.map(s=>s.myeon), borderColor:'#17BEBB', borderWidth:2, pointRadius:2, tension:.3, fill:false, yAxisID:'y' },
-        { label:'매십독', data: statsArr.map(s=>s.dok), borderColor:colorMid, borderWidth:2, pointRadius:2, tension:.3, fill:false, yAxisID:'y' },
-        { label:'매십운', data: statsArr.map(s=>s.un), borderColor:'#F59E0B', borderWidth:2, pointRadius:2, tension:.3, fill:false, yAxisID:'y' },
-        { label:'지원수', data: statsArr.map(s=>s.apps), borderColor:'#bbb', borderWidth:1.5, borderDash:[4,3], pointRadius:2, tension:.3, fill:false, yAxisID:'y1' },
+        { label:'매십경', data: statsArr.map(s=>s.gyeong), borderColor:ITEM_COLORS.gyeong, borderWidth:2, pointRadius:2, tension:.3, fill:false, yAxisID:'y' },
+        { label:'매십면', data: statsArr.map(s=>s.myeon), borderColor:ITEM_COLORS.myeon, borderWidth:2, pointRadius:2, tension:.3, fill:false, yAxisID:'y' },
+        { label:'매십독', data: statsArr.map(s=>s.dok), borderColor:ITEM_COLORS.dok, borderWidth:2, pointRadius:2, tension:.3, fill:false, yAxisID:'y' },
+        { label:'매십운', data: statsArr.map(s=>s.un), borderColor:ITEM_COLORS.un, borderWidth:2, pointRadius:2, tension:.3, fill:false, yAxisID:'y' },
+        { label:'지원수', data: statsArr.map(s=>s.apps), borderColor:ITEM_COLORS.apps, borderWidth:1.5, borderDash:[4,3], pointRadius:2, tension:.3, fill:false, yAxisID:'y1' },
       ]
     },
     options: {
