@@ -12,7 +12,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let user = null, userProfile = null;
-let allUsers = [], allRecords = [], allGroups = [], allGoals = [];
+let allUsers = [], allRecords = [], allGroups = [];
 let filters = { scope:'all', period:'week', progfilter:'all', gyscope:'all', gyperiod:'week', gyprogfilter:'all', myscope:'all', myperiod:'week', myprogfilter:'all', cscope:'all', cperiod:'week', gperiod:'week', selectedWeek: null, selectedMonth: null };
 let currentTab = 'rank';
 
@@ -26,7 +26,7 @@ onAuthStateChanged(auth, async u => {
   applyTheme(userProfile.themeColor || '#534AB7');
   initHeader();
   await loadAllData();
-  renderRank();
+  await refresh();
 });
 
 function applyTheme(color) {
@@ -67,22 +67,47 @@ function initHeader() {
 
 // ── 데이터 전체 로드 ──
 async function loadAllData() {
-  // 그룹 목록
+  // 그룹 + 유저만 로드. records는 선택된 기간에 맞춰 ensureRecords에서 로드(읽기 절약).
   const gSnap = await getDocs(collection(db, 'groups'));
   allGroups = gSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-  // 전체 유저
   const uSnap = await getDocs(collection(db, 'users'));
   allUsers = uSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
-
-  // 전체 기록
-  const rSnap = await getDocs(query(collection(db, 'records'), orderBy('date', 'desc')));
-  allRecords = rSnap.docs.map(d => d.data());
-
-  // 전체 주간 목표
-  const gSnap2 = await getDocs(collection(db, 'weekly_goals'));
-  allGoals = gSnap2.docs.map(d => d.data());
 }
+
+// ── 기간에 필요한 records만 로드 (단조 확장) ──
+// 현재 탭의 기간 필터가 요구하는 날짜 하한을 계산. filterRecords가 쓰는 getDateRange와
+// 동일 기준이라, 이 하한 이상만 로드해도 클라이언트 필터 결과는 동일(정확).
+let loadedFloor = null;
+function periodFloor() {
+  const period = filters[TAB_KEY_MAP[currentTab] || 'period'] || 'week';
+  if (period === 'specific_week') {
+    if (!filters.selectedWeek) return getDateRange('week');
+    let min = null;
+    allUsers.forEach(u => {
+      if (!u.startDate) return;
+      const { from } = getWeekRange(u.startDate, Number(filters.selectedWeek));
+      if (min === null || from < min) min = from;
+    });
+    return min || '2000-01-01';
+  }
+  if (period === 'specific_month') return (filters.selectedMonth || '2000-01') + '-01';
+  return getDateRange(period);
+}
+async function ensureRecords() {
+  const floor = periodFloor();
+  if (loadedFloor !== null && floor >= loadedFloor) return; // 이미 커버됨
+  const snap = await getDocs(query(collection(db, 'records'), where('date', '>=', floor), orderBy('date', 'desc')));
+  allRecords = snap.docs.map(d => d.data());
+  loadedFloor = floor;
+}
+function renderCurrentTab() {
+  if (currentTab === 'rank') renderRank();
+  else if (currentTab === 'gyeong') renderGyeongDetail();
+  else if (currentTab === 'myeon') renderMyeonDetail();
+  else if (currentTab === 'compare') renderCompare();
+  else if (currentTab === 'group') renderGroups();
+}
+async function refresh() { await ensureRecords(); renderCurrentTab(); }
 
 // ── 기간 필터 함수 ──
 function getDateRange(period) {
@@ -258,11 +283,7 @@ window.switchTab = (id, btn) => {
   if (id === 'gyeong') currentContext = 'gyeong';
   else if (id === 'myeon') currentContext = 'myeon';
   else currentContext = 'default';
-  if (id==='rank') renderRank();
-  if (id==='gyeong') renderGyeongDetail();
-  if (id==='myeon') renderMyeonDetail();
-  if (id==='compare') renderCompare();
-  if (id==='group') renderGroups();
+  refresh();
 };
 
 // ── 필터 ──
@@ -309,21 +330,13 @@ window.setFilter = (key, val, btn) => {
     }
   }
 
-  if (currentTab==='rank') renderRank();
-  if (currentTab==='gyeong') renderGyeongDetail();
-  if (currentTab==='myeon') renderMyeonDetail();
-  if (currentTab==='compare') renderCompare();
-  if (currentTab==='group') renderGroups();
+  refresh();
 };
 
 // 월 선택 변경 시 호출
 window.setMonthFilter = (monthVal, tabKey) => {
   filters.selectedMonth = monthVal;
-  if (currentTab==='rank') renderRank();
-  if (currentTab==='gyeong') renderGyeongDetail();
-  if (currentTab==='myeon') renderMyeonDetail();
-  if (currentTab==='compare') renderCompare();
-  if (currentTab==='group') renderGroups();
+  refresh();
 };
 
 // 주차 드롭다운 채우기 — 내 기준 현재 주차부터 1주차까지
@@ -337,11 +350,7 @@ function populateWeekPicker(sel) {
 
 window.setWeekFilter = (weekVal, tabKey) => {
   filters.selectedWeek = weekVal;
-  if (currentTab==='rank') renderRank();
-  if (currentTab==='gyeong') renderGyeongDetail();
-  if (currentTab==='myeon') renderMyeonDetail();
-  if (currentTab==='compare') renderCompare();
-  if (currentTab==='group') renderGroups();
+  refresh();
 };
 
 // ── 랭킹 렌더 ──

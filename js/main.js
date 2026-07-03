@@ -3,7 +3,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, onAuthStateChanged, signOut }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, collection, query,
-  where, orderBy, getDocs, deleteDoc }
+  where, orderBy, getDocs, deleteDoc, documentId }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 // Firebase 설정은 환경(운영/dev)에 따라 firebase-config.js에서 자동 선택됩니다.
@@ -347,8 +347,9 @@ async function loadAllRecords() {
   const snap = await getDocs(q);
   allRecords = snap.docs.map(d => d.data());
 
-  // 주간 목표도 같이 로드
-  const goalSnap = await getDocs(collection(db, 'weekly_goals'));
+  // 주간 목표도 같이 로드 (본인 것만 — 문서ID 접두 범위로 스코핑)
+  const goalSnap = await getDocs(query(collection(db, 'weekly_goals'),
+    where(documentId(), '>=', `${user.uid}_`), where(documentId(), '<=', `${user.uid}_\uf8ff`)));
   allGoals = goalSnap.docs.map(d => ({ _id: d.id, ...d.data() }));
 }
 
