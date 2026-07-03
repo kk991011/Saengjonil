@@ -45,16 +45,18 @@
   <!-- ── 대시보드 ── -->
   <div class="tab-panel active" id="tab-dashboard">
     <div class="sec-label">내 추이</div>
-    <div style="position:relative;height:200px;margin-bottom:8px"><canvas id="dash-my-chart" role="img" aria-label="내 주차별 매십경 매십독 지원수 추이"></canvas></div>
-    <div style="font-size:11px;color:#aaa;margin-bottom:20px;text-align:center">매십경·매십독 달성률(%) · 지원수(개) — 주차별</div>
+    <div style="position:relative;height:200px;margin-bottom:8px"><canvas id="dash-my-chart" role="img" aria-label="내 주차별 매십경 매십면 매십독 매십운 지원수 추이"></canvas></div>
+    <div style="font-size:11px;color:#aaa;margin-bottom:20px;text-align:center">매십경·매십면·매십독·매십운 달성률(%) · 지원수(개) — 주차별</div>
 
     <div class="sec-label">조별 추이 <span id="dash-group-name" style="color:var(--main);font-weight:600;text-transform:none;letter-spacing:0"></span></div>
-    <div style="position:relative;height:200px;margin-bottom:8px"><canvas id="dash-group-chart" role="img" aria-label="조별 주차별 매십경 매십독 지원수 추이"></canvas></div>
-    <div style="font-size:11px;color:#aaa;margin-bottom:8px;text-align:center">조원 평균 매십경·매십독 달성률(%) · 지원수(개) — 주차별</div>
+    <div style="position:relative;height:200px;margin-bottom:8px"><canvas id="dash-group-chart" role="img" aria-label="조별 주차별 매십경 매십면 매십독 매십운 지원수 추이"></canvas></div>
+    <div style="font-size:11px;color:#aaa;margin-bottom:8px;text-align:center">조원 평균 매십경·매십면·매십독·매십운 달성률(%) · 지원수(개) — 주차별</div>
 
-    <div style="display:flex;justify-content:center;gap:16px;font-size:11px;color:#888;margin-top:4px">
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px 16px;font-size:11px;color:#888;margin-top:4px">
       <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:var(--main);display:inline-block"></span>매십경</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#17BEBB;display:inline-block"></span>매십면</span>
       <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:var(--main-mid);display:inline-block"></span>매십독</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#F59E0B;display:inline-block"></span>매십운</span>
       <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#bbb;display:inline-block"></span>지원수(개)</span>
     </div>
   </div>
@@ -355,6 +357,8 @@
     <div style="position:relative;height:220px;margin-bottom:24px"><canvas id="trend-chart" role="img" aria-label="일별 활동 시간 선 그래프">활동 시간 추이</canvas></div>
     <div class="sec-label">매십면 주차별 달성률</div>
     <div style="position:relative;height:160px;margin-bottom:24px"><canvas id="itrend-myeon" role="img" aria-label="매십면 주차별 달성률">매십면 추이</canvas></div>
+    <div class="sec-label">매십경 주차별 달성률</div>
+    <div style="position:relative;height:160px;margin-bottom:24px"><canvas id="itrend-gyeong" role="img" aria-label="매십경 주차별 달성률">매십경 추이</canvas></div>
     <div class="sec-label">매십운 주차별 달성률</div>
     <div style="position:relative;height:160px;margin-bottom:24px"><canvas id="itrend-un" role="img" aria-label="매십운 주차별 달성률">매십운 추이</canvas></div>
     <div class="sec-label">매십독 주차별 달성률</div>

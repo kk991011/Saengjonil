@@ -503,6 +503,7 @@ async function loadTrend() {
           y:{ min:0, max:100, ticks:{ callback:v=>v+'%', font:{ size:10 } }, grid:{ color:'rgba(0,0,0,.04)' } } } } });
   };
   mkRateChart('itrend-myeon', 'routineMyeon');
+  mkRateChart('itrend-gyeong', 'routineGyeong');
   mkRateChart('itrend-un', 'routineUn');
   mkRateChart('itrend-dok', 'routineDok');
   mkRateChart('itrend-fa', 'fa5050');
@@ -564,7 +565,9 @@ async function loadDashboard() {
       const n = memberStats.length || 1;
       return {
         gyeong: Math.round(memberStats.reduce((a,s)=>a+s.gyeong,0)/n),
+        myeon: Math.round(memberStats.reduce((a,s)=>a+s.myeon,0)/n),
         dok: Math.round(memberStats.reduce((a,s)=>a+s.dok,0)/n),
+        un: Math.round(memberStats.reduce((a,s)=>a+s.un,0)/n),
         apps: Math.round(memberStats.reduce((a,s)=>a+s.apps,0)/n*10)/10,
       };
     });
@@ -578,17 +581,19 @@ async function loadDashboard() {
 
 // 특정 주차(w)에 해당하는 날짜 범위의 기록으로부터 매십경·매십독 달성률, 지원수 계산
 function calcWeekStats(recs, startDate, weekNum) {
-  if (!startDate || !weekNum) return { gyeong: 0, dok: 0, apps: 0 };
+  if (!startDate || !weekNum) return { gyeong: 0, myeon: 0, dok: 0, un: 0, apps: 0 };
   const start = new Date(startDate);
   const from = new Date(start); from.setDate(start.getDate() + (weekNum - 1) * 7);
   const to = new Date(from); to.setDate(from.getDate() + 6);
   const fromStr = localDate(from), toStr = localDate(to);
   const weekRecs = recs.filter(r => r.date >= fromStr && r.date <= toStr);
   const n = weekRecs.length;
-  if (!n) return { gyeong: 0, dok: 0, apps: 0 };
+  if (!n) return { gyeong: 0, myeon: 0, dok: 0, un: 0, apps: 0 };
   return {
     gyeong: Math.round(weekRecs.filter(r=>r.routineGyeong).length / n * 100),
+    myeon: Math.round(weekRecs.filter(r=>r.routineMyeon).length / n * 100),
     dok: Math.round(weekRecs.filter(r=>r.routineDok).length / n * 100),
+    un: Math.round(weekRecs.filter(r=>r.routineUn).length / n * 100),
     apps: weekRecs.reduce((a,r)=>a+(r.applications||0),0),
   };
 }
@@ -603,7 +608,9 @@ function renderDashChart(canvasId, labels, statsArr, color, colorMid) {
       labels: labels.map(w => `${w}주`),
       datasets: [
         { label:'매십경', data: statsArr.map(s=>s.gyeong), borderColor:color, borderWidth:2, pointRadius:2, tension:.3, fill:false, yAxisID:'y' },
+        { label:'매십면', data: statsArr.map(s=>s.myeon), borderColor:'#17BEBB', borderWidth:2, pointRadius:2, tension:.3, fill:false, yAxisID:'y' },
         { label:'매십독', data: statsArr.map(s=>s.dok), borderColor:colorMid, borderWidth:2, pointRadius:2, tension:.3, fill:false, yAxisID:'y' },
+        { label:'매십운', data: statsArr.map(s=>s.un), borderColor:'#F59E0B', borderWidth:2, pointRadius:2, tension:.3, fill:false, yAxisID:'y' },
         { label:'지원수', data: statsArr.map(s=>s.apps), borderColor:'#bbb', borderWidth:1.5, borderDash:[4,3], pointRadius:2, tension:.3, fill:false, yAxisID:'y1' },
       ]
     },
