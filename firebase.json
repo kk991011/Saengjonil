@@ -12,6 +12,12 @@
       "package.json",
       "package-lock.json",
       "firestore.indexes.json"
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(html|js|css)",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      }
     ]
   },
   "firestore": {
