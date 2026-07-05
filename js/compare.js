@@ -423,7 +423,7 @@ function renderCompare() {
     const wk = isAvg ? '—' : calcWeek(data.startDate)+'주';
     const s = isAvg ? avg : statsMap[data.uid];
     return `<tr class="${cls}">
-      <td title="${name}">${name}</td><td>${wk}</td>
+      <td class="name-col" title="${name}">${name}</td><td>${wk}</td>
       <td class="${!isAvg&&s.gyeong===maxMap.gyeong?'hi':''}">${s.gyeong}%</td>
       <td class="${!isAvg&&s.myeon===maxMap.myeon?'hi':''}">${s.myeon}%</td>
       <td class="${!isAvg&&s.dok===maxMap.dok?'hi':''}">${s.dok}%</td>

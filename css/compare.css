@@ -68,14 +68,17 @@
 
   /* 항목 비교 테이블 */
   .table-wrap { overflow-x: auto; overflow-y: auto; max-height: 480px; border-radius: 12px; border: 1px solid #f0f0f0; }
-  .cmp-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 770px; table-layout: fixed; }
-  .cmp-table th { padding: 9px 8px; text-align: left; font-size: 10px; font-weight: 600;
+  /* table-layout:auto → 셀이 내용에 맞게 늘어나 값이 잘리지 않음(주차·%·헤더 모두 전체 표시) */
+  .cmp-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 600px; table-layout: auto; }
+  .cmp-table th { padding: 9px 6px; text-align: left; font-size: 10px; font-weight: 600;
     position: sticky; top: 0; z-index: 1;
-    color: #fff; background: var(--main-dark); white-space: nowrap; overflow: hidden; }
+    color: #fff; background: var(--main-dark); white-space: nowrap; }
   .cmp-table th:first-child { border-radius: 12px 0 0 0; }
   .cmp-table th:last-child { border-radius: 0 12px 0 0; }
-  .cmp-table td { padding: 8px 8px; border-bottom: 1px solid #f5f5f5;
-    color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cmp-table td { padding: 8px 6px; border-bottom: 1px solid #f5f5f5;
+    color: #333; white-space: nowrap; }
+  /* 긴 닉네임만 말줄임(툴팁으로 전체 확인) — 숫자 셀은 잘리지 않게 둠 */
+  .cmp-table td.name-col { max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
   .cmp-table tr:last-child td { border-bottom: none; }
   .cmp-table tr.avg-row td { background: var(--main-light); font-weight: 600; color: var(--main-dark); }
   .cmp-table tr.me-row td { background: var(--main-xlight); }
