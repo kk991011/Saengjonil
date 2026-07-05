@@ -485,7 +485,7 @@ const LECTURE_GROUPS = [
     { name:'파이낸스프리젠터', short:'파이낸스' },
   ]},
   { label:'생존면접클래스', tint:1, items:['인성편','은행편','우리','국민','신한','농협','기업','하나','지역농축협'].map(v => ({ name:`생존면접클래스(${v})`, short:v })) },
-  { label:'기업분석자료', tint:2, items:['실전표','우리','국민','신한','농협','기업','하나','지역농축협'].map(v => ({ name:`기업분석자료(${v})`, short:v })) },
+  { label:'기업분석자료', tint:2, items:['실전편','우리','국민','신한','농협','기업','하나','지역농축협'].map(v => ({ name:`기업분석자료(${v})`, short:v })) },
 ];
 const CLASS_COLUMNS = LECTURE_GROUPS.flatMap(g => g.items.map((it, i) => ({ ...it, tint:g.tint, first: i === 0 && g.tint > 0 })));
 

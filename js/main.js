@@ -51,7 +51,7 @@ const CLASS_FAMILIES = {
   interview: { prefix: '생존면접클래스', selectId: 'f-interview-class-select', minId: 'f-interview-class-min', listId: 'interview-class-list',
     variants: ['인성편','은행편','우리','국민','신한','농협','기업','하나','지역농축협'] },
   analysis:  { prefix: '기업분석자료', selectId: 'f-analysis-class-select', minId: 'f-analysis-class-min', listId: 'analysis-class-list',
-    variants: ['실전표','우리','국민','신한','농협','기업','하나','지역농축협'] },
+    variants: ['실전편','우리','국민','신한','농협','기업','하나','지역농축협'] },
 };
 let familyEntries = { interview: {}, analysis: {} };  // { famId: { variant: 분 } }
 
