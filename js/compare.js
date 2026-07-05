@@ -13,7 +13,7 @@ const db = getFirestore(app);
 
 let user = null, userProfile = null;
 let allUsers = [], allRecords = [], allGroups = [];
-let filters = { scope:'all', period:'week', progfilter:'all', gyscope:'all', gyperiod:'week', gyprogfilter:'all', myscope:'all', myperiod:'week', myprogfilter:'all', cscope:'all', cperiod:'week', gperiod:'week', selectedWeek: null, selectedMonth: null };
+let filters = { scope:'all', period:'week', progfilter:'all', gyscope:'all', gyperiod:'week', gyprogfilter:'all', myscope:'all', myperiod:'week', myprogfilter:'all', cscope:'all', cperiod:'week', lscope:'all', lperiod:'week', gperiod:'week', selectedWeek: null, selectedMonth: null };
 let currentTab = 'rank';
 
 // ── 인증 ──
@@ -105,6 +105,7 @@ function renderCurrentTab() {
   else if (currentTab === 'gyeong') renderGyeongDetail();
   else if (currentTab === 'myeon') renderMyeonDetail();
   else if (currentTab === 'compare') renderCompare();
+  else if (currentTab === 'lecture') renderLecture();
   else if (currentTab === 'group') renderGroups();
 }
 async function refresh() { await ensureRecords(); renderCurrentTab(); }
@@ -287,10 +288,10 @@ window.switchTab = (id, btn) => {
 };
 
 // ── 필터 ──
-const WEEK_PICKER_MAP = { period:'rank-week-picker', gyperiod:'gyeong-week-picker', myperiod:'myeon-week-picker', cperiod:'compare-week-picker', gperiod:'group-week-picker' };
-const MONTH_PICKER_MAP = { period:'rank-month-picker', gyperiod:'gyeong-month-picker', myperiod:'myeon-month-picker', cperiod:'compare-month-picker', gperiod:'group-month-picker' };
-const MONTH_INPUT_MAP = { period:'rank-month-input', gyperiod:'gyeong-month-input', myperiod:'myeon-month-input', cperiod:'compare-month-input', gperiod:'group-month-input' };
-const TAB_KEY_MAP = { rank:'period', gyeong:'gyperiod', myeon:'myperiod', compare:'cperiod', group:'gperiod' };
+const WEEK_PICKER_MAP = { period:'rank-week-picker', gyperiod:'gyeong-week-picker', myperiod:'myeon-week-picker', cperiod:'compare-week-picker', lperiod:'lecture-week-picker', gperiod:'group-week-picker' };
+const MONTH_PICKER_MAP = { period:'rank-month-picker', gyperiod:'gyeong-month-picker', myperiod:'myeon-month-picker', cperiod:'compare-month-picker', lperiod:'lecture-month-picker', gperiod:'group-month-picker' };
+const MONTH_INPUT_MAP = { period:'rank-month-input', gyperiod:'gyeong-month-input', myperiod:'myeon-month-input', cperiod:'compare-month-input', lperiod:'lecture-month-input', gperiod:'group-month-input' };
+const TAB_KEY_MAP = { rank:'period', gyeong:'gyperiod', myeon:'myperiod', compare:'cperiod', lecture:'lperiod', group:'gperiod' };
 
 window.setFilter = (key, val, btn) => {
   filters[key] = val;
@@ -391,7 +392,7 @@ function renderCompare() {
   users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
 
   // 전체 평균 계산
-  const keys = ['gyeong','myeon','dok','un','fa','lecture','jasoseo','pilgi','interview','apps'];
+  const keys = ['gyeong','myeon','dok','un','fa','jasoseo','pilgi','interview','apps'];
   const avg = {};
   keys.forEach(k => {
     avg[k] = users.length ? Math.round(users.reduce((a,u)=>a+(statsMap[u.uid]?.[k]||0),0)/users.length) : 0;
@@ -429,7 +430,6 @@ function renderCompare() {
       <td class="${!isAvg&&s.dok===maxMap.dok?'hi':''}">${s.dok}%</td>
       <td class="${!isAvg&&s.un===maxMap.un?'hi':''}">${s.un}%</td>
       <td class="${!isAvg&&s.fa===maxMap.fa?'hi':''}">${s.fa}%</td>
-      <td class="${!isAvg&&s.lecture===maxMap.lecture?'hi':''}">${s.lecture}</td>
       <td class="${!isAvg&&s.jasoseo===maxMap.jasoseo?'hi':''}">${s.jasoseo}</td>
       <td class="${!isAvg&&s.pilgi===maxMap.pilgi?'hi':''}">${s.pilgi}</td>
       <td class="${!isAvg&&s.interview===maxMap.interview?'hi':''}">${s.interview}</td>
@@ -458,14 +458,14 @@ window.downloadExcel = () => {
   const { users, statsMap, avg, prevAvg } = window._compareData;
   const PREV_KEYS = ['prevInterviewCount','prevInterviewMin','prevPilgiMin','prevApplications'];
   const pv = v => (v == null || v === '' ? '-' : v);
-  const headers = ['닉네임','주차','매십경','매십면','매십독','매십운','FA','강의','자소서','필기','면접','지원수',
+  const headers = ['닉네임','주차','매십경','매십면','매십독','매십운','FA','자소서','필기','면접','지원수',
     '이전_면접경험(회)','이전_면접준비(분)','이전_필기준비(분)','이전_지원수(개)'];
   const rows = [
-    ['전체 평균','—',...['gyeong','myeon','dok','un','fa','lecture','jasoseo','pilgi','interview','apps'].map(k=>avg[k]),
+    ['전체 평균','—',...['gyeong','myeon','dok','un','fa','jasoseo','pilgi','interview','apps'].map(k=>avg[k]),
       ...PREV_KEYS.map(k => pv(prevAvg?.[k]))],
     ...users.map(u => {
       const s = statsMap[u.uid];
-      return [u.nickname, calcWeek(u.startDate)+'주', s.gyeong+'%', s.myeon+'%', s.dok+'%', s.un+'%', s.fa+'%', s.lecture, s.jasoseo, s.pilgi, s.interview, s.apps,
+      return [u.nickname, calcWeek(u.startDate)+'주', s.gyeong+'%', s.myeon+'%', s.dok+'%', s.un+'%', s.fa+'%', s.jasoseo, s.pilgi, s.interview, s.apps,
         ...PREV_KEYS.map(k => pv(u[k]))];
     })
   ];
@@ -474,6 +474,108 @@ window.downloadExcel = () => {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `생존일지_항목비교_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+};
+
+// ── 강의 수강 (클래스별 기간 합산) ──
+const LECTURE_GROUPS = [
+  { label:'기본', tint:0, items:[
+    { name:'은행직무클래스', short:'은행직무' },
+    { name:'생존자소서클래스', short:'자소서' },
+    { name:'파이낸스프리젠터', short:'파이낸스' },
+  ]},
+  { label:'생존면접클래스', tint:1, items:['인성편','은행편','우리','국민','신한','농협','기업','하나','지역농축협'].map(v => ({ name:`생존면접클래스(${v})`, short:v })) },
+  { label:'기업분석자료', tint:2, items:['실전표','우리','국민','신한','농협','기업','하나','지역농축협'].map(v => ({ name:`기업분석자료(${v})`, short:v })) },
+];
+const CLASS_COLUMNS = LECTURE_GROUPS.flatMap(g => g.items.map((it, i) => ({ ...it, tint:g.tint, first: i === 0 && g.tint > 0 })));
+
+// 유저의 기간 내 강의별 총 수강 시간(분) + 전체 합계(_total)
+function calcClassSums(uid, period) {
+  const recs = getUserRecords(uid, period);
+  const sums = {}; let total = 0;
+  CLASS_COLUMNS.forEach(c => { sums[c.name] = 0; });
+  recs.forEach(r => {
+    const items = r.lectureItems || {};
+    CLASS_COLUMNS.forEach(c => { const v = items[c.name] || 0; sums[c.name] += v; total += v; });
+  });
+  sums._total = total;
+  return sums;
+}
+
+// 컬럼의 그룹 배경 톤 + 그룹 시작 구분선 클래스
+function tintCls(c) {
+  return (c.tint ? `lec-g${c.tint}` : '') + (c.first ? ' lec-gfirst' : '');
+}
+
+function renderLectureHead() {
+  const head = document.getElementById('lec-head');
+  if (!head) return;
+  let th = '<th style="width:90px">닉네임</th><th style="width:36px">주차</th>'
+    + '<th class="lec-total-th" style="width:48px">합계</th>';
+  CLASS_COLUMNS.forEach(c => { th += `<th class="${tintCls(c)}" style="width:46px">${c.short}</th>`; });
+  head.innerHTML = `<tr>${th}</tr>`;
+}
+
+function renderLecture() {
+  renderLectureHead();
+  const users = getGroupUsers(filters.lscope, filters.progfilter);
+  const period = filters.lperiod;
+  const statsMap = {};
+  users.forEach(u => { statsMap[u.uid] = calcClassSums(u.uid, period); });
+
+  const cols = ['_total', ...CLASS_COLUMNS.map(c => c.name)];
+  const avg = {}, maxMap = {};
+  cols.forEach(k => {
+    avg[k] = users.length ? Math.round(users.reduce((a,u)=>a+(statsMap[u.uid]?.[k]||0),0)/users.length) : 0;
+    maxMap[k] = Math.max(0, ...users.map(u => statsMap[u.uid]?.[k]||0));
+  });
+
+  const numCell = (v, extraCls, isMax) => v > 0
+    ? `<td class="${extraCls}${isMax?' hi':''}">${v}</td>`
+    : `<td class="${extraCls} lec-zero">·</td>`;
+
+  const row = (data, isAvg, isMe) => {
+    const cls = isAvg ? 'avg-row' : isMe ? 'me-row' : '';
+    const name = isAvg ? '전체 평균' : (data.nickname + (isMe ? ' 나' : ''));
+    const wk = isAvg ? '—' : calcWeek(data.startDate)+'주';
+    const s = isAvg ? avg : statsMap[data.uid];
+    let tds = `<td class="name-col" title="${name}">${name}</td><td>${wk}</td>`;
+    tds += (s._total > 0 || isAvg) ? `<td class="lec-total">${s._total}</td>` : `<td class="lec-total lec-zero">·</td>`;
+    CLASS_COLUMNS.forEach(c => {
+      const v = s[c.name] || 0;
+      tds += numCell(v, tintCls(c), !isAvg && v > 0 && v === maxMap[c.name]);
+    });
+    return `<tr class="${cls}">${tds}</tr>`;
+  };
+
+  let html = row(null, true, false);
+  const others = users.filter(u => u.uid !== user.uid)
+    .sort((a,b) => (statsMap[b.uid]?._total||0) - (statsMap[a.uid]?._total||0));
+  const me = users.find(u => u.uid === user.uid);
+  if (me) html += row(me, false, true);
+  others.forEach(u => { html += row(u, false, false); });
+  document.getElementById('lec-body').innerHTML = html;
+
+  window._lectureData = { users: me ? [me, ...others] : others, statsMap, avg };
+}
+
+window.downloadLectureExcel = () => {
+  if (!window._lectureData) { alert('먼저 강의 수강 탭을 열어주세요'); return; }
+  const { users, statsMap, avg } = window._lectureData;
+  const cols = ['_total', ...CLASS_COLUMNS.map(c => c.name)];
+  const headers = ['닉네임','주차','합계(분)', ...CLASS_COLUMNS.map(c => c.name)];
+  const rows = [
+    ['전체 평균','—', ...cols.map(k => avg[k])],
+    ...users.map(u => {
+      const s = statsMap[u.uid];
+      return [u.nickname, calcWeek(u.startDate)+'주', ...cols.map(k => s[k] || 0)];
+    })
+  ];
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob(['﻿'+csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `생존일지_강의수강_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
 };
 

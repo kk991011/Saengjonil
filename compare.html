@@ -28,6 +28,7 @@
     <button class="tab-btn" onclick="switchTab('gyeong',this)">매십경 상세</button>
     <button class="tab-btn" onclick="switchTab('myeon',this)">매십면 상세</button>
     <button class="tab-btn" onclick="switchTab('compare',this)">항목 비교</button>
+    <button class="tab-btn" onclick="switchTab('lecture',this)">강의 수강</button>
     <button class="tab-btn" onclick="switchTab('group',this)">그룹별 현황</button>
   </div>
 </nav>
@@ -160,7 +161,6 @@
             <th style="width:44px">매십독</th>
             <th style="width:44px">매십운</th>
             <th style="width:36px">FA</th>
-            <th style="width:50px">강의</th>
             <th style="width:50px">자소서</th>
             <th style="width:44px">필기</th>
             <th style="width:44px">면접</th>
@@ -172,12 +172,49 @@
           </tr>
         </thead>
         <tbody id="cmp-body">
-          <tr><td colspan="16" style="text-align:center;padding:30px;color:#ccc">불러오는 중...</td></tr>
+          <tr><td colspan="15" style="text-align:center;padding:30px;color:#ccc">불러오는 중...</td></tr>
         </tbody>
       </table>
     </div>
     <div style="font-size:11px;color:#aaa;margin-top:8px;line-height:1.6">
       ※ 색칠된 <strong>면접경험·면접준비·필기준비·지원</strong> 4개 항목은 각자 프로필에 입력한 <strong>이전 시즌 기록</strong>이며, 기간 필터와 무관하게 표시됩니다. 단위 — 면접경험(회)·면접준비/필기준비(분)·지원(개).
+    </div>
+  </div>
+
+  <!-- ── 강의 수강 ── -->
+  <div class="tab-panel" id="tab-lecture">
+    <div class="filter-row">
+      <button class="filter-btn on" onclick="setFilter('lscope','all',this)">전체</button>
+      <button class="filter-btn" onclick="setFilter('lscope','mine',this)">내 그룹</button>
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn on" onclick="setFilter('lperiod','week',this)">이번 주</button>
+      <button class="filter-btn" onclick="setFilter('lperiod','month',this)">이번 달</button>
+      <button class="filter-btn" onclick="setFilter('lperiod','all',this)">누적</button>
+      <button class="filter-btn" onclick="setFilter('lperiod','specific_week',this)">특정 주차</button>
+      <button class="filter-btn" onclick="setFilter('lperiod','specific_month',this)">특정 월</button>
+    </div>
+    <div class="filter-row" id="lecture-week-picker" style="display:none">
+      <select onchange="setWeekFilter(this.value,'lecture')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
+        <option value="">주차 선택...</option>
+      </select>
+    </div>
+    <div class="filter-row" id="lecture-month-picker" style="display:none">
+      <input type="month" id="lecture-month-input" onchange="setMonthFilter(this.value,'lecture')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
+    </div>
+    <button class="dl-btn" onclick="downloadLectureExcel()">
+      ↓ 엑셀 다운로드
+    </button>
+    <div class="table-wrap">
+      <table class="cmp-table" id="lec-table">
+        <thead id="lec-head"></thead>
+        <tbody id="lec-body">
+          <tr><td colspan="3" style="text-align:center;padding:30px;color:#ccc">불러오는 중...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:11px;color:#aaa;margin-top:8px;line-height:1.6">
+      ※ 각 강의별 <strong>기간 내 총 수강 시간(분)</strong>입니다. <strong>합계</strong>는 전체 강의 시간, 미수강은 <strong>·</strong>. 색으로 <strong>생존면접클래스</strong>/<strong>기업분석자료</strong> 그룹을 구분했어요. 컬럼이 많아 가로 스크롤됩니다.
     </div>
   </div>
 
