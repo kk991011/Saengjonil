@@ -445,6 +445,23 @@
         <input type="number" id="pm-jobprob" min="0" max="100" placeholder="예: 35">
       </div>
 
+      <!-- 이전 시즌 기록 -->
+      <div style="border-top:1px solid #f0f0f0;margin:18px 0 12px"></div>
+      <div style="font-size:13px;font-weight:600;color:#222;margin-bottom:4px">이전 시즌 기록</div>
+      <div style="font-size:11px;color:#aaa;margin-bottom:12px;line-height:1.5">지난 시즌 활동을 기록해두면 함께 생존 &gt; 항목 비교에서 함께 볼 수 있어요. 입력 안 한 칸은 표에 <strong>-</strong> 로 표시돼요.</div>
+      <div class="row2" style="margin-bottom:12px">
+        <div class="field" style="margin-bottom:0"><label>면접 경험 <span style="color:#aaa;font-weight:400">(회)</span></label>
+          <input type="number" id="pm-prev-interview-count" min="0" placeholder="예: 3"></div>
+        <div class="field" style="margin-bottom:0"><label>면접 준비 시간 <span style="color:#aaa;font-weight:400">(분)</span></label>
+          <input type="number" id="pm-prev-interview-min" min="0" placeholder="예: 600"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>필기 준비 시간 <span style="color:#aaa;font-weight:400">(분)</span></label>
+          <input type="number" id="pm-prev-pilgi-min" min="0" placeholder="예: 300"></div>
+        <div class="field"><label>지원 개수 <span style="color:#aaa;font-weight:400">(개)</span></label>
+          <input type="number" id="pm-prev-applications" min="0" placeholder="예: 10"></div>
+      </div>
+
       <!-- 그룹 변경 -->
       <div class="field">
         <label>소속 그룹</label>

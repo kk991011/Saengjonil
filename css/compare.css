@@ -68,7 +68,7 @@
 
   /* 항목 비교 테이블 */
   .table-wrap { overflow-x: auto; overflow-y: auto; max-height: 480px; border-radius: 12px; border: 1px solid #f0f0f0; }
-  .cmp-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 540px; table-layout: fixed; }
+  .cmp-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 770px; table-layout: fixed; }
   .cmp-table th { padding: 9px 8px; text-align: left; font-size: 10px; font-weight: 600;
     position: sticky; top: 0; z-index: 1;
     color: #fff; background: var(--main-dark); white-space: nowrap; overflow: hidden; }
@@ -81,6 +81,10 @@
   .cmp-table tr.me-row td { background: var(--main-xlight); }
   .cmp-table tr:nth-child(even):not(.avg-row):not(.me-row) td { background: #fafafa; }
   .hi { color: var(--main); font-weight: 600; }
+  /* 이전 시즌 기록 컬럼 — 현재 시즌과 배경 톤으로 구분 (inset shadow로 행 배경 위에 겹침) */
+  .cmp-table th.prev-col { background: var(--main); }
+  .cmp-table td.prev-col { box-shadow: inset 0 0 0 999px var(--main-light); color: var(--main-dark); }
+  .cmp-table .prev-first { border-left: 2px solid var(--main-mid); }
   .dl-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px;
     border: 1.5px solid #e0e0e0; border-radius: 8px; background: white; font-size: 12px;
     color: #666; cursor: pointer; font-family: inherit; margin-bottom: 10px; }

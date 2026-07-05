@@ -1054,6 +1054,11 @@ window.openProfile = async () => {
   document.getElementById('pm-nickname').value = p.nickname;
   document.getElementById('pm-startdate').value = p.startDate;
   document.getElementById('pm-jobprob').value = p.jobProb || '';
+  // 이전 시즌 기록 (?? 로 채워 저장된 0도 0으로 표시, 미입력은 빈칸)
+  document.getElementById('pm-prev-interview-count').value = p.prevInterviewCount ?? '';
+  document.getElementById('pm-prev-interview-min').value   = p.prevInterviewMin ?? '';
+  document.getElementById('pm-prev-pilgi-min').value       = p.prevPilgiMin ?? '';
+  document.getElementById('pm-prev-applications').value    = p.prevApplications ?? '';
   pmCalcWeek();
 
   // 매십경/매십면 시작일 표시 여부 (프로그램 유형에 따라)
@@ -1181,6 +1186,17 @@ window.saveProfile = async () => {
   const jobProb = Number(document.getElementById('pm-jobprob').value) || 0;
   const gyeongStartDate = document.getElementById('pm-gyeong-startdate').value || '';
   const myeonStartDate  = document.getElementById('pm-myeon-startdate').value  || '';
+  // 이전 시즌 기록 — 빈칸은 null(표에서 '-'로 표시), 입력한 0은 실제 0으로 저장
+  const numOrNull = (id) => {
+    const v = document.getElementById(id).value.trim();
+    if (v === '') return null;
+    const n = Number(v);
+    return Number.isNaN(n) ? null : n;
+  };
+  const prevInterviewCount = numOrNull('pm-prev-interview-count');
+  const prevInterviewMin   = numOrNull('pm-prev-interview-min');
+  const prevPilgiMin       = numOrNull('pm-prev-pilgi-min');
+  const prevApplications   = numOrNull('pm-prev-applications');
   // 커리어PT는 커리어PT 시작일을, 매십 전용은 해당 매십 시작일을 startDate로 사용
   const type = userProfile.programType || 'careerpt';
   let startDate;
@@ -1203,11 +1219,15 @@ window.saveProfile = async () => {
       gyeongStartDate,
       myeonStartDate,
       jobProb,
+      prevInterviewCount,
+      prevInterviewMin,
+      prevPilgiMin,
+      prevApplications,
       groupId: pmSelectedGroupId,
       themeColor: color,
     });
 
-    userProfile = { ...userProfile, nickname, startDate, gyeongStartDate, myeonStartDate, jobProb, groupId: pmSelectedGroupId, themeColor: color };
+    userProfile = { ...userProfile, nickname, startDate, gyeongStartDate, myeonStartDate, jobProb, prevInterviewCount, prevInterviewMin, prevPilgiMin, prevApplications, groupId: pmSelectedGroupId, themeColor: color };
     applyTheme(color);
     initHeader();
     document.getElementById('f-nickname').value = nickname;

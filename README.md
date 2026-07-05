@@ -73,6 +73,7 @@
 | `programType` | string | `careerpt` / `maesipgyeong` / `maesipmyeon` / `maesipboth` |
 | `groupId` | string | 소속 그룹 문서 ID (→ `groups`) |
 | `jobProb` | number | 예상 취업 확률 (%) |
+| `prevInterviewCount` / `prevInterviewMin` / `prevPilgiMin` / `prevApplications` | number \| null | 이전 시즌 기록 — 면접 경험(회) · 면접 준비(분) · 필기 준비(분) · 지원 개수(개). 프로필에서 입력, 미입력은 `null`(비교표에 `-`). `compare` 항목 비교 표/엑셀에 표시(기간 무관) |
 | `themeColor` | string | 테마 색상 (hex) |
 | `onboardingDone` | boolean | 온보딩 완료 여부 |
 | `createdAt` | string(ISO) | 생성 시각 |

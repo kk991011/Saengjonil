@@ -401,6 +401,22 @@ function renderCompare() {
   const maxMap = {};
   keys.forEach(k => { maxMap[k] = Math.max(...users.map(u=>statsMap[u.uid]?.[k]||0)); });
 
+  // 이전 시즌 기록 — 프로필 고정값(기간 무관). 미입력(null)은 '-'로 표시, 평균은 입력한 사람만.
+  const PREV_KEYS = ['prevInterviewCount','prevInterviewMin','prevPilgiMin','prevApplications'];
+  const prevAvg = {};
+  PREV_KEYS.forEach(k => {
+    const vals = users.map(u => u[k]).filter(v => v != null && v !== '');
+    prevAvg[k] = vals.length ? Math.round(vals.reduce((a,v)=>a+Number(v),0)/vals.length) : null;
+  });
+  const prevCells = (data, isAvg) => {
+    const g = k => isAvg ? (prevAvg[k] == null ? '-' : prevAvg[k])
+                         : (data[k] == null || data[k] === '' ? '-' : data[k]);
+    return `<td class="prev-col prev-first">${g('prevInterviewCount')}</td>`
+         + `<td class="prev-col">${g('prevInterviewMin')}</td>`
+         + `<td class="prev-col">${g('prevPilgiMin')}</td>`
+         + `<td class="prev-col">${g('prevApplications')}</td>`;
+  };
+
   const row = (data, isAvg, isMe) => {
     const cls = isAvg ? 'avg-row' : isMe ? 'me-row' : '';
     const name = isAvg ? '전체 평균' : (data.nickname + (isMe ? ' 나' : ''));
@@ -418,6 +434,7 @@ function renderCompare() {
       <td class="${!isAvg&&s.pilgi===maxMap.pilgi?'hi':''}">${s.pilgi}</td>
       <td class="${!isAvg&&s.interview===maxMap.interview?'hi':''}">${s.interview}</td>
       <td class="${!isAvg&&s.apps===maxMap.apps?'hi':''}">${s.apps}</td>
+      ${prevCells(data, isAvg)}
     </tr>`;
   };
 
@@ -432,19 +449,24 @@ function renderCompare() {
   document.getElementById('cmp-body').innerHTML = html;
 
   // 엑셀 다운로드용 데이터 저장 (전체 평균 바로 아래 내 행 고정 순서 유지)
-  window._compareData = { users: me ? [me, ...others] : others, statsMap, avg };
+  window._compareData = { users: me ? [me, ...others] : others, statsMap, avg, prevAvg };
 }
 
 // ── 엑셀 다운로드 ──
 window.downloadExcel = () => {
   if (!window._compareData) { alert('먼저 항목 비교 탭을 열어주세요'); return; }
-  const { users, statsMap, avg } = window._compareData;
-  const headers = ['닉네임','주차','매십경','매십면','매십독','매십운','FA','강의','자소서','필기','면접','지원수'];
+  const { users, statsMap, avg, prevAvg } = window._compareData;
+  const PREV_KEYS = ['prevInterviewCount','prevInterviewMin','prevPilgiMin','prevApplications'];
+  const pv = v => (v == null || v === '' ? '-' : v);
+  const headers = ['닉네임','주차','매십경','매십면','매십독','매십운','FA','강의','자소서','필기','면접','지원수',
+    '이전_면접경험(회)','이전_면접준비(분)','이전_필기준비(분)','이전_지원수(개)'];
   const rows = [
-    ['전체 평균','—',...['gyeong','myeon','dok','un','fa','lecture','jasoseo','pilgi','interview','apps'].map(k=>avg[k])],
+    ['전체 평균','—',...['gyeong','myeon','dok','un','fa','lecture','jasoseo','pilgi','interview','apps'].map(k=>avg[k]),
+      ...PREV_KEYS.map(k => pv(prevAvg?.[k]))],
     ...users.map(u => {
       const s = statsMap[u.uid];
-      return [u.nickname, calcWeek(u.startDate)+'주', s.gyeong+'%', s.myeon+'%', s.dok+'%', s.un+'%', s.fa+'%', s.lecture, s.jasoseo, s.pilgi, s.interview, s.apps];
+      return [u.nickname, calcWeek(u.startDate)+'주', s.gyeong+'%', s.myeon+'%', s.dok+'%', s.un+'%', s.fa+'%', s.lecture, s.jasoseo, s.pilgi, s.interview, s.apps,
+        ...PREV_KEYS.map(k => pv(u[k]))];
     })
   ];
   const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
