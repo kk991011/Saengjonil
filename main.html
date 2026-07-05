@@ -188,13 +188,35 @@
 
     <!-- 클래스 수강 -->
     <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:8px">
-      <div style="font-size:12px;font-weight:600;color:var(--main);margin-bottom:8px">클래스 수강</div>
+      <div style="font-size:12px;font-weight:600;color:var(--main);margin-bottom:8px">클래스 수강 <span style="color:#aaa;font-weight:400">(분)</span></div>
+
+      <!-- 단일 클래스: 직접 입력 -->
       <div class="row2" style="margin-bottom:6px">
-        <div class="field"><label>수강 시간 <span style="color:#aaa;font-weight:400">(분)</span></label>
-          <input type="number" id="f-lecture" min="0" placeholder="0" oninput="updateTotalTime()"></div>
-        <div class="field"><label>수강 항목</label>
-          <input type="text" id="f-lecture-item" placeholder="예: 재무제표 분석"></div>
+        <div class="field" style="margin-bottom:0"><label>은행직무클래스</label>
+          <input type="number" id="f-class-bank" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+        <div class="field" style="margin-bottom:0"><label>생존자소서클래스</label>
+          <input type="number" id="f-class-jaso" min="0" placeholder="0" oninput="updateTotalTime()"></div>
       </div>
+      <div class="field" style="margin-bottom:12px"><label>파이낸스프리젠터</label>
+        <input type="number" id="f-class-finance" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+
+      <!-- 생존면접클래스: 드롭다운 + 추가 -->
+      <div style="font-size:11px;font-weight:600;color:var(--main);margin-bottom:5px">생존면접클래스</div>
+      <div class="class-add-row">
+        <select id="f-interview-class-select" class="class-select"></select>
+        <input type="number" id="f-interview-class-min" min="0" placeholder="분" class="class-min-input">
+        <button type="button" class="class-add-btn" onclick="addClassEntry('interview')">추가</button>
+      </div>
+      <div id="interview-class-list" class="class-entry-list"></div>
+
+      <!-- 기업분석자료: 드롭다운 + 추가 -->
+      <div style="font-size:11px;font-weight:600;color:var(--main);margin:12px 0 5px">기업분석자료</div>
+      <div class="class-add-row">
+        <select id="f-analysis-class-select" class="class-select"></select>
+        <input type="number" id="f-analysis-class-min" min="0" placeholder="분" class="class-min-input">
+        <button type="button" class="class-add-btn" onclick="addClassEntry('analysis')">추가</button>
+      </div>
+      <div id="analysis-class-list" class="class-entry-list"></div>
     </div>
 
     <!-- 자소서 -->

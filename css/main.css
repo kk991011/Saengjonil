@@ -160,6 +160,25 @@
   .goal-del { background: none; border: none; cursor: pointer; color: #ccc; font-size: 16px;
     line-height: 1; padding: 0 4px; }
   .goal-del:hover { color: #f87171; }
+  /* 클래스 수강 (드롭다운 + 추가) */
+  .class-add-row { display: flex; gap: 6px; margin-bottom: 6px; }
+  .class-select { flex: 1; min-width: 0; font-size: 13px; padding: 8px 10px; border: 1.5px solid #e8e8e8;
+    border-radius: 8px; font-family: inherit; outline: none; background: white; color: #333; }
+  .class-select:focus { border-color: var(--main); }
+  .class-min-input { width: 62px; flex-shrink: 0; font-size: 13px; padding: 8px 10px; border: 1.5px solid #e8e8e8;
+    border-radius: 8px; font-family: inherit; outline: none; }
+  .class-min-input:focus { border-color: var(--main); }
+  .class-add-btn { flex-shrink: 0; padding: 8px 14px; background: var(--main); color: white; border: none;
+    border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .class-entry-list { display: flex; flex-direction: column; gap: 4px; }
+  .class-entry-row { display: flex; align-items: center; gap: 8px; background: white; border: 1px solid #eee;
+    border-radius: 8px; padding: 6px 10px; font-size: 12px; }
+  .class-entry-name { flex: 1; min-width: 0; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .class-entry-min { color: var(--main); font-weight: 600; flex-shrink: 0; }
+  .class-entry-del { flex-shrink: 0; background: none; border: none; color: #ccc; cursor: pointer;
+    font-size: 14px; line-height: 1; padding: 0 2px; }
+  .class-entry-del:hover { color: #e64980; }
+
   .goal-add-row { display: flex; gap: 8px; margin-top: 12px; }
   .goal-add-row input { flex: 1; padding: 10px 14px; border: 1.5px solid #e8e8e8;
     border-radius: 10px; font-size: 14px; font-family: inherit; outline: none; }

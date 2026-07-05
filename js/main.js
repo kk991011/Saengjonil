@@ -40,6 +40,21 @@ let scoreSelected = 0, faSelected = null;
 let allRecords = [], allGoals = [];
 let groupRecords = [], groupUsers = [];
 
+// ── 클래스 수강 항목 ──
+// 단일 클래스는 직접 입력, 변형이 많은 패밀리(생존면접클래스·기업분석자료)는 드롭다운+추가.
+const SINGLE_CLASSES = [
+  { id: 'f-class-bank',    name: '은행직무클래스' },
+  { id: 'f-class-jaso',    name: '생존자소서클래스' },
+  { id: 'f-class-finance', name: '파이낸스프리젠터' },
+];
+const CLASS_FAMILIES = {
+  interview: { prefix: '생존면접클래스', selectId: 'f-interview-class-select', minId: 'f-interview-class-min', listId: 'interview-class-list',
+    variants: ['인성편','은행편','우리','국민','신한','농협','기업','하나','지역농축협'] },
+  analysis:  { prefix: '기업분석자료', selectId: 'f-analysis-class-select', minId: 'f-analysis-class-min', listId: 'analysis-class-list',
+    variants: ['실전표','우리','국민','신한','농협','기업','하나','지역농축협'] },
+};
+let familyEntries = { interview: {}, analysis: {} };  // { famId: { variant: 분 } }
+
 // ── 인증 확인 ──
 onAuthStateChanged(auth, async u => {
   if (!u) { window.location.href = 'index.html'; return; }
@@ -129,6 +144,7 @@ function initInputForm() {
   const today = localDate();
   document.getElementById('f-date').value = today;
   applyProgramType(userProfile.programType || 'careerpt');
+  renderClassInputs();
 }
 
 // programType에 따라 입력 섹션 표시/숨김
@@ -265,11 +281,74 @@ window.updateDokStatus = () => {
   }
 };
 
+// ── 클래스 수강 입력 ──
+// 셀렉트 옵션 채우기 + 목록 렌더 (폼 초기화 시 호출)
+function renderClassInputs() {
+  Object.values(CLASS_FAMILIES).forEach(fam => {
+    const sel = document.getElementById(fam.selectId);
+    if (sel) sel.innerHTML = '<option value="">클래스 선택...</option>' +
+      fam.variants.map(v => `<option value="${v}">${v}</option>`).join('');
+  });
+  renderFamilyList('interview');
+  renderFamilyList('analysis');
+}
+
+// 전체 클래스 수강 시간 합계(분) = 단일 클래스 + 패밀리 추가분
+function calcLectureTotal() {
+  let sum = 0;
+  SINGLE_CLASSES.forEach(s => { sum += Number(document.getElementById(s.id)?.value) || 0; });
+  Object.values(familyEntries).forEach(fam => Object.values(fam).forEach(m => sum += m));
+  return sum;
+}
+
+// 저장용 클래스 내역 맵 { 전체클래스명: 분 } — 0분 초과만
+function buildLectureItems() {
+  const items = {};
+  SINGLE_CLASSES.forEach(s => { const v = Number(document.getElementById(s.id)?.value) || 0; if (v > 0) items[s.name] = v; });
+  Object.entries(familyEntries).forEach(([famId, fam]) => {
+    const prefix = CLASS_FAMILIES[famId].prefix;
+    Object.entries(fam).forEach(([variant, min]) => { if (min > 0) items[`${prefix}(${variant})`] = min; });
+  });
+  return items;
+}
+
+window.addClassEntry = (famId) => {
+  const fam = CLASS_FAMILIES[famId];
+  const sel = document.getElementById(fam.selectId);
+  const minEl = document.getElementById(fam.minId);
+  const variant = sel.value;
+  const min = Number(minEl.value) || 0;
+  if (!variant) { showToast('클래스를 선택해주세요'); return; }
+  if (min <= 0) { showToast('수강 시간(분)을 입력해주세요'); return; }
+  familyEntries[famId][variant] = (familyEntries[famId][variant] || 0) + min;  // 같은 항목 추가 시 합산
+  sel.value = ''; minEl.value = '';
+  renderFamilyList(famId);
+};
+
+window.removeClassEntry = (famId, variant) => {
+  delete familyEntries[famId][variant];
+  renderFamilyList(famId);
+};
+
+function renderFamilyList(famId) {
+  const fam = CLASS_FAMILIES[famId];
+  const listEl = document.getElementById(fam.listId);
+  if (!listEl) return;
+  const entries = familyEntries[famId];
+  listEl.innerHTML = Object.keys(entries).map(v => `
+    <div class="class-entry-row">
+      <span class="class-entry-name">${fam.prefix}(${v})</span>
+      <span class="class-entry-min">${entries[v]}분</span>
+      <button type="button" class="class-entry-del" onclick="removeClassEntry('${famId}','${v}')">✕</button>
+    </div>`).join('');
+  updateTotalTime();
+}
+
 // 취준 활동 총 시간 자동 합산
 window.updateTotalTime = () => {
   const manualInput = document.getElementById('f-total-time-manual');
   if (manualInput && manualInput.style.display !== 'none') return; // 수동 모드일 때는 합산 안 함
-  const lecture = Number(document.getElementById('f-lecture').value) || 0;
+  const lecture = calcLectureTotal();
   const jasoseo = Number(document.getElementById('f-jasoseo').value) || 0;
   const pilgi = Number(document.getElementById('f-pilgi').value) || 0;
   const interview = Number(document.getElementById('f-interview').value) || 0;
@@ -328,6 +407,8 @@ window.saveRecord = async () => {
   try {
     const focusTags = [...document.querySelectorAll('.focus-tag.selected:not(.exercise-tag)')].map(t => t.textContent);
     const chk = id => document.getElementById(id).classList.contains('checked');
+    const lectureItems = buildLectureItems();
+    const lectureSum = Object.values(lectureItems).reduce((a, b) => a + b, 0);
     const data = {
       uid: user.uid, nickname: userProfile.nickname, date,
       // 매십경 세부
@@ -348,8 +429,8 @@ window.saveRecord = async () => {
       bookTitle:  document.getElementById('f-book-title').value.trim(),
       routineUn:  getSelectedExercises().length > 0,
       exercises:  getSelectedExercises(),
-      lecture: Number(document.getElementById('f-lecture').value) || 0,
-      lectureItem: document.getElementById('f-lecture-item').value.trim(),
+      lecture: lectureSum,
+      lectureItems,
       jasoseo: Number(document.getElementById('f-jasoseo').value) || 0,
       jasoseoCount: Number(document.getElementById('f-jasoseo-count').value) || 0,
       pilgi: Number(document.getElementById('f-pilgi').value) || 0,
@@ -359,7 +440,7 @@ window.saveRecord = async () => {
         if (manualInput && manualInput.style.display !== 'none') {
           return Number(manualInput.value) || 0;
         }
-        return (Number(document.getElementById('f-lecture').value)||0) + (Number(document.getElementById('f-jasoseo').value)||0) + (Number(document.getElementById('f-pilgi').value)||0) + (Number(document.getElementById('f-interview').value)||0);
+        return lectureSum + (Number(document.getElementById('f-jasoseo').value)||0) + (Number(document.getElementById('f-pilgi').value)||0) + (Number(document.getElementById('f-interview').value)||0);
       })(),
       applications: Number(document.getElementById('f-applications').value) || 0,
       selfEsteem: scoreSelected || 0,
@@ -768,8 +849,6 @@ window.editTodayRecord = () => {
   if (r.routineDok)      { document.getElementById('r-dok').classList.add('checked'); document.getElementById('r-dok').closest('.routine-row').classList.add('checked'); }
   if (r.routinePilsa)    { document.getElementById('r-pilsa').classList.add('checked'); document.getElementById('r-pilsa').closest('.routine-row').classList.add('checked'); }
   document.getElementById('f-book-title').value = r.bookTitle || '';
-  const lectureItemEl = document.getElementById('f-lecture-item');
-  if (lectureItemEl) lectureItemEl.value = r.lectureItem || '';
   const jasoseoCountEl = document.getElementById('f-jasoseo-count');
   if (jasoseoCountEl) jasoseoCountEl.value = r.jasoseoCount || '';
   updateDokStatus();
@@ -790,7 +869,21 @@ window.editTodayRecord = () => {
   renderCustomExercises();
   updateExerciseStatus();
 
-  document.getElementById('f-lecture').value      = r.lecture || 0;
+  // 클래스 수강 복원 — lectureItems 맵을 단일 클래스 입력칸 / 패밀리 목록으로 분배
+  SINGLE_CLASSES.forEach(s => { const el = document.getElementById(s.id); if (el) el.value = ''; });
+  familyEntries = { interview: {}, analysis: {} };
+  Object.entries(r.lectureItems || {}).forEach(([name, min]) => {
+    const single = SINGLE_CLASSES.find(s => s.name === name);
+    if (single) { const el = document.getElementById(single.id); if (el) el.value = min; return; }
+    for (const [famId, fam] of Object.entries(CLASS_FAMILIES)) {
+      if (name.startsWith(fam.prefix + '(') && name.endsWith(')')) {
+        familyEntries[famId][name.slice(fam.prefix.length + 1, -1)] = min;
+        break;
+      }
+    }
+  });
+  renderFamilyList('interview');
+  renderFamilyList('analysis');
   document.getElementById('f-jasoseo').value      = r.jasoseo || 0;
   document.getElementById('f-pilgi').value        = r.pilgi || 0;
   document.getElementById('f-interview').value    = r.interview || 0;
