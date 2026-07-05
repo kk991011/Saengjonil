@@ -59,7 +59,7 @@ let currentContext = 'default';
 function initHeader() {
   const wk = calcWeek(userProfile.startDate);
   document.getElementById('user-name').textContent = userProfile.nickname;
-  document.getElementById('week-badge').textContent = `${wk}`;
+  document.getElementById('week-badge').textContent = `${wk}주차`;
   const av = document.getElementById('avatar');
   if (user.photoURL) av.innerHTML = `<img src="${user.photoURL}" alt="프로필">`;
   else av.textContent = userProfile.nickname[0];
