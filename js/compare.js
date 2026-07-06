@@ -175,13 +175,19 @@ function getGroupUsers(scope, progfilter) {
 function setupMyGroupBar() {
   const gids = groupIdsOf(userProfile);
   if (!gids.includes(myGroupSel)) myGroupSel = gids[0] || null;
-  const bar = document.getElementById('my-group-bar');
   const sel = document.getElementById('my-group-select');
-  if (!bar || !sel) return;
-  if (gids.length < 2) { bar.style.display = 'none'; return; }
-  const nameOf = id => allGroups.find(g => g.id === id)?.name || id;
-  bar.style.display = 'flex';
-  sel.innerHTML = gids.map(id => `<option value="${id}" ${id===myGroupSel?'selected':''}>${nameOf(id)}</option>`).join('');
+  if (sel && gids.length >= 2) {
+    const nameOf = id => allGroups.find(g => g.id === id)?.name || id;
+    sel.innerHTML = gids.map(id => `<option value="${id}" ${id===myGroupSel?'selected':''}>${nameOf(id)}</option>`).join('');
+  }
+  updateMyGroupBar();
+}
+// 바 표시: 내 조 2개 이상 AND 현재 탭이 '그룹별 현황'이 아닐 때만 (그룹별 현황은 전체 조를 보므로 불필요)
+function updateMyGroupBar() {
+  const bar = document.getElementById('my-group-bar');
+  if (!bar) return;
+  const show = groupIdsOf(userProfile).length >= 2 && currentTab !== 'group';
+  bar.style.display = show ? 'flex' : 'none';
 }
 window.setMyGroup = (gid) => { myGroupSel = gid; refresh(); };
 
@@ -308,6 +314,7 @@ window.switchTab = (id, btn) => {
   if (id === 'gyeong') currentContext = 'gyeong';
   else if (id === 'myeon') currentContext = 'myeon';
   else currentContext = 'default';
+  updateMyGroupBar();
   refresh();
 };
 
