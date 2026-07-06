@@ -201,7 +201,7 @@ function calcStats(uid, period) {
 }
 
 // 공통 랭킹 카드 HTML 생성 (내 행 고정 상단, 나머지 스크롤)
-function buildRankCardHtml(sorted, statsMap, item, unit, context, cardStyle) {
+function buildRankCardHtml(sorted, statsMap, item, unit, context, cardStyle, showLeader) {
   const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
   const rows = buildRankRows(sorted);
   const myRow = rows.find(r => r.isMe);
@@ -213,7 +213,7 @@ function buildRankCardHtml(sorted, statsMap, item, unit, context, cardStyle) {
     const numCls = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
     return `<div class="rank-row ${isMe?'me':''}">
       <div class="rank-num ${numCls}">${rank}</div>
-      <div class="rank-name">${u.nickname}<span class="rank-week">${wk}</span></div>
+      <div class="rank-name">${showLeader && u.isLeader ? '<span class="leader-tag">조장</span>' : ''}${u.nickname}<span class="rank-week">${wk}</span></div>
       ${isMe?'<span class="me-tag">나</span>':''}
       <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
       <div class="rank-val">${val}${unit}</div>
@@ -248,7 +248,7 @@ function renderGyeongDetail() {
   let html = '';
   items.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
-    html += buildRankCardHtml(sorted, statsMap, item, '%', currentContext, item.highlight?'style="border:1.5px solid var(--main-mid)"':'');
+    html += buildRankCardHtml(sorted, statsMap, item, '%', currentContext, item.highlight?'style="border:1.5px solid var(--main-mid)"':'', filters.gyscope === 'mine');
   });
   document.getElementById('gyeong-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
 }
@@ -268,7 +268,7 @@ function renderMyeonDetail() {
   let html = '';
   items.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
-    html += buildRankCardHtml(sorted, statsMap, item, '%', currentContext, item.highlight?'style="border:1.5px solid var(--main-mid)"':'');
+    html += buildRankCardHtml(sorted, statsMap, item, '%', currentContext, item.highlight?'style="border:1.5px solid var(--main-mid)"':'', filters.myscope === 'mine');
   });
   document.getElementById('myeon-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
 }
@@ -378,7 +378,7 @@ function renderRank() {
   let html = '';
   RANK_ITEMS.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
-    html += buildRankCardHtml(sorted, statsMap, item, item.unit, currentContext, '');
+    html += buildRankCardHtml(sorted, statsMap, item, item.unit, currentContext, '', filters.scope === 'mine');
   });
 
   document.getElementById('rank-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
@@ -646,7 +646,7 @@ window.showGroupDetail = (groupId) => {
     html += `<div class="member-row ${isMe?'me':''}">
       <div class="member-rank ${i<3?'top':''}">${i+1}</div>
       <div class="member-av">${m.nickname[0]}</div>
-      <div class="member-name">${m.nickname}${isMe?' <span style="font-size:10px;color:var(--main);font-weight:600">나</span>':''}<br>
+      <div class="member-name">${m.isLeader ? '<span class="leader-tag">조장</span>' : ''}${m.nickname}${isMe?' <span style="font-size:10px;color:var(--main);font-weight:600">나</span>':''}<br>
         <span style="font-size:10px;color:#aaa">${wk}</span>
       </div>
       <div class="member-bars">

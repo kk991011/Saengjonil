@@ -106,7 +106,7 @@ function renderUsers(search='') {
   document.getElementById('user-table-body').innerHTML = filtered.map(u => `
     <tr>
       <td><div class="user-avatar">${u.photoURL ? `<img src="${u.photoURL}">` : (u.nickname?.[0]||'?')}</div></td>
-      <td style="font-weight:500">${u.nickname||'-'}</td>
+      <td style="font-weight:500">${u.nickname||'-'}${u.isLeader ? ' <span style="font-size:10px;font-weight:700;color:#fff;background:var(--main);padding:1px 6px;border-radius:6px">조장</span>' : ''}</td>
       <td style="font-size:12px;color:#aaa">${u.email||'-'}</td>
       <td><span style="background:var(--main-light);color:var(--main-dark);padding:2px 8px;border-radius:6px;font-size:11px">${groupMap[u.groupId]||'미배정'}</span></td>
       <td style="font-size:12px;color:#aaa">${u.startDate ? calcWeek(u.startDate)+'주차' : '-'}</td>
@@ -369,6 +369,7 @@ window.openUserManage = (uid, nickname, currentGroupId) => {
     allGroups.map(g => `<option value="${g.id}" ${g.id===currentGroupId?'selected':''}>${g.name}</option>`).join('');
   const progSel = document.getElementById('user-program-select');
   progSel.value = u?.programType || 'careerpt';
+  document.getElementById('user-leader-check').checked = u?.isLeader === true;
   openModal('user-manage-modal');
 };
 
@@ -376,10 +377,11 @@ window.saveUserGroup = async () => {
   const uid = document.getElementById('manage-user-uid').value;
   const groupId = document.getElementById('user-group-select').value;
   const programType = document.getElementById('user-program-select').value;
+  const isLeader = document.getElementById('user-leader-check').checked;
   try {
-    await updateDoc(doc(db, 'users', uid), { groupId, programType });
+    await updateDoc(doc(db, 'users', uid), { groupId, programType, isLeader });
     const u = allUsers.find(x=>x.uid===uid);
-    if (u) { u.groupId = groupId; u.programType = programType; }
+    if (u) { u.groupId = groupId; u.programType = programType; u.isLeader = isLeader; }
     closeModal('user-manage-modal');
     renderGroups();
     renderUsers();

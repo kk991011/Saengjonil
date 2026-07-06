@@ -18,10 +18,12 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create: if (isSignedIn() && request.auth.uid == userId
-                        && request.resource.data.get('isAdmin', false) == false)
+                        && request.resource.data.get('isAdmin', false) == false
+                        && request.resource.data.get('isLeader', false) == false)
                     || isAdmin();
       allow update: if (isSignedIn() && request.auth.uid == userId
-                        && request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false))
+                        && request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false)
+                        && request.resource.data.get('isLeader', false) == resource.data.get('isLeader', false))
                     || isAdmin();
       allow delete: if isAdmin();
     }

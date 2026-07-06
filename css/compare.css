@@ -65,6 +65,8 @@
   .rank-val { font-size: 12px; font-weight: 600; color: var(--main);
     min-width: 40px; text-align: right; flex-shrink: 0; }
   .me-tag { font-size: 10px; color: var(--main); font-weight: 600; flex-shrink: 0; }
+  .leader-tag { font-size: 9px; font-weight: 700; color: #fff; background: var(--main);
+    padding: 1px 6px; border-radius: 6px; margin-right: 4px; vertical-align: middle; white-space: nowrap; }
 
   /* 항목 비교 테이블 */
   .table-wrap { overflow-x: auto; overflow-y: auto; max-height: 480px; border-radius: 12px; border: 1px solid #f0f0f0; }
