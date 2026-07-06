@@ -600,9 +600,12 @@ function renderGroups() {
       totalApps: statsArr.reduce((a,s)=>a+(s.apps||0),0),
       members,
     };
-  }).sort((a,b) => b.routineAvg - a.routineAvg);
+  });
 
-  const topGroup = groupStats[0]?.id;
+  // "1위" 뱃지는 루틴 달성률 최고 조 (표시 순서와 무관하게 계산)
+  const topGroup = groupStats.reduce((best, g) => g.routineAvg > (best?.routineAvg ?? -Infinity) ? g : best, null)?.id;
+  // 표시는 조 이름 가나다(숫자 자연) 순 정렬
+  groupStats.sort((a,b) => (a.name || '').localeCompare(b.name || '', 'ko', { numeric: true }));
   let html = '<div class="group-grid">';
   groupStats.forEach(g => {
     const isMe = g.id === userProfile.groupId;
