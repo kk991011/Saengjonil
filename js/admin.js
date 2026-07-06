@@ -79,7 +79,7 @@ function renderGroups() {
       </div>
       <div class="group-members">
         ${members.length ? members.map(m =>
-          `<div class="member-chip">${m.nickname}
+          `<div class="member-chip">${m.isLeader ? '<span style="font-size:9px;font-weight:700;color:#fff;background:var(--main);padding:1px 5px;border-radius:5px;margin-right:4px">조장</span>' : ''}${m.nickname}
             <button class="remove-btn" onclick="removeMemberFromGroup('${m.uid}','${g.name}')" title="그룹에서 제거">×</button>
           </div>`).join('') : '<span style="font-size:12px;color:#ccc">멤버 없음</span>'}
       </div>
@@ -143,6 +143,16 @@ window.openEditGroup = (id, name) => {
   document.getElementById('edit-group-id').value = id;
   document.getElementById('edit-group-name').value = name;
   document.getElementById('edit-group-title').textContent = `"${name}" 수정`;
+  // 조장 지정 — 이 조의 조원 체크리스트 (현재 isLeader 반영)
+  const members = allUsers.filter(u => u.groupId === id);
+  const listEl = document.getElementById('edit-group-leaders');
+  listEl.innerHTML = members.length
+    ? members.map(m => `
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px">
+        <input type="checkbox" class="leader-check" data-uid="${m.uid}" ${m.isLeader ? 'checked' : ''} style="width:16px;height:16px;cursor:pointer">
+        <span>${m.nickname || '-'}</span>
+      </label>`).join('')
+    : '<div style="font-size:12px;color:#ccc">조원이 없어요</div>';
   openModal('edit-group-modal');
 };
 
@@ -154,10 +164,21 @@ window.saveGroupEdit = async () => {
     await updateDoc(doc(db, 'groups', id), { name });
     const g = allGroups.find(x=>x.id===id);
     if (g) g.name = name;
+    // 조장 지정 반영 — 체크 상태가 바뀐 조원만 users.isLeader 업데이트
+    const checks = [...document.querySelectorAll('#edit-group-leaders .leader-check')];
+    await Promise.all(checks.map(chk => {
+      const uid = chk.dataset.uid;
+      const u = allUsers.find(x => x.uid === uid);
+      const val = chk.checked;
+      if (u && (u.isLeader === true) !== val) {
+        return updateDoc(doc(db, 'users', uid), { isLeader: val }).then(() => { u.isLeader = val; });
+      }
+      return null;
+    }));
     closeModal('edit-group-modal');
     renderGroups();
     renderUsers();
-    showToast('그룹 이름이 변경됐어요');
+    showToast('저장됐어요');
   } catch(e) { showToast('오류가 발생했어요'); console.error(e); }
 };
 
@@ -369,7 +390,6 @@ window.openUserManage = (uid, nickname, currentGroupId) => {
     allGroups.map(g => `<option value="${g.id}" ${g.id===currentGroupId?'selected':''}>${g.name}</option>`).join('');
   const progSel = document.getElementById('user-program-select');
   progSel.value = u?.programType || 'careerpt';
-  document.getElementById('user-leader-check').checked = u?.isLeader === true;
   openModal('user-manage-modal');
 };
 
@@ -377,11 +397,10 @@ window.saveUserGroup = async () => {
   const uid = document.getElementById('manage-user-uid').value;
   const groupId = document.getElementById('user-group-select').value;
   const programType = document.getElementById('user-program-select').value;
-  const isLeader = document.getElementById('user-leader-check').checked;
   try {
-    await updateDoc(doc(db, 'users', uid), { groupId, programType, isLeader });
+    await updateDoc(doc(db, 'users', uid), { groupId, programType });
     const u = allUsers.find(x=>x.uid===uid);
-    if (u) { u.groupId = groupId; u.programType = programType; u.isLeader = isLeader; }
+    if (u) { u.groupId = groupId; u.programType = programType; }
     closeModal('user-manage-modal');
     renderGroups();
     renderUsers();

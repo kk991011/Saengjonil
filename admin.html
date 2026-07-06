@@ -105,6 +105,10 @@
     </div>
     <div class="modal-body">
       <div class="field"><label>그룹 이름</label><input type="text" id="edit-group-name" maxlength="20"></div>
+      <div class="field" style="margin-top:12px">
+        <label>조장 지정 <span style="font-size:11px;color:#aaa;font-weight:400">(조원 중 복수 선택 가능)</span></label>
+        <div id="edit-group-leaders" style="display:flex;flex-direction:column;gap:6px;margin-top:6px;max-height:220px;overflow-y:auto"></div>
+      </div>
       <input type="hidden" id="edit-group-id">
       <button class="btn btn-primary" style="width:100%;padding:12px;margin-bottom:10px" onclick="saveGroupEdit()">저장</button>
       <button class="btn btn-danger" style="width:100%;padding:12px" onclick="deleteGroup()">그룹 삭제</button>
@@ -132,12 +136,6 @@
           <option value="maesipmyeon">🎤 매십면 전용</option>
           <option value="maesipboth">📰🎤 매십경 + 매십면</option>
         </select>
-      </div>
-      <div class="field" style="margin-top:10px">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0">
-          <input type="checkbox" id="user-leader-check" style="width:16px;height:16px;cursor:pointer">
-          <span>조장 지정 <span style="font-size:11px;color:#aaa;font-weight:400">(함께 생존에서 조장 태그 표시)</span></span>
-        </label>
       </div>
       <input type="hidden" id="manage-user-uid">
       <button class="btn btn-primary" style="width:100%;padding:12px;margin-bottom:10px" onclick="saveUserGroup()">변경사항 저장</button>
