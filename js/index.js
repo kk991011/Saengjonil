@@ -36,7 +36,6 @@ document.addEventListener('input', (e) => {
 const provider = new GoogleAuthProvider();
 
 let currentUser = null;
-let selectedGroupId = null;
 let selectedProgram = null;
 let currentStep = 1;
 
@@ -92,37 +91,6 @@ async function showOnboarding(user) {
   document.getElementById('onboarding-section').style.display = 'block';
   const nameInput = document.getElementById('ob-nickname');
   if (user.displayName) nameInput.value = user.displayName.split(' ')[0];
-  await loadGroups();
-}
-
-// 그룹 목록 로드
-async function loadGroups() {
-  const snap = await getDocs(collection(db, 'groups'));
-  const listEl = document.getElementById('group-list');
-  listEl.innerHTML = '';
-  if (snap.empty) {
-    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;font-size:14px">아직 등록된 그룹이 없어요.<br>관리자에게 문의해주세요.</div>';
-    return;
-  }
-  // 이름 기준 오름차순 정렬
-  const groups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  groups.sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true }));
-  // 멤버 수는 users.groupId 기준으로 집계 (group.members 배열은 앱이 갱신하지 않아 부정확)
-  const counts = await Promise.all(groups.map(g =>
-    getCountFromServer(query(collection(db, 'users'), where('groupId', '==', g.id)))
-      .then(s => s.data().count).catch(() => 0)));
-  groups.forEach((g, i) => {
-    const el = document.createElement('div');
-    el.className = 'group-option';
-    el.dataset.id = g.id;
-    el.innerHTML = `<div class="g-icon">${g.name[0]}</div><div><div class="g-name">${g.name}</div><div class="g-count">멤버 ${counts[i]}명</div></div>`;
-    el.onclick = () => {
-      document.querySelectorAll('.group-option').forEach(o => o.classList.remove('selected'));
-      el.classList.add('selected');
-      selectedGroupId = g.id;
-    };
-    listEl.appendChild(el);
-  });
 }
 
 // 주차 계산
@@ -197,7 +165,7 @@ window.calcProgramWeek = (prog) => {
   document.getElementById(previewId).style.display = 'block';
 };
 
-// 온보딩 스텝 이동 (4스텝: 기본정보 → 프로그램 → 그룹 → 완료)
+// 온보딩 스텝 이동 (3스텝: 기본정보 → 프로그램 → 완료). 조 배정은 관리자 전용.
 window.obNext = async () => {
   if (currentStep === 1) {
     const nick = document.getElementById('ob-nickname').value.trim();
@@ -217,12 +185,9 @@ window.obNext = async () => {
       if (!document.getElementById('ob-myeon-only-start').value) { alert('매십면 시작일을 입력해주세요.'); return; }
     }
     gotoStep(3);
-  } else if (currentStep === 3) {
-    if (!selectedGroupId) { alert('그룹을 선택해주세요.'); return; }
-    gotoStep(4);
     await saveOnboarding();
     document.getElementById('btn-next').textContent = '내 일지 시작하기 →';
-  } else if (currentStep === 4) {
+  } else if (currentStep === 3) {
     window.location.href = 'main.html';
   }
 };
@@ -239,7 +204,7 @@ function gotoStep(n) {
   document.getElementById(`step${n}`).classList.add('active');
   document.getElementById(`sd${n}`).classList.add('active');
   document.getElementById('btn-back').style.display = n > 1 ? 'block' : 'none';
-  if (n === 4) document.getElementById('btn-back').style.display = 'none';
+  if (n === 3) document.getElementById('btn-back').style.display = 'none';
 }
 
 // 시작일 값 가져오기 헬퍼
@@ -281,7 +246,7 @@ async function saveOnboarding() {
     startDate,
     gyeongStartDate,
     myeonStartDate,
-    groupId: selectedGroupId,
+    groupIds: [],
     programType: selectedProgram,
     jobProb,
     email: currentUser.email,

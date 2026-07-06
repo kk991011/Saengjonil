@@ -49,7 +49,9 @@
     <div style="position:relative;height:200px;margin-bottom:8px"><canvas id="dash-my-chart" role="img" aria-label="내 주차별 매십경 매십면 매십독 매십운 지원수 추이"></canvas></div>
     <div style="font-size:11px;color:#aaa;margin-bottom:20px;text-align:center">매십경·매십면·매십독·매십운 달성률(%) · 지원수(개) — 주차별</div>
 
-    <div class="sec-label">조별 추이 <span id="dash-group-name" style="color:var(--main);font-weight:600;text-transform:none;letter-spacing:0"></span></div>
+    <div class="sec-label">조별 추이 <span id="dash-group-name" style="color:var(--main);font-weight:600;text-transform:none;letter-spacing:0"></span>
+      <select id="dash-group-select" onchange="changeDashGroup(this.value)" style="display:none;font-size:11px;padding:3px 8px;border:1px solid #e0e0e0;border-radius:6px;font-family:inherit;margin-left:6px;color:#333;vertical-align:middle"></select>
+    </div>
     <div style="position:relative;height:200px;margin-bottom:8px"><canvas id="dash-group-chart" role="img" aria-label="조별 주차별 매십경 매십면 매십독 매십운 지원수 추이"></canvas></div>
     <div style="font-size:11px;color:#aaa;margin-bottom:8px;text-align:center">조원 평균 매십경·매십면·매십독·매십운 달성률(%) · 지원수(개) — 주차별</div>
 
@@ -486,8 +488,8 @@
 
       <!-- 그룹 변경 -->
       <div class="field">
-        <label>소속 그룹</label>
-        <div id="pm-group-list" style="display:flex;flex-direction:column;gap:6px;margin-top:4px"></div>
+        <label>소속 조 <span style="font-size:11px;color:#aaa;font-weight:400">(배정은 관리자에게 문의)</span></label>
+        <div id="pm-my-groups" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
       </div>
 
       <!-- 테마 컬러 -->

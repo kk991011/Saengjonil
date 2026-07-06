@@ -666,9 +666,16 @@ async function loadTrend() {
 // ── 대시보드 ──
 let dashMyChartInst, dashGroupChartInst;
 
+let dashGroupId = null;          // 대시보드 조별 추이 대상 조
+const dashGroupNames = {};       // gid -> 조 이름 캐시
+
+// 내 소속 조 목록 (groupIds 배열 / 구 단일 groupId 호환)
+function myGroupIds() {
+  return Array.isArray(userProfile.groupIds) ? userProfile.groupIds : (userProfile.groupId ? [userProfile.groupId] : []);
+}
+
 async function loadDashboard() {
   if (!allRecords.length) await loadAllRecords();
-  if (userProfile.groupId) await loadGroupRecords();
 
   const myWeek = calcWeek(userProfile.startDate);
   const fromWeek = Math.max(1, myWeek - 7);
@@ -682,29 +689,55 @@ async function loadDashboard() {
   const myStats = weekLabels.map(w => calcWeekStats(allRecords, userProfile.startDate, w));
   renderDashChart('dash-my-chart', weekLabels, myStats, color, colorMid);
 
-  // 조별 추이
-  if (userProfile.groupId && groupUsers.length) {
-    const groupName = (await getGroupName(userProfile.groupId)) || '내 그룹';
-    document.getElementById('dash-group-name').textContent = `(${groupName})`;
+  // 조별 추이 — 내 조가 여러 개면 선택기 노출
+  await setupDashGroupSelect();
+  await renderGroupTrend();
+}
 
-    const groupStats = weekLabels.map(w => {
-      // 그룹 내 각 멤버의 본인 시작일 기준 N주차(w) 통계를 평균
-      const memberStats = groupUsers.map(u => calcWeekStats(groupRecords.filter(r=>r.uid===u.uid), u.startDate, w));
-      const n = memberStats.length || 1;
-      return {
-        gyeong: Math.round(memberStats.reduce((a,s)=>a+s.gyeong,0)/n),
-        myeon: Math.round(memberStats.reduce((a,s)=>a+s.myeon,0)/n),
-        dok: Math.round(memberStats.reduce((a,s)=>a+s.dok,0)/n),
-        un: Math.round(memberStats.reduce((a,s)=>a+s.un,0)/n),
-        apps: Math.round(memberStats.reduce((a,s)=>a+s.apps,0)/n*10)/10,
-      };
-    });
-    renderDashChart('dash-group-chart', weekLabels, groupStats, color, colorMid);
-  } else {
-    document.getElementById('dash-group-name').textContent = '';
-    const el = document.getElementById('dash-group-chart');
-    if (el) { const ex = Chart.getChart(el); if (ex) ex.destroy(); }
-  }
+async function setupDashGroupSelect() {
+  const gids = myGroupIds();
+  await Promise.all(gids.filter(id => !dashGroupNames[id]).map(async id => { dashGroupNames[id] = (await getGroupName(id)) || id; }));
+  if (!gids.includes(dashGroupId)) dashGroupId = gids[0] || null;
+  const sel = document.getElementById('dash-group-select');
+  if (!sel) return;
+  if (gids.length <= 1) { sel.style.display = 'none'; sel.innerHTML = ''; return; }
+  sel.style.display = '';
+  sel.innerHTML = gids.map(id => `<option value="${id}" ${id===dashGroupId?'selected':''}>${dashGroupNames[id]}</option>`).join('');
+}
+
+window.changeDashGroup = async (gid) => { dashGroupId = gid; await renderGroupTrend(); };
+
+// 조별 추이 (선택된 조 기준). 미배정/멤버 없음이면 차트 숨김.
+async function renderGroupTrend() {
+  const nameEl = document.getElementById('dash-group-name');
+  const chartEl = document.getElementById('dash-group-chart');
+  const clear = () => { if (nameEl) nameEl.textContent = ''; if (chartEl) { const ex = Chart.getChart(chartEl); if (ex) ex.destroy(); } };
+  const gid = dashGroupId;
+  if (!gid) { clear(); return; }
+  await loadGroupRecords(gid);
+  if (!groupUsers.length) { clear(); return; }
+  if (nameEl) nameEl.textContent = `(${dashGroupNames[gid] || '내 그룹'})`;
+
+  const myWeek = calcWeek(userProfile.startDate);
+  const fromWeek = Math.max(1, myWeek - 7);
+  const weekLabels = [];
+  for (let w = fromWeek; w <= myWeek; w++) weekLabels.push(w);
+  const color = getComputedStyle(document.documentElement).getPropertyValue('--main').trim() || '#534AB7';
+  const colorMid = getComputedStyle(document.documentElement).getPropertyValue('--main-mid').trim() || '#7F77DD';
+
+  const groupStats = weekLabels.map(w => {
+    // 그룹 내 각 멤버의 본인 시작일 기준 N주차(w) 통계를 평균
+    const memberStats = groupUsers.map(u => calcWeekStats(groupRecords.filter(r=>r.uid===u.uid), u.startDate, w));
+    const n = memberStats.length || 1;
+    return {
+      gyeong: Math.round(memberStats.reduce((a,s)=>a+s.gyeong,0)/n),
+      myeon: Math.round(memberStats.reduce((a,s)=>a+s.myeon,0)/n),
+      dok: Math.round(memberStats.reduce((a,s)=>a+s.dok,0)/n),
+      un: Math.round(memberStats.reduce((a,s)=>a+s.un,0)/n),
+      apps: Math.round(memberStats.reduce((a,s)=>a+s.apps,0)/n*10)/10,
+    };
+  });
+  renderDashChart('dash-group-chart', weekLabels, groupStats, color, colorMid);
 }
 
 // 특정 주차(w)에 해당하는 날짜 범위의 기록으로부터 매십경·매십독 달성률, 지원수 계산
@@ -754,8 +787,8 @@ function renderDashChart(canvasId, labels, statsArr, color, colorMid) {
   });
 }
 
-async function loadGroupRecords() {
-  const uSnap = await getDocs(query(collection(db,'users'), where('groupId','==',userProfile.groupId)));
+async function loadGroupRecords(gid) {
+  const uSnap = await getDocs(query(collection(db,'users'), where('groupIds','array-contains', gid)));
   groupUsers = uSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
   const uids = groupUsers.map(u => u.uid);
   if (!uids.length) { groupRecords = []; return; }
@@ -1128,7 +1161,6 @@ const THEME_PRESETS = [
   { name:'황색', color:'#854F0B' }, { name:'회색', color:'#5F5E5A' },
 ];
 
-let pmSelectedGroupId = null;
 let pmSelectedColor = null;
 
 window.openProfile = async () => {
@@ -1182,7 +1214,7 @@ window.openProfile = async () => {
   renderSwatches(pmSelectedColor);
 
   // 그룹 목록 로드
-  await loadPmGroups(p.groupId);
+  await renderPmGroups();
 };
 
 window.closeProfile = () => {
@@ -1244,34 +1276,13 @@ window.pmCalcProgramWeek = (prog) => {
   document.getElementById(previewId).style.display = 'block';
 };
 
-async function loadPmGroups(currentGroupId) {
-  pmSelectedGroupId = currentGroupId;
-  const listEl = document.getElementById('pm-group-list');
-  listEl.innerHTML = '<div style="font-size:13px;color:#ccc;padding:8px 0">불러오는 중...</div>';
-  const snap = await getDocs(collection(db, 'groups'));
-  listEl.innerHTML = '';
-  if (snap.empty) {
-    listEl.innerHTML = '<div style="font-size:13px;color:#ccc;padding:8px 0">등록된 그룹이 없어요. 관리자에게 문의해주세요.</div>';
-    return;
-  }
-  const groups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  groups.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko', { numeric: true }));
-  // 멤버 수는 users.groupId 기준으로 집계 (group.members 배열은 앱이 갱신하지 않아 부정확)
-  const counts = await Promise.all(groups.map(g =>
-    getCountFromServer(query(collection(db, 'users'), where('groupId', '==', g.id)))
-      .then(s => s.data().count).catch(() => 0)));
-  groups.forEach((g, i) => {
-    const opt = document.createElement('div');
-    opt.className = 'pm-group-option' + (g.id === currentGroupId ? ' selected' : '');
-    opt.dataset.id = g.id;
-    opt.innerHTML = `<div class="g-icon">${g.name[0]}</div><div><div class="g-name">${g.name}</div><div class="g-count">멤버 ${counts[i]}명</div></div>`;
-    opt.onclick = () => {
-      document.querySelectorAll('.pm-group-option').forEach(o => o.classList.remove('selected'));
-      opt.classList.add('selected');
-      pmSelectedGroupId = g.id;
-    };
-    listEl.appendChild(opt);
-  });
+// 소속 조 읽기 전용 표시 (조 배정은 관리자 전용)
+async function renderPmGroups() {
+  const el = document.getElementById('pm-my-groups');
+  const gids = myGroupIds();
+  if (!gids.length) { el.innerHTML = '<span style="font-size:13px;color:#aaa">미배정 — 관리자가 조를 배정해드려요</span>'; return; }
+  const names = await Promise.all(gids.map(id => getGroupName(id).then(n => n || id)));
+  el.innerHTML = names.map(n => `<span style="background:var(--main-light);color:var(--main-dark);padding:4px 10px;border-radius:8px;font-size:13px">${n}</span>`).join('');
 }
 
 window.saveProfile = async () => {
@@ -1298,7 +1309,6 @@ window.saveProfile = async () => {
   else startDate = gyeongStartDate; // maesipgyeong, maesipboth
   if (!nickname) { showToast('닉네임을 입력해주세요'); return; }
   if (!startDate) { showToast('참여 시작일을 선택해주세요'); return; }
-  if (!pmSelectedGroupId) { showToast('그룹을 선택해주세요'); return; }
 
   const btn = document.getElementById('pm-save-btn');
   btn.disabled = true; btn.textContent = '저장 중...';
@@ -1316,11 +1326,10 @@ window.saveProfile = async () => {
       prevInterviewMin,
       prevPilgiMin,
       prevApplications,
-      groupId: pmSelectedGroupId,
       themeColor: color,
     });
 
-    userProfile = { ...userProfile, nickname, startDate, gyeongStartDate, myeonStartDate, jobProb, prevInterviewCount, prevInterviewMin, prevPilgiMin, prevApplications, groupId: pmSelectedGroupId, themeColor: color };
+    userProfile = { ...userProfile, nickname, startDate, gyeongStartDate, myeonStartDate, jobProb, prevInterviewCount, prevInterviewMin, prevPilgiMin, prevApplications, themeColor: color };
     applyTheme(color);
     initHeader();
     document.getElementById('f-nickname').value = nickname;

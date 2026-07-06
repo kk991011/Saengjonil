@@ -71,7 +71,7 @@
 | `nickname` / `email` / `photoURL` | string | 프로필 |
 | `startDate` / `gyeongStartDate` / `myeonStartDate` | string(YYYY-MM-DD) | 프로그램별 시작일 |
 | `programType` | string | `careerpt` / `maesipgyeong` / `maesipmyeon` / `maesipboth` |
-| `groupId` | string | 소속 그룹 문서 ID (→ `groups`) |
+| `groupIds` | array | 소속 조 문서 ID 목록(**다중 가입**, → `groups`). **관리자만** 배정(온보딩/프로필에서 못 바꿈). 구버전 단일 `groupId`는 코드 헬퍼로 호환 |
 | `jobProb` | number | 예상 취업 확률 (%) |
 | `prevInterviewCount` / `prevInterviewMin` / `prevPilgiMin` / `prevApplications` | number \| null | 이전 시즌 기록 — 면접 경험(회) · 면접 준비(분) · 필기 준비(분) · 지원 개수(개). 프로필에서 입력, 미입력은 `null`(비교표에 `-`). `compare` 항목 비교 표/엑셀에 표시(기간 무관) |
 | `themeColor` | string | 테마 색상 (hex) |
@@ -82,7 +82,8 @@
 | 필드 | 타입 | 설명 |
 |---|---|---|
 | `name` | string | 조 이름 |
-| `members` | array | 표시용 멤버 목록(실제 소속 판정은 `users.groupId` 기준) |
+| `leaderUids` | array | 이 조의 **조장** uid 목록(조당 여러 명 가능). 관리자가 그룹 수정에서 지정 |
+| `members` | array | (레거시·미사용) 실제 소속 판정은 `users.groupIds` 기준 |
 | `createdAt` | string(ISO) | 생성 시각 |
 
 ### `records` — 문서 ID = **`{uid}_{YYYY-MM-DD}`** (하루 1문서)
@@ -93,7 +94,7 @@
 | 매십면 | `myeon_am` / `myeon_pm` / `myeon_feedback` (bool), `myeonScore`(0–3) |
 | 루틴 | `routineGyeong` / `routineMyeon` / `routineDok` / `routinePilsa` (bool) |
 | 독서/운동 | `bookTitle`(str), `routineUn`(bool), `exercises`(array) |
-| 취준활동 | `lecture` / `jasoseo` / `jasoseoCount` / `pilgi` / `interview` / `totalTime` / `applications` (number), `lectureItem`(str) |
+| 취준활동 | `lecture` / `jasoseo` / `jasoseoCount` / `pilgi` / `interview` / `totalTime` / `applications` (number), `lectureItems`(map: 강의명→분; `lecture`는 그 합계) |
 | 기타 | `selfEsteem`(1–5), `jobProb`(복사본), `fa5050`(bool), `focusTags`(array), `createdAt`(ISO) |
 
 ### `weekly_goals` — 문서 ID = **`{uid}_week{N}`** 또는 **`{uid}_month_{YYYY-MM}`**
@@ -106,7 +107,8 @@
 
 **관계 (수동 참조, FK 강제 없음):**
 ```
-users(uid) ──groupId──▶ groups(docId)
+users(uid) ──groupIds[]──▶ groups(docId)  (다중)
+groups(docId).leaderUids[] ──▶ users(uid)  (조장)
 records(`{uid}_{date}`).uid ──▶ users(uid)
 weekly_goals(`{uid}_...`) ── uid를 문서 ID에 내장
 ```

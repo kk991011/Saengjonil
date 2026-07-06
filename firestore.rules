@@ -19,11 +19,12 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create: if (isSignedIn() && request.auth.uid == userId
                         && request.resource.data.get('isAdmin', false) == false
-                        && request.resource.data.get('isLeader', false) == false)
+                        && request.resource.data.get('groupIds', []).size() == 0)
                     || isAdmin();
+      // 본인 문서 수정 가능하나 isAdmin·groupIds(조 배정)는 못 바꿈 → 조 배정은 관리자 전용
       allow update: if (isSignedIn() && request.auth.uid == userId
                         && request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false)
-                        && request.resource.data.get('isLeader', false) == resource.data.get('isLeader', false))
+                        && request.resource.data.get('groupIds', []) == resource.data.get('groupIds', []))
                     || isAdmin();
       allow delete: if isAdmin();
     }

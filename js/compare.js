@@ -26,6 +26,7 @@ onAuthStateChanged(auth, async u => {
   applyTheme(userProfile.themeColor || '#534AB7');
   initHeader();
   await loadAllData();
+  setupMyGroupBar();
   await refresh();
 });
 
@@ -153,13 +154,36 @@ function getUserRecords(uid, period) {
   return filterRecords(allRecords.filter(r => r.uid === uid), period, u?.startDate);
 }
 
+// 유저의 소속 조 목록 (groupIds 배열 / 구 단일 groupId 호환)
+const groupIdsOf = (u) => Array.isArray(u.groupIds) ? u.groupIds : (u.groupId ? [u.groupId] : []);
+let myGroupSel = null;   // '내 그룹' 컨텍스트로 선택된 조
+// 선택된 조의 조장 uid Set (scope가 'mine'이고 선택 조가 있을 때만 태그 표시)
+function leaderSetForScope(scope) {
+  if (scope !== 'mine' || !myGroupSel) return null;
+  return new Set(allGroups.find(g => g.id === myGroupSel)?.leaderUids || []);
+}
+
 function getGroupUsers(scope, progfilter) {
   let users = allUsers;
-  if (scope === 'mine') users = users.filter(u => u.groupId === userProfile.groupId);
+  if (scope === 'mine') users = myGroupSel ? users.filter(u => groupIdsOf(u).includes(myGroupSel)) : [];
   const pf = progfilter || filters.progfilter || 'all';
   if (pf !== 'all') users = users.filter(u => (u.programType || 'careerpt') === pf);
   return users;
 }
+
+// '내 그룹' 조 선택기 — 내 조가 2개 이상일 때만 노출, 선택 조가 '내 그룹' 컨텍스트가 됨
+function setupMyGroupBar() {
+  const gids = groupIdsOf(userProfile);
+  if (!gids.includes(myGroupSel)) myGroupSel = gids[0] || null;
+  const bar = document.getElementById('my-group-bar');
+  const sel = document.getElementById('my-group-select');
+  if (!bar || !sel) return;
+  if (gids.length < 2) { bar.style.display = 'none'; return; }
+  const nameOf = id => allGroups.find(g => g.id === id)?.name || id;
+  bar.style.display = 'flex';
+  sel.innerHTML = gids.map(id => `<option value="${id}" ${id===myGroupSel?'selected':''}>${nameOf(id)}</option>`).join('');
+}
+window.setMyGroup = (gid) => { myGroupSel = gid; refresh(); };
 
 // 상위 N명 + 내 순위가 N위 밖이면 내 행도 별도로 추가
 // 내 행을 상단에 고정하고 나머지를 순위대로 정렬 (전체 표시)
@@ -201,7 +225,7 @@ function calcStats(uid, period) {
 }
 
 // 공통 랭킹 카드 HTML 생성 (내 행 고정 상단, 나머지 스크롤)
-function buildRankCardHtml(sorted, statsMap, item, unit, context, cardStyle, showLeader) {
+function buildRankCardHtml(sorted, statsMap, item, unit, context, cardStyle, leaderSet) {
   const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
   const rows = buildRankRows(sorted);
   const myRow = rows.find(r => r.isMe);
@@ -213,7 +237,7 @@ function buildRankCardHtml(sorted, statsMap, item, unit, context, cardStyle, sho
     const numCls = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
     return `<div class="rank-row ${isMe?'me':''}">
       <div class="rank-num ${numCls}">${rank}</div>
-      <div class="rank-name">${showLeader && u.isLeader ? '<span class="leader-tag">조장</span>' : ''}${u.nickname}<span class="rank-week">${wk}</span></div>
+      <div class="rank-name">${leaderSet && leaderSet.has(u.uid) ? '<span class="leader-tag">조장</span>' : ''}${u.nickname}<span class="rank-week">${wk}</span></div>
       ${isMe?'<span class="me-tag">나</span>':''}
       <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
       <div class="rank-val">${val}${unit}</div>
@@ -248,7 +272,7 @@ function renderGyeongDetail() {
   let html = '';
   items.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
-    html += buildRankCardHtml(sorted, statsMap, item, '%', currentContext, item.highlight?'style="border:1.5px solid var(--main-mid)"':'', filters.gyscope === 'mine');
+    html += buildRankCardHtml(sorted, statsMap, item, '%', currentContext, item.highlight?'style="border:1.5px solid var(--main-mid)"':'', leaderSetForScope(filters.gyscope));
   });
   document.getElementById('gyeong-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
 }
@@ -268,7 +292,7 @@ function renderMyeonDetail() {
   let html = '';
   items.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
-    html += buildRankCardHtml(sorted, statsMap, item, '%', currentContext, item.highlight?'style="border:1.5px solid var(--main-mid)"':'', filters.myscope === 'mine');
+    html += buildRankCardHtml(sorted, statsMap, item, '%', currentContext, item.highlight?'style="border:1.5px solid var(--main-mid)"':'', leaderSetForScope(filters.myscope));
   });
   document.getElementById('myeon-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
 }
@@ -378,7 +402,7 @@ function renderRank() {
   let html = '';
   RANK_ITEMS.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
-    html += buildRankCardHtml(sorted, statsMap, item, item.unit, currentContext, '', filters.scope === 'mine');
+    html += buildRankCardHtml(sorted, statsMap, item, item.unit, currentContext, '', leaderSetForScope(filters.scope));
   });
 
   document.getElementById('rank-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
@@ -589,7 +613,7 @@ function renderGroups() {
 
   // 그룹별 통계
   const groupStats = allGroups.map(g => {
-    const members = allUsers.filter(u => u.groupId === g.id);
+    const members = allUsers.filter(u => groupIdsOf(u).includes(g.id));
     const statsArr = members.map(u => calcStats(u.uid, period));
     const n = statsArr.length || 1;
     const avgStat = k => Math.round(statsArr.reduce((a,s)=>a+(s[k]||0),0)/n);
@@ -606,9 +630,10 @@ function renderGroups() {
   const topGroup = groupStats.reduce((best, g) => g.routineAvg > (best?.routineAvg ?? -Infinity) ? g : best, null)?.id;
   // 표시는 조 이름 가나다(숫자 자연) 순 정렬
   groupStats.sort((a,b) => (a.name || '').localeCompare(b.name || '', 'ko', { numeric: true }));
+  const myGids = new Set(groupIdsOf(userProfile));
   let html = '<div class="group-grid">';
   groupStats.forEach(g => {
-    const isMe = g.id === userProfile.groupId;
+    const isMe = myGids.has(g.id);
     const isTop = g.id === topGroup;
     html += `<div class="group-card ${isMe?'mine':''}" onclick="showGroupDetail('${g.id}')">
       <div class="group-name">${g.name}
@@ -636,6 +661,7 @@ window.showGroupDetail = (groupId) => {
   document.getElementById('detail-sub').textContent = `${g.memberCount}명 · 루틴 달성 평균 ${g.routineAvg}%`;
 
   const period = filters.gperiod;
+  const leaders = new Set(g.leaderUids || []);
   const members = [...g.members].sort((a,b) => {
     const sa = calcStats(a.uid, period), sb = calcStats(b.uid, period);
     return sb.gyeong - sa.gyeong;
@@ -649,7 +675,7 @@ window.showGroupDetail = (groupId) => {
     html += `<div class="member-row ${isMe?'me':''}">
       <div class="member-rank ${i<3?'top':''}">${i+1}</div>
       <div class="member-av">${m.nickname[0]}</div>
-      <div class="member-name">${m.isLeader ? '<span class="leader-tag">조장</span>' : ''}${m.nickname}${isMe?' <span style="font-size:10px;color:var(--main);font-weight:600">나</span>':''}<br>
+      <div class="member-name">${leaders.has(m.uid) ? '<span class="leader-tag">조장</span>' : ''}${m.nickname}${isMe?' <span style="font-size:10px;color:var(--main);font-weight:600">나</span>':''}<br>
         <span style="font-size:10px;color:#aaa">${wk}</span>
       </div>
       <div class="member-bars">

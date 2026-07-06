@@ -35,6 +35,13 @@
 
 <main class="content">
 
+  <!-- 내 그룹 선택기 (내 조 2개 이상일 때만 노출) -->
+  <div id="my-group-bar" style="display:none;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;color:#666">
+    <span>내 조</span>
+    <select id="my-group-select" onchange="setMyGroup(this.value)" style="font-size:13px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333"></select>
+    <span style="font-size:11px;color:#aaa">— '내 그룹' 기준 조</span>
+  </div>
+
   <!-- ── 랭킹 ── -->
   <div class="tab-panel active" id="tab-rank">
     <div class="filter-row" id="rank-scope-filter">
