@@ -1181,8 +1181,8 @@ window.openProfile = async () => {
   document.getElementById('pm-jobprob').value = p.jobProb || '';
   // 이전 시즌 기록 (?? 로 채워 저장된 0도 0으로 표시, 미입력은 빈칸)
   document.getElementById('pm-prev-interview-count').value = p.prevInterviewCount ?? '';
-  document.getElementById('pm-prev-interview-min').value   = p.prevInterviewMin ?? '';
-  document.getElementById('pm-prev-pilgi-min').value       = p.prevPilgiMin ?? '';
+  document.getElementById('pm-prev-interview-hour').value  = p.prevInterviewHour ?? '';
+  document.getElementById('pm-prev-pilgi-hour').value      = p.prevPilgiHour ?? '';
   document.getElementById('pm-prev-applications').value    = p.prevApplications ?? '';
   pmCalcWeek();
 
@@ -1298,8 +1298,8 @@ window.saveProfile = async () => {
     return Number.isNaN(n) ? null : n;
   };
   const prevInterviewCount = numOrNull('pm-prev-interview-count');
-  const prevInterviewMin   = numOrNull('pm-prev-interview-min');
-  const prevPilgiMin       = numOrNull('pm-prev-pilgi-min');
+  const prevInterviewHour  = numOrNull('pm-prev-interview-hour');
+  const prevPilgiHour      = numOrNull('pm-prev-pilgi-hour');
   const prevApplications   = numOrNull('pm-prev-applications');
   // 커리어PT는 커리어PT 시작일을, 매십 전용은 해당 매십 시작일을 startDate로 사용
   const type = userProfile.programType || 'careerpt';
@@ -1323,13 +1323,13 @@ window.saveProfile = async () => {
       myeonStartDate,
       jobProb,
       prevInterviewCount,
-      prevInterviewMin,
-      prevPilgiMin,
+      prevInterviewHour,
+      prevPilgiHour,
       prevApplications,
       themeColor: color,
     });
 
-    userProfile = { ...userProfile, nickname, startDate, gyeongStartDate, myeonStartDate, jobProb, prevInterviewCount, prevInterviewMin, prevPilgiMin, prevApplications, themeColor: color };
+    userProfile = { ...userProfile, nickname, startDate, gyeongStartDate, myeonStartDate, jobProb, prevInterviewCount, prevInterviewHour, prevPilgiHour, prevApplications, themeColor: color };
     applyTheme(color);
     initHeader();
     document.getElementById('f-nickname').value = nickname;

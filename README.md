@@ -78,7 +78,7 @@
 | `groupIds` | array | 소속 조 문서 ID 목록(**다중 가입**, → `groups`). **관리자만** 배정(온보딩/프로필에서 못 바꿈, 보안 규칙으로 강제). 구버전 단일 `groupId`는 코드 헬퍼 `groupIdsOf()`로 호환 |
 | `isAdmin` | boolean | 관리자 여부. **관리자 판정은 이 필드**(과거 `ADMIN_UIDS` 배열 방식은 폐기). 본인이 못 바꿈(규칙) |
 | `jobProb` | number | 예상 취업 확률 (%) |
-| `prevInterviewCount` / `prevInterviewMin` / `prevPilgiMin` / `prevApplications` | number \| null | 이전 시즌 기록 — 면접 경험(회)·면접 준비(분)·필기 준비(분)·지원 개수(개). 프로필에서 입력, 미입력은 `null`(비교표에 `-`). `compare` 항목 비교 표/엑셀에 표시(기간 무관) |
+| `prevInterviewCount` / `prevInterviewHour` / `prevPilgiHour` / `prevApplications` | number \| null | 이전 시즌 기록 — 면접 경험(회)·면접 준비(시간)·필기 준비(시간)·지원 개수(개). 프로필에서 입력, 미입력은 `null`(비교표에 `-`). `compare` 항목 비교 표/엑셀에 표시(기간 무관) |
 | `themeColor` | string | 테마 색상 (hex) |
 | `onboardingDone` | boolean | 온보딩 완료 여부 |
 | `createdAt` | string(ISO) | 생성 시각 |

@@ -434,7 +434,7 @@ function renderCompare() {
   keys.forEach(k => { maxMap[k] = Math.max(...users.map(u=>statsMap[u.uid]?.[k]||0)); });
 
   // 이전 시즌 기록 — 프로필 고정값(기간 무관). 미입력(null)은 '-'로 표시, 평균은 입력한 사람만.
-  const PREV_KEYS = ['prevInterviewCount','prevInterviewMin','prevPilgiMin','prevApplications'];
+  const PREV_KEYS = ['prevInterviewCount','prevInterviewHour','prevPilgiHour','prevApplications'];
   const prevAvg = {};
   PREV_KEYS.forEach(k => {
     const vals = users.map(u => u[k]).filter(v => v != null && v !== '');
@@ -444,8 +444,8 @@ function renderCompare() {
     const g = k => isAvg ? (prevAvg[k] == null ? '-' : prevAvg[k])
                          : (data[k] == null || data[k] === '' ? '-' : data[k]);
     return `<td class="prev-col prev-first">${g('prevInterviewCount')}</td>`
-         + `<td class="prev-col">${g('prevInterviewMin')}</td>`
-         + `<td class="prev-col">${g('prevPilgiMin')}</td>`
+         + `<td class="prev-col">${g('prevInterviewHour')}</td>`
+         + `<td class="prev-col">${g('prevPilgiHour')}</td>`
          + `<td class="prev-col">${g('prevApplications')}</td>`;
   };
 
@@ -487,10 +487,10 @@ function renderCompare() {
 window.downloadExcel = () => {
   if (!window._compareData) { alert('먼저 항목 비교 탭을 열어주세요'); return; }
   const { users, statsMap, avg, prevAvg } = window._compareData;
-  const PREV_KEYS = ['prevInterviewCount','prevInterviewMin','prevPilgiMin','prevApplications'];
+  const PREV_KEYS = ['prevInterviewCount','prevInterviewHour','prevPilgiHour','prevApplications'];
   const pv = v => (v == null || v === '' ? '-' : v);
   const headers = ['닉네임','주차','매십경','매십면','매십독','매십운','FA','자소서','필기','면접','지원수',
-    '이전_면접경험(회)','이전_면접준비(분)','이전_필기준비(분)','이전_지원수(개)'];
+    '이전_면접경험(회)','이전_면접준비(시간)','이전_필기준비(시간)','이전_지원수(개)'];
   const rows = [
     ['전체 평균','—',...['gyeong','myeon','dok','un','fa','jasoseo','pilgi','interview','apps'].map(k=>avg[k]),
       ...PREV_KEYS.map(k => pv(prevAvg?.[k]))],
