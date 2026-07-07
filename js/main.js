@@ -497,7 +497,7 @@ async function loadSummary() {
   setPct('p-myeon-2','pb-myeon-2',mP);
   setPct('p-myeon-3','pb-myeon-3',mF);
   // 나머지
-  setPct('p-dok','pb-dok',pct('routineDok'));
+  setPct('p-dok','pb-dok',Math.round((pct('routineDok')+pct('routinePilsa'))/2));
   setPct('p-un','pb-un',pct('routineUn'));
   setPct('p-fa','pb-fa',pct('fa5050'));
   const avg = k => n ? Math.round(recs.reduce((a,r)=>a+(r[k]||0),0)/n) : 0;
@@ -608,7 +608,9 @@ async function loadTrend() {
   // 매십면·매십운·매십독·FA5050 주차별 달성률 (각 항목별 그래프)
   const iWk = calcWeek(userProfile.startDate);
   const iFrom = Math.max(1, iWk - 7);
-  const itemWeekly = (field) => {
+  // fields: 단일 필드명 또는 세부 항목 배열(각 비율의 평균 = 세부평균 달성률)
+  const itemWeekly = (fields) => {
+    const arr = Array.isArray(fields) ? fields : [fields];
     const ls = [], ds = [];
     for (let w = iFrom; w <= iWk; w++) {
       const st = new Date(userProfile.startDate);
@@ -617,7 +619,7 @@ async function loadTrend() {
       const fs = localDate(f), ts = localDate(t);
       const wr = allRecords.filter(r => r.date >= fs && r.date <= ts);
       ls.push(`${w}주차`);
-      ds.push(wr.length ? Math.round(wr.filter(r => r[field]).length / wr.length * 100) : null);
+      ds.push(wr.length ? Math.round(arr.reduce((a,fld)=>a + wr.filter(r=>r[fld]).length / wr.length * 100, 0) / arr.length) : null);
     }
     return { ls, ds };
   };
@@ -630,10 +632,10 @@ async function loadTrend() {
         scales:{ x:{ ticks:{ font:{ size:10 } }, grid:{ display:false } },
           y:{ min:0, max:100, ticks:{ callback:v=>v+'%', font:{ size:10 } }, grid:{ color:'rgba(0,0,0,.04)' } } } } });
   };
-  mkRateChart('itrend-myeon', 'routineMyeon', ITEM_COLORS.myeon);
-  mkRateChart('itrend-gyeong', 'routineGyeong', ITEM_COLORS.gyeong);
+  mkRateChart('itrend-myeon', ['myeon_am','myeon_pm','myeon_feedback'], ITEM_COLORS.myeon);
+  mkRateChart('itrend-gyeong', ['gyeong_article','gyeong_opinion','gyeong_comment'], ITEM_COLORS.gyeong);
   mkRateChart('itrend-un', 'routineUn', ITEM_COLORS.un);
-  mkRateChart('itrend-dok', 'routineDok', ITEM_COLORS.dok);
+  mkRateChart('itrend-dok', ['routineDok','routinePilsa'], ITEM_COLORS.dok);
   mkRateChart('itrend-fa', 'fa5050', ITEM_COLORS.fa);
 
   // 주간 목표 달성률 차트
@@ -750,11 +752,12 @@ function calcWeekStats(recs, startDate, weekNum) {
   const weekRecs = recs.filter(r => r.date >= fromStr && r.date <= toStr);
   const n = weekRecs.length;
   if (!n) return { gyeong: 0, myeon: 0, dok: 0, un: 0, apps: 0 };
+  const pct = f => weekRecs.filter(r=>r[f]).length / n * 100;
   return {
-    gyeong: Math.round(weekRecs.filter(r=>r.routineGyeong).length / n * 100),
-    myeon: Math.round(weekRecs.filter(r=>r.routineMyeon).length / n * 100),
-    dok: Math.round(weekRecs.filter(r=>r.routineDok).length / n * 100),
-    un: Math.round(weekRecs.filter(r=>r.routineUn).length / n * 100),
+    gyeong: Math.round((pct('gyeong_article')+pct('gyeong_opinion')+pct('gyeong_comment'))/3),
+    myeon: Math.round((pct('myeon_am')+pct('myeon_pm')+pct('myeon_feedback'))/3),
+    dok: Math.round((pct('routineDok')+pct('routinePilsa'))/2),
+    un: Math.round(pct('routineUn')),
     apps: weekRecs.reduce((a,r)=>a+(r.applications||0),0),
   };
 }
@@ -814,6 +817,8 @@ window.loadRecords = async () => {
   if (!recs.length) { list.innerHTML = '<div class="empty-state"><p>아직 기록이 없어요.<br>오늘 입력 탭에서 첫 기록을 남겨보세요!</p></div>'; return; }
   list.innerHTML = recs.map(r => {
     const routineDone = [r.routineGyeong,r.routineMyeon,r.routineDok,r.routineUn].filter(Boolean).length;
+    const gCnt = [r.gyeong_article,r.gyeong_opinion,r.gyeong_comment].filter(Boolean).length;  // 매십경 세부 3개 중
+    const mCnt = [r.myeon_am,r.myeon_pm,r.myeon_feedback].filter(Boolean).length;              // 매십면 세부 3개 중
     const dateStr = new Date(r.date).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
     const isToday = r.date === today;
     return `<div class="record-card" ${isToday ? 'style="border-color:var(--main-mid)"' : ''}>
@@ -835,8 +840,8 @@ window.loadRecords = async () => {
         <div class="record-item">자존감 <span>${r.selfEsteem||'-'}점</span></div>
       </div>
       <div class="routine-tags">
-        <span class="rtag ${r.routineGyeong?'rtag-done':'rtag-miss'}">매십경${r.routineGyeong?' ✓':''}</span>
-        <span class="rtag ${r.routineMyeon?'rtag-done':'rtag-miss'}">매십면${r.routineMyeon?' ✓':''}</span>
+        <span class="rtag ${gCnt>0?'rtag-done':'rtag-miss'}">매십경${gCnt===3?' ✓':''}</span>
+        <span class="rtag ${mCnt>0?'rtag-done':'rtag-miss'}">매십면${mCnt===3?' ✓':''}</span>
         <span class="rtag ${r.routineDok?'rtag-done':'rtag-miss'}">매십독${r.bookTitle?' · '+r.bookTitle:''}</span>
         <span class="rtag ${r.routineUn?'rtag-done':'rtag-miss'}">매십운${r.routineUn?' ✓':''}</span>
       </div>
@@ -1103,10 +1108,12 @@ window.downloadMyExcel = () => {
     '자존감(1-5)', '취업확률(%)', 'FA5050/현장방문', '집중활동'
   ];
 
+  // 세부 항목 완료 정도: 전부=O, 일부=△, 없음=X
+  const mark3 = arr => { const c = arr.filter(Boolean).length; return c === 0 ? 'X' : c === arr.length ? 'O' : '△'; };
   const rows = [...recs].reverse().map(r => [
     r.date,
-    r.routineGyeong ? 'O' : 'X',
-    r.routineMyeon  ? 'O' : 'X',
+    mark3([r.gyeong_article, r.gyeong_opinion, r.gyeong_comment]),
+    mark3([r.myeon_am, r.myeon_pm, r.myeon_feedback]),
     r.bookTitle     || (r.routineDok ? 'O' : 'X'),
     (r.exercises && r.exercises.length) ? r.exercises.join('/') : (r.routineUn ? 'O' : 'X'),
     r.lecture       || 0,

@@ -321,6 +321,8 @@ window.renderUserDetail = () => {
   const n = recs.length;
   const pct = k => n ? Math.round(recs.filter(r=>r[k]).length/n*100) : 0;
   const avg = k => n ? Math.round(recs.reduce((a,r)=>a+(r[k]||0),0)/n) : 0;
+  // 세부 항목 완료 정도: 전부=✓, 일부=△, 없음=-
+  const mark = arr => { const c = arr.filter(Boolean).length; return c === 0 ? '-' : c === arr.length ? '✓' : '△'; };
   const apps = recs.reduce((a,r)=>a+(r.applications||0),0);
   const moodAvg = (() => {
     const m = recs.filter(r=>r.selfEsteem>0);
@@ -346,7 +348,7 @@ window.renderUserDetail = () => {
       ${[
         ['gyeong_article','매십경·기사읽기'],['gyeong_opinion','매십경·오피니언'],['gyeong_comment','매십경·댓글'],
         ['myeon_am','매십면·오전'],['myeon_pm','매십면·오후'],['myeon_feedback','매십면·피드백'],
-        ['routineDok','매십독'],['routineUn','매십운'],['fa5050','FA5050/현장방문'],
+        ['routineDok','매십독·책읽기'],['routinePilsa','매십독·필사'],['routineUn','매십운'],['fa5050','FA5050/현장방문'],
       ].map(([k,label]) => `
         <div style="background:#f8f8ff;border-radius:8px;padding:8px 10px">
           <div style="font-size:11px;color:#888;margin-bottom:4px">${label}</div>
@@ -375,8 +377,8 @@ window.renderUserDetail = () => {
           ${recs.map(r => `
             <tr>
               <td>${r.date}</td>
-              <td>${r.routineGyeong?'✓':'-'}</td>
-              <td>${r.routineMyeon?'✓':'-'}</td>
+              <td>${mark([r.gyeong_article,r.gyeong_opinion,r.gyeong_comment])}</td>
+              <td>${mark([r.myeon_am,r.myeon_pm,r.myeon_feedback])}</td>
               <td>${r.bookTitle || (r.routineDok?'✓':'-')}</td>
               <td>${(r.exercises&&r.exercises.length)?r.exercises.join('/'):(r.routineUn?'✓':'-')}</td>
               <td>${r.fa5050===true?'✓':r.fa5050===false?'X':'-'}</td>
