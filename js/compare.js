@@ -163,6 +163,7 @@ function leaderSetForScope(scope) {
   if (scope !== 'mine' || !myGroupSel) return null;
   return new Set(allGroups.find(g => g.id === myGroupSel)?.leaderUids || []);
 }
+const scopeLabelOf = (scope) => scope === 'mine' ? '내 그룹' : '전체';
 
 function getGroupUsers(scope, progfilter) {
   let users = allUsers;
@@ -245,8 +246,12 @@ function calcStats(uid, period) {
 }
 
 // 공통 랭킹 카드 HTML 생성 (내 행 고정 상단, 나머지 스크롤)
-function buildRankCardHtml(sorted, statsMap, item, unit, context, cardStyle, leaderSet) {
+function buildRankCardHtml(sorted, statsMap, item, unit, context, cardStyle, leaderSet, scopeLabel) {
   const maxVal = statsMap[sorted[0]?.uid]?.[item.key] || 1;
+  // 스코프(전체/내 그룹) 평균 — 표시 중인 유저 집합 기준
+  const avgTxt = sorted.length
+    ? Math.round(sorted.reduce((a,u)=>a+(statsMap[u.uid]?.[item.key]||0),0)/sorted.length) + unit
+    : '—';
   const rows = buildRankRows(sorted);
   const myRow = rows.find(r => r.isMe);
   const othersRows = rows.filter(r => !r.isMe);
@@ -265,7 +270,7 @@ function buildRankCardHtml(sorted, statsMap, item, unit, context, cardStyle, lea
   };
 
   let html = `<div class="rank-card" ${cardStyle||''}>
-    <div class="rank-card-title">${item.label}</div>`;
+    <div class="rank-card-title"><span>${item.label}</span><span class="card-avg">${scopeLabel} 평균 ${avgTxt}</span></div>`;
   // 내 행 상단 고정 (스크롤 밖)
   if (myRow) {
     html += `<div style="border-bottom:1px solid var(--main-light)">
@@ -292,7 +297,7 @@ function renderGyeongDetail() {
   let html = '';
   items.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
-    html += buildRankCardHtml(sorted, statsMap, item, '%', currentContext, item.highlight?'style="border:1.5px solid var(--main-mid)"':'', leaderSetForScope(filters.gyscope));
+    html += buildRankCardHtml(sorted, statsMap, item, '%', currentContext, item.highlight?'style="border:1.5px solid var(--main-mid)"':'', leaderSetForScope(filters.gyscope), scopeLabelOf(filters.gyscope));
   });
   document.getElementById('gyeong-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
 }
@@ -312,7 +317,7 @@ function renderMyeonDetail() {
   let html = '';
   items.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
-    html += buildRankCardHtml(sorted, statsMap, item, '%', currentContext, item.highlight?'style="border:1.5px solid var(--main-mid)"':'', leaderSetForScope(filters.myscope));
+    html += buildRankCardHtml(sorted, statsMap, item, '%', currentContext, item.highlight?'style="border:1.5px solid var(--main-mid)"':'', leaderSetForScope(filters.myscope), scopeLabelOf(filters.myscope));
   });
   document.getElementById('myeon-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
 }
@@ -423,7 +428,7 @@ function renderRank() {
   let html = '';
   RANK_ITEMS.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
-    html += buildRankCardHtml(sorted, statsMap, item, item.unit, currentContext, '', leaderSetForScope(filters.scope));
+    html += buildRankCardHtml(sorted, statsMap, item, item.unit, currentContext, '', leaderSetForScope(filters.scope), scopeLabelOf(filters.scope));
   });
 
   document.getElementById('rank-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
@@ -528,6 +533,7 @@ const LECTURE_GROUPS = [
     { name:'은행직무클래스', short:'은행직무' },
     { name:'생존자소서클래스', short:'자소서' },
     { name:'파이낸스프리젠터', short:'파이낸스' },
+    { name:'프레임 리부트 5050', short:'프레임' },
   ]},
   { label:'생존면접클래스', tint:1, items:['인성편','은행편','우리','국민','신한','농협','기업','하나','지역농축협'].map(v => ({ name:`생존면접클래스(${v})`, short:v })) },
   { label:'기업분석자료', tint:2, items:['실전편','우리','국민','신한','농협','기업','하나','지역농축협'].map(v => ({ name:`기업분석자료(${v})`, short:v })) },

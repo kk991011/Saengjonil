@@ -46,6 +46,7 @@ const SINGLE_CLASSES = [
   { id: 'f-class-bank',    name: '은행직무클래스' },
   { id: 'f-class-jaso',    name: '생존자소서클래스' },
   { id: 'f-class-finance', name: '파이낸스프리젠터' },
+  { id: 'f-class-frame',   name: '프레임 리부트 5050' },
 ];
 const CLASS_FAMILIES = {
   interview: { prefix: '생존면접클래스', selectId: 'f-interview-class-select', minId: 'f-interview-class-min', listId: 'interview-class-list',
