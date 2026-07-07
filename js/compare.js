@@ -13,7 +13,7 @@ const db = getFirestore(app);
 
 let user = null, userProfile = null;
 let allUsers = [], allRecords = [], allGroups = [];
-let filters = { scope:'all', period:'week', progfilter:'all', gyscope:'all', gyperiod:'week', gyprogfilter:'all', myscope:'all', myperiod:'week', myprogfilter:'all', cscope:'all', cperiod:'week', lscope:'all', lperiod:'week', gperiod:'week', selectedWeek: null, selectedMonth: null };
+let filters = { scope:'all', period:'today', progfilter:'all', gyscope:'all', gyperiod:'today', gyprogfilter:'all', myscope:'all', myperiod:'today', myprogfilter:'all', cscope:'all', cperiod:'today', lscope:'all', lperiod:'today', gperiod:'today', selectedWeek: null, selectedMonth: null };
 let currentTab = 'rank';
 
 // ── 인증 ──
@@ -114,6 +114,7 @@ async function refresh() { await ensureRecords(); renderCurrentTab(); }
 // ── 기간 필터 함수 ──
 function getDateRange(period) {
   const now = new Date();
+  if (period === 'today') return localDateStr(now);
   if (period === 'week') {
     const day = now.getDay() || 7;
     const mon = new Date(now); mon.setDate(now.getDate() - day + 1);
@@ -215,14 +216,27 @@ function calcStats(uid, period) {
   const avg = k => Math.round(recs.reduce((a,r)=>a+(r[k]||0),0) / n);
   const gA = pct('gyeong_article'), gO = pct('gyeong_opinion'), gC = pct('gyeong_comment');
   const mA = pct('myeon_am'), mP = pct('myeon_pm'), mF = pct('myeon_feedback');
+  // 요소별 세부 평균 달성률 (부분 달성도 반영) — 루틴 종합의 구성요소
+  const gyeongAvg = Math.round((gA + gO + gC) / 3);
+  const myeonAvg = Math.round((mA + mP + mF) / 3);
+  const dokAvg = Math.round((pct('routineDok') + pct('routinePilsa')) / 2);  // 책읽기 + 필사
+  const un = pct('routineUn');
+  // 종합 루틴 달성률 = 프로그램 유형에 해당하는 요소만 평균 (각 요소 동일 가중)
+  const type = allUsers.find(u => u.uid === uid)?.programType || 'careerpt';
+  const comps = type === 'maesipgyeong' ? [gyeongAvg]
+              : type === 'maesipmyeon'  ? [myeonAvg]
+              : type === 'maesipboth'   ? [gyeongAvg, myeonAvg]
+              : [gyeongAvg, myeonAvg, dokAvg, un];  // careerpt(기본): 경·면·독·운
+  const routineTotal = Math.round(comps.reduce((a, b) => a + b, 0) / comps.length);
   return {
     gyeong: pct('routineGyeong'),
     gyeong_article: gA, gyeong_opinion: gO, gyeong_comment: gC,
-    gyeongAvg: Math.round((gA + gO + gC) / 3),
+    gyeongAvg,
     myeon: pct('routineMyeon'),
     myeon_am: mA, myeon_pm: mP, myeon_feedback: mF,
-    myeonAvg: Math.round((mA + mP + mF) / 3),
-    dok: pct('routineDok'), un: pct('routineUn'), fa: pct('fa5050'),
+    myeonAvg,
+    dok: pct('routineDok'), dokAvg, un, fa: pct('fa5050'),
+    routineTotal,
     lecture: avg('lecture'), jasoseo: avg('jasoseo'),
     pilgi: avg('pilgi'), interview: avg('interview'),
     apps: recs.reduce((a,r)=>a+(r.applications||0),0),
@@ -391,10 +405,10 @@ function renderRank() {
   const period = filters.period;
 
   const RANK_ITEMS = [
-    { key:'gyeong', label:'매십경 달성률', unit:'%' },
-    { key:'myeon',  label:'매십면 달성률', unit:'%' },
-    { key:'dok',    label:'매십독 달성률', unit:'%' },
-    { key:'un',     label:'매십운 달성률', unit:'%' },
+    { key:'gyeongAvg', label:'매십경 달성률', unit:'%' },
+    { key:'myeonAvg',  label:'매십면 달성률', unit:'%' },
+    { key:'dokAvg',    label:'매십독 달성률', unit:'%' },
+    { key:'un',        label:'매십운 달성률', unit:'%' },
     { key:'fa',     label:'FA5050/현장방문 달성률', unit:'%' },
     { key:'apps',   label:'총 지원 개수', unit:'개' },
     { key:'jasoseo',label:'자소서 시간 (일평균)', unit:'분' },
@@ -423,7 +437,7 @@ function renderCompare() {
   users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
 
   // 전체 평균 계산
-  const keys = ['gyeong','myeon','dok','un','fa','jasoseo','pilgi','interview','apps'];
+  const keys = ['gyeongAvg','myeonAvg','dokAvg','un','fa','jasoseo','pilgi','interview','apps'];
   const avg = {};
   keys.forEach(k => {
     avg[k] = users.length ? Math.round(users.reduce((a,u)=>a+(statsMap[u.uid]?.[k]||0),0)/users.length) : 0;
@@ -456,9 +470,9 @@ function renderCompare() {
     const s = isAvg ? avg : statsMap[data.uid];
     return `<tr class="${cls}">
       <td class="name-col" title="${name}">${name}</td><td>${wk}</td>
-      <td class="${!isAvg&&s.gyeong===maxMap.gyeong?'hi':''}">${s.gyeong}%</td>
-      <td class="${!isAvg&&s.myeon===maxMap.myeon?'hi':''}">${s.myeon}%</td>
-      <td class="${!isAvg&&s.dok===maxMap.dok?'hi':''}">${s.dok}%</td>
+      <td class="${!isAvg&&s.gyeongAvg===maxMap.gyeongAvg?'hi':''}">${s.gyeongAvg}%</td>
+      <td class="${!isAvg&&s.myeonAvg===maxMap.myeonAvg?'hi':''}">${s.myeonAvg}%</td>
+      <td class="${!isAvg&&s.dokAvg===maxMap.dokAvg?'hi':''}">${s.dokAvg}%</td>
       <td class="${!isAvg&&s.un===maxMap.un?'hi':''}">${s.un}%</td>
       <td class="${!isAvg&&s.fa===maxMap.fa?'hi':''}">${s.fa}%</td>
       <td class="${!isAvg&&s.jasoseo===maxMap.jasoseo?'hi':''}">${s.jasoseo}</td>
@@ -472,7 +486,7 @@ function renderCompare() {
   let html = row(null, true, false);
   // 나를 제외한 나머지를 매십경 기준 내림차순 정렬
   const others = users.filter(u => u.uid !== user.uid)
-    .sort((a,b) => (statsMap[b.uid]?.gyeong||0) - (statsMap[a.uid]?.gyeong||0));
+    .sort((a,b) => (statsMap[b.uid]?.gyeongAvg||0) - (statsMap[a.uid]?.gyeongAvg||0));
   const me = users.find(u => u.uid === user.uid);
   // 전체 평균 바로 아래에 내 행을 고정, 그 다음 나머지
   if (me) html += row(me, false, true);
@@ -492,11 +506,11 @@ window.downloadExcel = () => {
   const headers = ['닉네임','주차','매십경','매십면','매십독','매십운','FA','자소서','필기','면접','지원수',
     '이전_면접경험(회)','이전_면접준비(시간)','이전_필기준비(시간)','이전_지원수(개)'];
   const rows = [
-    ['전체 평균','—',...['gyeong','myeon','dok','un','fa','jasoseo','pilgi','interview','apps'].map(k=>avg[k]),
+    ['전체 평균','—',...['gyeongAvg','myeonAvg','dokAvg','un','fa','jasoseo','pilgi','interview','apps'].map(k=>avg[k]),
       ...PREV_KEYS.map(k => pv(prevAvg?.[k]))],
     ...users.map(u => {
       const s = statsMap[u.uid];
-      return [u.nickname, calcWeek(u.startDate)+'주', s.gyeong+'%', s.myeon+'%', s.dok+'%', s.un+'%', s.fa+'%', s.jasoseo, s.pilgi, s.interview, s.apps,
+      return [u.nickname, calcWeek(u.startDate)+'주', s.gyeongAvg+'%', s.myeonAvg+'%', s.dokAvg+'%', s.un+'%', s.fa+'%', s.jasoseo, s.pilgi, s.interview, s.apps,
         ...PREV_KEYS.map(k => pv(u[k]))];
     })
   ];
@@ -626,7 +640,7 @@ function renderGroups() {
     const avgStat = k => Math.round(statsArr.reduce((a,s)=>a+(s[k]||0),0)/n);
     return {
       ...g, memberCount: members.length,
-      routineAvg: avgStat('gyeong'),
+      routineAvg: avgStat('routineTotal'),
       lectureAvg: avgStat('lecture'),
       totalApps: statsArr.reduce((a,s)=>a+(s.apps||0),0),
       members,
@@ -671,7 +685,7 @@ window.showGroupDetail = (groupId) => {
   const leaders = new Set(g.leaderUids || []);
   const members = [...g.members].sort((a,b) => {
     const sa = calcStats(a.uid, period), sb = calcStats(b.uid, period);
-    return sb.gyeong - sa.gyeong;
+    return sb.routineTotal - sa.routineTotal;
   });
 
   let html = '';
@@ -686,9 +700,9 @@ window.showGroupDetail = (groupId) => {
         <span style="font-size:10px;color:#aaa">${wk}</span>
       </div>
       <div class="member-bars">
-        <div class="mini-bar-row"><span class="mini-bar-label">경</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${s.gyeong}%"></div></div><span class="mini-bar-pct">${s.gyeong}%</span></div>
-        <div class="mini-bar-row"><span class="mini-bar-label">면</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${s.myeon}%;opacity:.8"></div></div><span class="mini-bar-pct">${s.myeon}%</span></div>
-        <div class="mini-bar-row"><span class="mini-bar-label">독</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${s.dok}%;opacity:.6"></div></div><span class="mini-bar-pct">${s.dok}%</span></div>
+        <div class="mini-bar-row"><span class="mini-bar-label">경</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${s.gyeongAvg}%"></div></div><span class="mini-bar-pct">${s.gyeongAvg}%</span></div>
+        <div class="mini-bar-row"><span class="mini-bar-label">면</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${s.myeonAvg}%;opacity:.8"></div></div><span class="mini-bar-pct">${s.myeonAvg}%</span></div>
+        <div class="mini-bar-row"><span class="mini-bar-label">독</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${s.dokAvg}%;opacity:.6"></div></div><span class="mini-bar-pct">${s.dokAvg}%</span></div>
         <div class="mini-bar-row"><span class="mini-bar-label">운</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${s.un}%;opacity:.4"></div></div><span class="mini-bar-pct">${s.un}%</span></div>
       </div>
     </div>`;
