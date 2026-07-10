@@ -845,7 +845,6 @@ window.loadRecords = async () => {
         <div class="record-item">면접 <span>${r.interview||0}분</span></div>
         <div class="record-item">자격증 <span>${r.cert||0}분</span></div>
         <div class="record-item">지원 <span>${r.applications||0}개</span></div>
-        <div class="record-item">자존감 <span>${r.selfEsteem||'-'}점</span></div>
       </div>
       <div class="routine-tags">
         <span class="rtag ${gCnt>0?'rtag-done':'rtag-miss'}">매십경${gCnt===3?' ✓':''}</span>
