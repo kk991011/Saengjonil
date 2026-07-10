@@ -353,7 +353,8 @@ window.updateTotalTime = () => {
   const jasoseo = Number(document.getElementById('f-jasoseo').value) || 0;
   const pilgi = Number(document.getElementById('f-pilgi').value) || 0;
   const interview = Number(document.getElementById('f-interview').value) || 0;
-  const total = lecture + jasoseo + pilgi + interview;
+  const cert = Number(document.getElementById('f-cert').value) || 0;
+  const total = lecture + jasoseo + pilgi + interview + cert;
   document.getElementById('total-time-display').textContent = total;
 };
 
@@ -369,7 +370,7 @@ window.toggleTotalTimeEdit = () => {
     manualInput.style.display = 'none';
     displayWrap.style.display = '';
     btn.textContent = '직접 수정';
-    hint.textContent = '수강+자소서+필기+면접 자동 합산';
+    hint.textContent = '수강+자소서+필기+면접+자격증 자동 합산';
     updateTotalTime();
   } else {
     // 직접 수정 모드
@@ -436,12 +437,13 @@ window.saveRecord = async () => {
       jasoseoCount: Number(document.getElementById('f-jasoseo-count').value) || 0,
       pilgi: Number(document.getElementById('f-pilgi').value) || 0,
       interview: Number(document.getElementById('f-interview').value) || 0,
+      cert: Number(document.getElementById('f-cert').value) || 0,
       totalTime: (() => {
         const manualInput = document.getElementById('f-total-time-manual');
         if (manualInput && manualInput.style.display !== 'none') {
           return Number(manualInput.value) || 0;
         }
-        return lectureSum + (Number(document.getElementById('f-jasoseo').value)||0) + (Number(document.getElementById('f-pilgi').value)||0) + (Number(document.getElementById('f-interview').value)||0);
+        return lectureSum + (Number(document.getElementById('f-jasoseo').value)||0) + (Number(document.getElementById('f-pilgi').value)||0) + (Number(document.getElementById('f-interview').value)||0) + (Number(document.getElementById('f-cert').value)||0);
       })(),
       applications: Number(document.getElementById('f-applications').value) || 0,
       selfEsteem: scoreSelected || 0,
@@ -482,7 +484,7 @@ async function loadSummary() {
     if (!n) { return; }
   document.getElementById('s-days').textContent = n;
   document.getElementById('s-apps').textContent = recs.reduce((a,r)=>a+(r.applications||0),0);
-  document.getElementById('s-lecture').textContent = Math.round(recs.reduce((a,r)=>a+(r.totalTime ?? ((r.lecture||0)+(r.jasoseo||0)+(r.pilgi||0)+(r.interview||0))),0)/60);
+  document.getElementById('s-lecture').textContent = Math.round(recs.reduce((a,r)=>a+(r.totalTime ?? ((r.lecture||0)+(r.jasoseo||0)+(r.pilgi||0)+(r.interview||0)+(r.cert||0))),0)/60);
   const pct = k => Math.round(recs.filter(r=>r[k]).length/n*100);
   const setPct = (id,pb,v) => { document.getElementById(id).textContent=v+'%'; document.getElementById(pb).style.width=v+'%'; };
   // 매십경 세부
@@ -507,13 +509,15 @@ async function loadSummary() {
   document.getElementById('s-jas-avg').textContent = avg('jasoseo');
   document.getElementById('s-pil-avg').textContent = avg('pilgi');
   document.getElementById('s-int-avg').textContent = avg('interview');
+  document.getElementById('s-cert-avg').textContent = avg('cert');
   document.getElementById('s-lec-total').textContent = total('lecture');
   document.getElementById('s-jas-total').textContent = total('jasoseo');
   document.getElementById('s-pil-total').textContent = total('pilgi');
   document.getElementById('s-int-total').textContent = total('interview');
+  document.getElementById('s-cert-total').textContent = total('cert');
 
   // 집중 활동 분포 도넛 차트
-  const focusCount = { '자소서':0, '필기':0, '면접':0, 'FA5050/현장방문':0, '골고루':0 };
+  const focusCount = { '자소서':0, '필기':0, '면접':0, '자격증':0, 'FA5050/현장방문':0, '골고루':0 };
   recs.forEach(r => { (r.focusTags||[]).forEach(t => { if(focusCount[t]!==undefined) focusCount[t]++; }); });
   const focusLabels = Object.keys(focusCount).filter(k => focusCount[k] > 0);
   const focusData = focusLabels.map(k => focusCount[k]);
@@ -525,6 +529,7 @@ async function loadSummary() {
     `rgba(${r2},${g2},${b2},.55)`,
     `rgba(${r2},${g2},${b2},.35)`,
     `rgba(${r2},${g2},${b2},.2)`,
+    `rgba(${r2},${g2},${b2},.1)`,
   ];
   const donutEl = document.getElementById('focus-donut');
   const donutWrap = document.getElementById('focus-donut-wrap');
@@ -605,6 +610,7 @@ async function loadTrend() {
     {label:'자소서',data:recs.map(r=>r.jasoseo||0),borderColor:color+'99',borderWidth:1.5,borderDash:[4,3],pointRadius:2,tension:.3,fill:false},
     {label:'필기',data:recs.map(r=>r.pilgi||0),borderColor:color+'66',borderWidth:1.5,pointRadius:2,tension:.3,fill:false},
     {label:'면접',data:recs.map(r=>r.interview||0),borderColor:color+'44',borderWidth:1.5,borderDash:[4,3],pointRadius:2,tension:.3,fill:false},
+    {label:'자격증',data:recs.map(r=>r.cert||0),borderColor:color+'22',borderWidth:1.5,pointRadius:2,tension:.3,fill:false},
   ]);
   // 매십면·매십운·매십독·FA5050 주차별 달성률 (각 항목별 그래프)
   const iWk = calcWeek(userProfile.startDate);
@@ -837,6 +843,7 @@ window.loadRecords = async () => {
         <div class="record-item">자소서 <span>${r.jasoseo||0}분</span></div>
         <div class="record-item">필기 <span>${r.pilgi||0}분</span></div>
         <div class="record-item">면접 <span>${r.interview||0}분</span></div>
+        <div class="record-item">자격증 <span>${r.cert||0}분</span></div>
         <div class="record-item">지원 <span>${r.applications||0}개</span></div>
         <div class="record-item">자존감 <span>${r.selfEsteem||'-'}점</span></div>
       </div>
@@ -926,6 +933,7 @@ window.editTodayRecord = () => {
   document.getElementById('f-jasoseo').value      = r.jasoseo || 0;
   document.getElementById('f-pilgi').value        = r.pilgi || 0;
   document.getElementById('f-interview').value    = r.interview || 0;
+  document.getElementById('f-cert').value         = r.cert || 0;
   document.getElementById('f-applications').value = r.applications || 0;
   updateTotalTime();
   scoreSelected = r.selfEsteem || 0;
@@ -1105,7 +1113,7 @@ window.downloadMyExcel = () => {
 
   const headers = [
     '날짜', '매십경', '매십면', '매십독(책제목)', '매십운(운동종류)',
-    '강의(분)', '자소서(분)', '필기(분)', '면접(분)', '총취준시간(분)', '지원개수',
+    '강의(분)', '자소서(분)', '필기(분)', '면접(분)', '자격증(분)', '총취준시간(분)', '지원개수',
     '자존감(1-5)', '취업확률(%)', 'FA5050/현장방문', '집중활동'
   ];
 
@@ -1121,7 +1129,8 @@ window.downloadMyExcel = () => {
     r.jasoseo       || 0,
     r.pilgi         || 0,
     r.interview     || 0,
-    r.totalTime || ((r.lecture||0)+(r.jasoseo||0)+(r.pilgi||0)+(r.interview||0)),
+    r.cert          || 0,
+    r.totalTime || ((r.lecture||0)+(r.jasoseo||0)+(r.pilgi||0)+(r.interview||0)+(r.cert||0)),
     r.applications  || 0,
     r.selfEsteem    || '',
     r.jobProb       || '',

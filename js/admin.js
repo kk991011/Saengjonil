@@ -365,6 +365,7 @@ window.renderUserDetail = () => {
       <div class="stat-box"><div class="num">${avg('jasoseo')}</div><div class="lbl">자소서</div></div>
       <div class="stat-box"><div class="num">${avg('pilgi')}</div><div class="lbl">필기</div></div>
       <div class="stat-box"><div class="num">${avg('interview')}</div><div class="lbl">면접</div></div>
+      <div class="stat-box"><div class="num">${avg('cert')}</div><div class="lbl">자격증</div></div>
     </div>
     <div class="sec-label">일별 기록 (${n}개)</div>
     <div style="max-height:280px;overflow-y:auto;border:1px solid #f0f0f0;border-radius:10px">

@@ -239,7 +239,7 @@ function calcStats(uid, period) {
     dok: pct('routineDok'), dokAvg, un, fa: pct('fa5050'),
     routineTotal,
     lecture: avg('lecture'), jasoseo: avg('jasoseo'),
-    pilgi: avg('pilgi'), interview: avg('interview'),
+    pilgi: avg('pilgi'), interview: avg('interview'), cert: avg('cert'),
     apps: recs.reduce((a,r)=>a+(r.applications||0),0),
     days: recs.length,
   };
@@ -420,6 +420,7 @@ function renderRank() {
     { key:'lecture',label:'강의 시간 (일평균)', unit:'분' },
     { key:'pilgi',  label:'필기 시간 (일평균)', unit:'분' },
     { key:'interview',label:'면접 시간 (일평균)', unit:'분' },
+    { key:'cert',   label:'자격증 시간 (일평균)', unit:'분' },
   ];
 
   const statsMap = {};
@@ -442,7 +443,7 @@ function renderCompare() {
   users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
 
   // 전체 평균 계산
-  const keys = ['gyeongAvg','myeonAvg','dokAvg','un','fa','jasoseo','pilgi','interview','apps'];
+  const keys = ['gyeongAvg','myeonAvg','dokAvg','un','fa','jasoseo','pilgi','interview','cert','apps'];
   const avg = {};
   keys.forEach(k => {
     avg[k] = users.length ? Math.round(users.reduce((a,u)=>a+(statsMap[u.uid]?.[k]||0),0)/users.length) : 0;
@@ -483,6 +484,7 @@ function renderCompare() {
       <td class="${!isAvg&&s.jasoseo===maxMap.jasoseo?'hi':''}">${s.jasoseo}</td>
       <td class="${!isAvg&&s.pilgi===maxMap.pilgi?'hi':''}">${s.pilgi}</td>
       <td class="${!isAvg&&s.interview===maxMap.interview?'hi':''}">${s.interview}</td>
+      <td class="${!isAvg&&s.cert===maxMap.cert?'hi':''}">${s.cert}</td>
       <td class="${!isAvg&&s.apps===maxMap.apps?'hi':''}">${s.apps}</td>
       ${prevCells(data, isAvg)}
     </tr>`;
@@ -508,14 +510,14 @@ window.downloadExcel = () => {
   const { users, statsMap, avg, prevAvg } = window._compareData;
   const PREV_KEYS = ['prevInterviewCount','prevInterviewHour','prevPilgiHour','prevApplications'];
   const pv = v => (v == null || v === '' ? '-' : v);
-  const headers = ['닉네임','주차','매십경','매십면','매십독','매십운','FA','자소서','필기','면접','지원수',
+  const headers = ['닉네임','주차','매십경','매십면','매십독','매십운','FA','자소서','필기','면접','자격증','지원수',
     '이전_면접경험(회)','이전_면접준비(시간)','이전_필기준비(시간)','이전_지원수(개)'];
   const rows = [
-    ['전체 평균','—',...['gyeongAvg','myeonAvg','dokAvg','un','fa','jasoseo','pilgi','interview','apps'].map(k=>avg[k]),
+    ['전체 평균','—',...['gyeongAvg','myeonAvg','dokAvg','un','fa','jasoseo','pilgi','interview','cert','apps'].map(k=>avg[k]),
       ...PREV_KEYS.map(k => pv(prevAvg?.[k]))],
     ...users.map(u => {
       const s = statsMap[u.uid];
-      return [u.nickname, calcWeek(u.startDate)+'주', s.gyeongAvg+'%', s.myeonAvg+'%', s.dokAvg+'%', s.un+'%', s.fa+'%', s.jasoseo, s.pilgi, s.interview, s.apps,
+      return [u.nickname, calcWeek(u.startDate)+'주', s.gyeongAvg+'%', s.myeonAvg+'%', s.dokAvg+'%', s.un+'%', s.fa+'%', s.jasoseo, s.pilgi, s.interview, s.cert, s.apps,
         ...PREV_KEYS.map(k => pv(u[k]))];
     })
   ];

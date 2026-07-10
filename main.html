@@ -236,13 +236,15 @@
       </div>
     </div>
 
-    <!-- 필기/인적성 + 면접 준비 -->
+    <!-- 필기/인적성 + 면접 준비 + 자격증 준비 -->
     <div class="row2">
       <div class="field"><label>필기/인적성 <span style="color:#aaa;font-weight:400">(분)</span></label>
         <input type="number" id="f-pilgi" min="0" placeholder="0" oninput="updateTotalTime()"></div>
       <div class="field"><label>면접 준비 <span style="color:#aaa;font-weight:400">(분)</span></label>
         <input type="number" id="f-interview" min="0" placeholder="0" oninput="updateTotalTime()"></div>
     </div>
+    <div class="field"><label>자격증 준비 <span style="color:#aaa;font-weight:400">(분)</span></label>
+      <input type="number" id="f-cert" min="0" placeholder="0" oninput="updateTotalTime()"></div>
 
     <!-- 총 취준 시간: 자동 합산 + 직접 수정 가능 -->
     <div style="background:var(--main-xlight);border-radius:10px;padding:10px 14px;margin-bottom:14px">
@@ -256,7 +258,7 @@
         <input type="number" id="f-total-time-manual" min="0" placeholder="직접 입력"
           style="display:none;width:100px;font-size:14px;padding:6px 10px;border:1.5px solid var(--main-mid);border-radius:8px;font-family:inherit;outline:none">
       </div>
-      <div style="font-size:11px;color:#aaa;margin-top:4px" id="total-time-hint">수강+자소서+필기+면접 자동 합산</div>
+      <div style="font-size:11px;color:#aaa;margin-top:4px" id="total-time-hint">수강+자소서+필기+면접+자격증 자동 합산</div>
     </div>
 
     <div class="field"><label>지원 개수</label><input type="number" id="f-applications" min="0" placeholder="0"></div>
@@ -276,6 +278,7 @@
         <div class="focus-tag" onclick="toggleTag(this)">자소서</div>
         <div class="focus-tag" onclick="toggleTag(this)">필기</div>
         <div class="focus-tag" onclick="toggleTag(this)">면접</div>
+        <div class="focus-tag" onclick="toggleTag(this)">자격증</div>
         <div class="focus-tag" onclick="toggleTag(this)">FA5050/현장방문</div>
         <div class="focus-tag" onclick="toggleTag(this)">골고루</div>
       </div>
@@ -363,6 +366,7 @@
         <div class="stat-card"><div class="stat-label">자소서</div><div><span class="stat-value" id="s-jas-avg">0</span><span class="stat-unit">분</span></div></div>
         <div class="stat-card"><div class="stat-label">필기</div><div><span class="stat-value" id="s-pil-avg">0</span><span class="stat-unit">분</span></div></div>
         <div class="stat-card"><div class="stat-label">면접</div><div><span class="stat-value" id="s-int-avg">0</span><span class="stat-unit">분</span></div></div>
+        <div class="stat-card"><div class="stat-label">자격증</div><div><span class="stat-value" id="s-cert-avg">0</span><span class="stat-unit">분</span></div></div>
       </div>
       <div class="sec-label">취준 활동 누적 합계</div>
       <div class="stat-grid">
@@ -370,6 +374,7 @@
         <div class="stat-card"><div class="stat-label">자소서</div><div><span class="stat-value" id="s-jas-total">0</span><span class="stat-unit">분</span></div></div>
         <div class="stat-card"><div class="stat-label">필기</div><div><span class="stat-value" id="s-pil-total">0</span><span class="stat-unit">분</span></div></div>
         <div class="stat-card"><div class="stat-label">면접</div><div><span class="stat-value" id="s-int-total">0</span><span class="stat-unit">분</span></div></div>
+        <div class="stat-card"><div class="stat-label">자격증</div><div><span class="stat-value" id="s-cert-total">0</span><span class="stat-unit">분</span></div></div>
       </div>
       <div class="sec-label">집중 활동 분포</div>
       <div id="focus-donut-wrap" style="position:relative;width:220px;height:220px;margin:0 auto 8px">
