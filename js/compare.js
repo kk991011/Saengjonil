@@ -82,14 +82,7 @@ let loadedFloor = null;
 function periodFloor() {
   const period = filters[TAB_KEY_MAP[currentTab] || 'period'] || 'week';
   if (period === 'specific_week') {
-    if (!filters.selectedWeek) return getDateRange('week');
-    let min = null;
-    allUsers.forEach(u => {
-      if (!u.startDate) return;
-      const { from } = getWeekRange(u.startDate, Number(filters.selectedWeek));
-      if (min === null || from < min) min = from;
-    });
-    return min || '2000-01-01';
+    return filters.selectedWeek || getDateRange('week');
   }
   if (period === 'specific_month') return (filters.selectedMonth || '2000-01') + '-01';
   return getDateRange(period);
@@ -124,23 +117,28 @@ function getDateRange(period) {
   return '2000-01-01';
 }
 
-// 특정 주차(N주차)의 시작일~종료일 계산 — 각 유저의 startDate 기준
-function getWeekRange(startDate, weekNum) {
-  const start = new Date(startDate);
-  const from = new Date(start);
-  from.setDate(start.getDate() + (weekNum - 1) * 7);
-  const to = new Date(from);
-  to.setDate(from.getDate() + 6);
-  return { from: localDateStr(from), to: localDateStr(to) };
-}
-
 function localDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-function filterRecords(recs, period, startDate) {
-  if (period === 'specific_week' && filters.selectedWeek && startDate) {
-    const { from, to } = getWeekRange(startDate, Number(filters.selectedWeek));
+// 해당 날짜가 속한 주의 월요일
+function mondayOf(d) {
+  const day = d.getDay() || 7;
+  const mon = new Date(d);
+  mon.setDate(d.getDate() - day + 1);
+  return mon;
+}
+
+// 특정 캘린더 주(월요일 시작)의 시작일~종료일 계산 — 개인 startDate와 무관하게 전원 동일 구간
+function getCalendarWeekRange(mondayStr) {
+  const to = new Date(mondayStr);
+  to.setDate(to.getDate() + 6);
+  return { from: mondayStr, to: localDateStr(to) };
+}
+
+function filterRecords(recs, period) {
+  if (period === 'specific_week' && filters.selectedWeek) {
+    const { from, to } = getCalendarWeekRange(filters.selectedWeek);
     return recs.filter(r => r.date >= from && r.date <= to);
   }
   if (period === 'specific_month' && filters.selectedMonth) {
@@ -151,8 +149,7 @@ function filterRecords(recs, period, startDate) {
 }
 
 function getUserRecords(uid, period) {
-  const u = allUsers.find(x => x.uid === uid);
-  return filterRecords(allRecords.filter(r => r.uid === uid), period, u?.startDate);
+  return filterRecords(allRecords.filter(r => r.uid === uid), period);
 }
 
 // 유저의 소속 조 목록 (groupIds 배열 / 구 단일 groupId 호환)
@@ -390,12 +387,19 @@ window.setMonthFilter = (monthVal, tabKey) => {
   refresh();
 };
 
-// 주차 드롭다운 채우기 — 내 기준 현재 주차부터 1주차까지
+// 주차 드롭다운 채우기 — 월요일 시작 캘린더 주 기준(전원 동일 구간), 이번 주부터 과거로
 function populateWeekPicker(sel) {
-  const myWeek = calcWeek(userProfile.startDate);
+  const thisMonday = mondayOf(new Date());
+  const earliestStart = allUsers.reduce((min, u) => (u.startDate && (!min || u.startDate < min)) ? u.startDate : min, null);
+  const earliestMonday = earliestStart ? mondayOf(new Date(earliestStart)) : thisMonday;
+
   sel.innerHTML = '<option value="">주차 선택...</option>';
-  for (let w = myWeek; w >= 1; w--) {
-    sel.innerHTML += `<option value="${w}">${w}주차</option>`;
+  const cur = new Date(thisMonday);
+  while (cur >= earliestMonday) {
+    const from = localDateStr(cur);
+    const to = new Date(cur); to.setDate(cur.getDate() + 6);
+    sel.innerHTML += `<option value="${from}">${cur.getMonth()+1}/${cur.getDate()} ~ ${to.getMonth()+1}/${to.getDate()}</option>`;
+    cur.setDate(cur.getDate() - 7);
   }
 }
 
