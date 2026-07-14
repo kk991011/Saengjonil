@@ -517,7 +517,7 @@ async function loadSummary() {
   document.getElementById('s-cert-total').textContent = total('cert');
 
   // 집중 활동 분포 도넛 차트
-  const focusCount = { '자소서':0, '필기':0, '면접':0, '자격증':0, 'FA5050/현장방문':0, '골고루':0 };
+  const focusCount = { '자소서':0, '필기':0, '면접':0, '자격증':0, '매십경':0, 'FA5050/현장방문':0, '골고루':0, '기타':0 };
   recs.forEach(r => { (r.focusTags||[]).forEach(t => { if(focusCount[t]!==undefined) focusCount[t]++; }); });
   const focusLabels = Object.keys(focusCount).filter(k => focusCount[k] > 0);
   const focusData = focusLabels.map(k => focusCount[k]);
@@ -525,10 +525,12 @@ async function loadSummary() {
   const r2 = parseInt(color.slice(1,3)||'53',16), g2 = parseInt(color.slice(3,5)||'4a',16), b2 = parseInt(color.slice(5,7)||'b7',16);
   const palette = [
     color,
-    `rgba(${r2},${g2},${b2},.75)`,
+    `rgba(${r2},${g2},${b2},.85)`,
+    `rgba(${r2},${g2},${b2},.7)`,
     `rgba(${r2},${g2},${b2},.55)`,
-    `rgba(${r2},${g2},${b2},.35)`,
-    `rgba(${r2},${g2},${b2},.2)`,
+    `rgba(${r2},${g2},${b2},.4)`,
+    `rgba(${r2},${g2},${b2},.28)`,
+    `rgba(${r2},${g2},${b2},.18)`,
     `rgba(${r2},${g2},${b2},.1)`,
   ];
   const donutEl = document.getElementById('focus-donut');
