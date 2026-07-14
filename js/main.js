@@ -354,7 +354,9 @@ window.updateTotalTime = () => {
   const pilgi = Number(document.getElementById('f-pilgi').value) || 0;
   const interview = Number(document.getElementById('f-interview').value) || 0;
   const cert = Number(document.getElementById('f-cert').value) || 0;
-  const total = lecture + jasoseo + pilgi + interview + cert;
+  const gyeongTime = Number(document.getElementById('f-gyeong-time').value) || 0;
+  const etc = Number(document.getElementById('f-etc').value) || 0;
+  const total = lecture + jasoseo + pilgi + interview + cert + gyeongTime + etc;
   document.getElementById('total-time-display').textContent = total;
 };
 
@@ -438,12 +440,14 @@ window.saveRecord = async () => {
       pilgi: Number(document.getElementById('f-pilgi').value) || 0,
       interview: Number(document.getElementById('f-interview').value) || 0,
       cert: Number(document.getElementById('f-cert').value) || 0,
+      gyeongTime: Number(document.getElementById('f-gyeong-time').value) || 0,
+      etc: Number(document.getElementById('f-etc').value) || 0,
       totalTime: (() => {
         const manualInput = document.getElementById('f-total-time-manual');
         if (manualInput && manualInput.style.display !== 'none') {
           return Number(manualInput.value) || 0;
         }
-        return lectureSum + (Number(document.getElementById('f-jasoseo').value)||0) + (Number(document.getElementById('f-pilgi').value)||0) + (Number(document.getElementById('f-interview').value)||0) + (Number(document.getElementById('f-cert').value)||0);
+        return lectureSum + (Number(document.getElementById('f-jasoseo').value)||0) + (Number(document.getElementById('f-pilgi').value)||0) + (Number(document.getElementById('f-interview').value)||0) + (Number(document.getElementById('f-cert').value)||0) + (Number(document.getElementById('f-gyeong-time').value)||0) + (Number(document.getElementById('f-etc').value)||0);
       })(),
       applications: Number(document.getElementById('f-applications').value) || 0,
       selfEsteem: scoreSelected || 0,
@@ -517,7 +521,7 @@ async function loadSummary() {
   document.getElementById('s-cert-total').textContent = total('cert');
 
   // 집중 활동 분포 도넛 차트
-  const focusCount = { '자소서':0, '필기':0, '면접':0, '자격증':0, '매십경':0, 'FA5050/현장방문':0, '골고루':0, '기타':0 };
+  const focusCount = { '자소서':0, '필기':0, '면접':0, '자격증':0, 'FA5050/현장방문':0, '골고루':0 };
   recs.forEach(r => { (r.focusTags||[]).forEach(t => { if(focusCount[t]!==undefined) focusCount[t]++; }); });
   const focusLabels = Object.keys(focusCount).filter(k => focusCount[k] > 0);
   const focusData = focusLabels.map(k => focusCount[k]);
@@ -525,12 +529,10 @@ async function loadSummary() {
   const r2 = parseInt(color.slice(1,3)||'53',16), g2 = parseInt(color.slice(3,5)||'4a',16), b2 = parseInt(color.slice(5,7)||'b7',16);
   const palette = [
     color,
-    `rgba(${r2},${g2},${b2},.85)`,
-    `rgba(${r2},${g2},${b2},.7)`,
+    `rgba(${r2},${g2},${b2},.75)`,
     `rgba(${r2},${g2},${b2},.55)`,
-    `rgba(${r2},${g2},${b2},.4)`,
-    `rgba(${r2},${g2},${b2},.28)`,
-    `rgba(${r2},${g2},${b2},.18)`,
+    `rgba(${r2},${g2},${b2},.35)`,
+    `rgba(${r2},${g2},${b2},.2)`,
     `rgba(${r2},${g2},${b2},.1)`,
   ];
   const donutEl = document.getElementById('focus-donut');
@@ -846,6 +848,8 @@ window.loadRecords = async () => {
         <div class="record-item">필기 <span>${r.pilgi||0}분</span></div>
         <div class="record-item">면접 <span>${r.interview||0}분</span></div>
         <div class="record-item">자격증 <span>${r.cert||0}분</span></div>
+        <div class="record-item">매십경 <span>${r.gyeongTime||0}분</span></div>
+        <div class="record-item">기타 <span>${r.etc||0}분</span></div>
         <div class="record-item">지원 <span>${r.applications||0}개</span></div>
       </div>
       <div class="routine-tags">
@@ -935,6 +939,8 @@ window.editTodayRecord = () => {
   document.getElementById('f-pilgi').value        = r.pilgi || 0;
   document.getElementById('f-interview').value    = r.interview || 0;
   document.getElementById('f-cert').value         = r.cert || 0;
+  document.getElementById('f-gyeong-time').value  = r.gyeongTime || 0;
+  document.getElementById('f-etc').value          = r.etc || 0;
   document.getElementById('f-applications').value = r.applications || 0;
   updateTotalTime();
   scoreSelected = r.selfEsteem || 0;
@@ -1114,7 +1120,7 @@ window.downloadMyExcel = () => {
 
   const headers = [
     '날짜', '매십경', '매십면', '매십독(책제목)', '매십운(운동종류)',
-    '강의(분)', '자소서(분)', '필기(분)', '면접(분)', '자격증(분)', '총취준시간(분)', '지원개수',
+    '강의(분)', '자소서(분)', '필기(분)', '면접(분)', '자격증(분)', '매십경(분)', '기타(분)', '총취준시간(분)', '지원개수',
     '자존감(1-5)', '취업확률(%)', 'FA5050/현장방문', '집중활동'
   ];
 
@@ -1131,7 +1137,9 @@ window.downloadMyExcel = () => {
     r.pilgi         || 0,
     r.interview     || 0,
     r.cert          || 0,
-    r.totalTime || ((r.lecture||0)+(r.jasoseo||0)+(r.pilgi||0)+(r.interview||0)+(r.cert||0)),
+    r.gyeongTime    || 0,
+    r.etc           || 0,
+    r.totalTime || ((r.lecture||0)+(r.jasoseo||0)+(r.pilgi||0)+(r.interview||0)+(r.cert||0)+(r.gyeongTime||0)+(r.etc||0)),
     r.applications  || 0,
     r.selfEsteem    || '',
     r.jobProb       || '',
