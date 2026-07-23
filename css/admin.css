@@ -13,6 +13,16 @@
   .page-title { font-size:20px; font-weight:700; color:#222; margin-bottom:4px; }
   .page-sub { font-size:13px; color:#aaa; margin-bottom:24px; }
 
+  .tab-nav { background:white; border-bottom:1px solid #eee; border-radius:12px 12px 0 0; margin-bottom:16px; }
+  .tab-nav-inner { display:flex; overflow-x:auto; }
+  .tab-nav-inner::-webkit-scrollbar { display:none; }
+  .tab-btn { padding:12px 18px; border:none; background:transparent; font-size:13px;
+    color:#888; cursor:pointer; white-space:nowrap; border-bottom:2px solid transparent;
+    font-family:inherit; transition:color .15s; }
+  .tab-btn.active { color:var(--main); border-bottom-color:var(--main); font-weight:600; }
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+
   .section { background:white; border-radius:16px; padding:20px; margin-bottom:16px; border:1px solid #f0f0f0; }
   .section-title { font-size:15px; font-weight:700; color:#222; margin-bottom:14px;
     display:flex; align-items:center; justify-content:space-between; }

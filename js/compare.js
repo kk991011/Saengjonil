@@ -154,11 +154,20 @@ function getUserRecords(uid, period) {
 
 // 유저의 소속 조 목록 (groupIds 배열 / 구 단일 groupId 호환)
 const groupIdsOf = (u) => Array.isArray(u.groupIds) ? u.groupIds : (u.groupId ? [u.groupId] : []);
+// 조의 매십경/매십면 조장 uid 목록. leaderUidsGyeong/leaderUidsMyeon이 없는(구버전) 그룹은
+// 구 leaderUids를 경/면 양쪽에 임시 배정.
+function leaderUidsOf(g, type) {
+  const specific = type === 'gyeong' ? g.leaderUidsGyeong : g.leaderUidsMyeon;
+  if (Array.isArray(specific)) return specific;
+  return Array.isArray(g.leaderUids) ? g.leaderUids : [];
+}
 let myGroupSel = null;   // '내 그룹' 컨텍스트로 선택된 조
-// 선택된 조의 조장 uid Set (scope가 'mine'이고 선택 조가 있을 때만 태그 표시)
+// 선택된 조의 경/면 조장 uid Set (scope가 'mine'이고 선택 조가 있을 때만 태그 표시)
 function leaderSetForScope(scope) {
   if (scope !== 'mine' || !myGroupSel) return null;
-  return new Set(allGroups.find(g => g.id === myGroupSel)?.leaderUids || []);
+  const g = allGroups.find(g => g.id === myGroupSel);
+  if (!g) return null;
+  return { gyeong: new Set(leaderUidsOf(g, 'gyeong')), myeon: new Set(leaderUidsOf(g, 'myeon')) };
 }
 const scopeLabelOf = (scope) => scope === 'mine' ? '내 그룹' : '전체';
 
@@ -219,6 +228,7 @@ function calcStats(uid, period) {
   const myeonAvg = Math.round((mA + mP + mF) / 3);
   const dokAvg = Math.round((pct('routineDok') + pct('routinePilsa')) / 2);  // 책읽기 + 필사
   const un = pct('routineUn');
+  const subconAvg = Math.round((pct('subconGyeong') + pct('subconMyeon')) / 2);  // 잠재의식 미션 (경/면 영상+댓글)
   // 종합 루틴 달성률 = 프로그램 유형에 해당하는 요소만 평균 (각 요소 동일 가중)
   const type = allUsers.find(u => u.uid === uid)?.programType || 'careerpt';
   const comps = type === 'maesipgyeong' ? [gyeongAvg]
@@ -234,6 +244,7 @@ function calcStats(uid, period) {
     myeon_am: mA, myeon_pm: mP, myeon_feedback: mF,
     myeonAvg,
     dok: pct('routineDok'), dokAvg, un, fa: pct('fa5050'),
+    subconGyeong: pct('subconGyeong'), subconMyeon: pct('subconMyeon'), subconAvg,
     routineTotal,
     lecture: avg('lecture'), jasoseo: avg('jasoseo'),
     pilgi: avg('pilgi'), interview: avg('interview'), cert: avg('cert'),
@@ -253,13 +264,20 @@ function buildRankCardHtml(sorted, statsMap, item, unit, context, cardStyle, lea
   const myRow = rows.find(r => r.isMe);
   const othersRows = rows.filter(r => !r.isMe);
 
+  const leaderTagsHtml = (uid) => {
+    if (!leaderSet) return '';
+    let html = '';
+    if (leaderSet.gyeong?.has(uid)) html += '<span class="leader-tag">매십경 조장</span>';
+    if (leaderSet.myeon?.has(uid)) html += '<span class="leader-tag">매십면 조장</span>';
+    return html;
+  };
   const rowHtml = (u, rank, isMe) => {
     const val = statsMap[u.uid]?.[item.key] || 0;
     const wk = calcWeekForUser(u, context);
     const numCls = rank===1?'top1':rank===2?'top2':rank===3?'top3':'';
     return `<div class="rank-row ${isMe?'me':''}">
       <div class="rank-num ${numCls}">${rank}</div>
-      <div class="rank-name">${leaderSet && leaderSet.has(u.uid) ? '<span class="leader-tag">조장</span>' : ''}${u.nickname}<span class="rank-week">${wk}</span></div>
+      <div class="rank-name">${leaderTagsHtml(u.uid)}${u.nickname}<span class="rank-week">${wk}</span></div>
       ${isMe?'<span class="me-tag">나</span>':''}
       <div class="rank-bar-wrap"><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${maxVal?Math.round(val/maxVal*100):0}%"></div></div></div>
       <div class="rank-val">${val}${unit}</div>
@@ -414,6 +432,8 @@ function renderRank() {
   const period = filters.period;
 
   const RANK_ITEMS = [
+    { key:'routineTotal', label:'종합 달성률', unit:'%', highlight:true },
+    { key:'subconAvg', label:'잠재의식 달성률', unit:'%' },
     { key:'gyeongAvg', label:'매십경 달성률', unit:'%' },
     { key:'myeonAvg',  label:'매십면 달성률', unit:'%' },
     { key:'dokAvg',    label:'매십독 달성률', unit:'%' },
@@ -433,7 +453,7 @@ function renderRank() {
   let html = '';
   RANK_ITEMS.forEach(item => {
     const sorted = [...users].sort((a,b) => (statsMap[b.uid]?.[item.key]||0) - (statsMap[a.uid]?.[item.key]||0));
-    html += buildRankCardHtml(sorted, statsMap, item, item.unit, currentContext, '', leaderSetForScope(filters.scope), scopeLabelOf(filters.scope));
+    html += buildRankCardHtml(sorted, statsMap, item, item.unit, currentContext, item.highlight?'style="border:1.5px solid var(--main-mid)"':'', leaderSetForScope(filters.scope), scopeLabelOf(filters.scope));
   });
 
   document.getElementById('rank-content').innerHTML = html || '<div class="empty-state"><p>기록이 없어요</p></div>';
@@ -447,7 +467,7 @@ function renderCompare() {
   users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
 
   // 전체 평균 계산
-  const keys = ['gyeongAvg','myeonAvg','dokAvg','un','fa','jasoseo','pilgi','interview','cert','apps'];
+  const keys = ['subconAvg','gyeongAvg','myeonAvg','dokAvg','un','fa','jasoseo','pilgi','interview','cert','apps'];
   const avg = {};
   keys.forEach(k => {
     avg[k] = users.length ? Math.round(users.reduce((a,u)=>a+(statsMap[u.uid]?.[k]||0),0)/users.length) : 0;
@@ -480,6 +500,7 @@ function renderCompare() {
     const s = isAvg ? avg : statsMap[data.uid];
     return `<tr class="${cls}">
       <td class="name-col" title="${name}">${name}</td><td>${wk}</td>
+      <td class="${!isAvg&&s.subconAvg===maxMap.subconAvg?'hi':''}">${s.subconAvg}%</td>
       <td class="${!isAvg&&s.gyeongAvg===maxMap.gyeongAvg?'hi':''}">${s.gyeongAvg}%</td>
       <td class="${!isAvg&&s.myeonAvg===maxMap.myeonAvg?'hi':''}">${s.myeonAvg}%</td>
       <td class="${!isAvg&&s.dokAvg===maxMap.dokAvg?'hi':''}">${s.dokAvg}%</td>
@@ -514,14 +535,14 @@ window.downloadExcel = () => {
   const { users, statsMap, avg, prevAvg } = window._compareData;
   const PREV_KEYS = ['prevInterviewCount','prevInterviewHour','prevPilgiHour','prevApplications'];
   const pv = v => (v == null || v === '' ? '-' : v);
-  const headers = ['닉네임','주차','매십경','매십면','매십독','매십운','FA','자소서','필기','면접','자격증','지원수',
+  const headers = ['닉네임','주차','잠재의식','매십경','매십면','매십독','매십운','FA','자소서','필기','면접','자격증','지원수',
     '이전_면접경험(회)','이전_면접준비(시간)','이전_필기준비(시간)','이전_지원수(개)'];
   const rows = [
-    ['전체 평균','—',...['gyeongAvg','myeonAvg','dokAvg','un','fa','jasoseo','pilgi','interview','cert','apps'].map(k=>avg[k]),
+    ['전체 평균','—',...['subconAvg','gyeongAvg','myeonAvg','dokAvg','un','fa','jasoseo','pilgi','interview','cert','apps'].map(k=>avg[k]),
       ...PREV_KEYS.map(k => pv(prevAvg?.[k]))],
     ...users.map(u => {
       const s = statsMap[u.uid];
-      return [u.nickname, calcWeek(u.startDate)+'주', s.gyeongAvg+'%', s.myeonAvg+'%', s.dokAvg+'%', s.un+'%', s.fa+'%', s.jasoseo, s.pilgi, s.interview, s.cert, s.apps,
+      return [u.nickname, calcWeek(u.startDate)+'주', s.subconAvg+'%', s.gyeongAvg+'%', s.myeonAvg+'%', s.dokAvg+'%', s.un+'%', s.fa+'%', s.jasoseo, s.pilgi, s.interview, s.cert, s.apps,
         ...PREV_KEYS.map(k => pv(u[k]))];
     })
   ];
@@ -694,7 +715,8 @@ window.showGroupDetail = (groupId) => {
   document.getElementById('detail-sub').textContent = `${g.memberCount}명 · 루틴 달성 평균 ${g.routineAvg}%`;
 
   const period = filters.gperiod;
-  const leaders = new Set(g.leaderUids || []);
+  const gyeongLeaders = new Set(leaderUidsOf(g, 'gyeong'));
+  const myeonLeaders = new Set(leaderUidsOf(g, 'myeon'));
   const members = [...g.members].sort((a,b) => {
     const sa = calcStats(a.uid, period), sb = calcStats(b.uid, period);
     return sb.routineTotal - sa.routineTotal;
@@ -708,7 +730,7 @@ window.showGroupDetail = (groupId) => {
     html += `<div class="member-row ${isMe?'me':''}">
       <div class="member-rank ${i<3?'top':''}">${i+1}</div>
       <div class="member-av">${m.nickname[0]}</div>
-      <div class="member-name">${leaders.has(m.uid) ? '<span class="leader-tag">조장</span>' : ''}${m.nickname}${isMe?' <span style="font-size:10px;color:var(--main);font-weight:600">나</span>':''}<br>
+      <div class="member-name">${gyeongLeaders.has(m.uid) ? '<span class="leader-tag">매십경 조장</span>' : ''}${myeonLeaders.has(m.uid) ? '<span class="leader-tag">매십면 조장</span>' : ''}${m.nickname}${isMe?' <span style="font-size:10px;color:var(--main);font-weight:600">나</span>':''}<br>
         <span style="font-size:10px;color:#aaa">${wk}</span>
       </div>
       <div class="member-bars">

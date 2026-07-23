@@ -161,6 +161,8 @@ function applyProgramType(type) {
     show('section-dok', false);
     show('section-un', false);
     show('section-jwijun', false);
+    show('subcon-gyeong-item', true);
+    show('subcon-myeon-item', false);
   } else if (type === 'maesipmyeon') {
     // 매십면만
     show('section-gyeong', false);
@@ -168,6 +170,8 @@ function applyProgramType(type) {
     show('section-dok', false);
     show('section-un', false);
     show('section-jwijun', false);
+    show('subcon-gyeong-item', false);
+    show('subcon-myeon-item', true);
   } else if (type === 'maesipboth') {
     // 매십경 + 매십면
     show('section-gyeong', true);
@@ -175,6 +179,8 @@ function applyProgramType(type) {
     show('section-dok', false);
     show('section-un', false);
     show('section-jwijun', false);
+    show('subcon-gyeong-item', true);
+    show('subcon-myeon-item', true);
   } else {
     // 커리어PT — 전체
     show('section-gyeong', true);
@@ -182,7 +188,10 @@ function applyProgramType(type) {
     show('section-dok', true);
     show('section-un', true);
     show('section-jwijun', true);
+    show('subcon-gyeong-item', true);
+    show('subcon-myeon-item', true);
   }
+  updateSubconPct();
 }
 
 // ── 탭 전환 ──
@@ -206,13 +215,14 @@ window.toggleRoutine = (row, id) => {
   row.classList.toggle('checked');
 };
 
-// 세부 루틴 토글 (매십경/매십면)
+// 세부 루틴 토글 (매십경/매십면/잠재의식 미션)
 window.toggleSubRoutine = (row, id) => {
   const chk = document.getElementById(id);
   chk.classList.toggle('checked');
   row.classList.toggle('checked');
   updateGyeongPct();
   updateMyeonPct();
+  updateSubconPct();
 };
 
 // 매십운: 운동 종류 선택
@@ -269,6 +279,16 @@ function updateGyeongPct() {
 function updateMyeonPct() {
   const cnt = ['r-myeon-1','r-myeon-2','r-myeon-3'].filter(id => document.getElementById(id).classList.contains('checked')).length;
   document.getElementById('myeon-pct').textContent = `${cnt} / 3`;
+}
+// 잠재의식 미션: programType에 따라 숨겨진 항목은 분모에서 제외
+function updateSubconPct() {
+  const ids = ['r-subcon-gyeong','r-subcon-myeon'].filter(id => {
+    const row = document.getElementById(id)?.closest('.routine-row');
+    return row && row.style.display !== 'none';
+  });
+  const cnt = ids.filter(id => document.getElementById(id).classList.contains('checked')).length;
+  const el = document.getElementById('subcon-pct');
+  if (el) el.textContent = `${cnt} / ${ids.length}`;
 }
 
 // 매십독: 책 이름 입력 상태 업데이트
@@ -345,18 +365,26 @@ function renderFamilyList(famId) {
   updateTotalTime();
 }
 
+// FA5050/현장방문 세부(산업분석·기업분석·현직자 인터뷰) 합계(분)
+function calcFaTime() {
+  return (Number(document.getElementById('f-fa-industry')?.value) || 0)
+       + (Number(document.getElementById('f-fa-company')?.value) || 0)
+       + (Number(document.getElementById('f-fa-interviewer')?.value) || 0);
+}
+
 // 취준 활동 총 시간 자동 합산
 window.updateTotalTime = () => {
   const manualInput = document.getElementById('f-total-time-manual');
   if (manualInput && manualInput.style.display !== 'none') return; // 수동 모드일 때는 합산 안 함
   const lecture = calcLectureTotal();
   const jasoseo = Number(document.getElementById('f-jasoseo').value) || 0;
+  const faTime = calcFaTime();
   const pilgi = Number(document.getElementById('f-pilgi').value) || 0;
   const interview = Number(document.getElementById('f-interview').value) || 0;
   const cert = Number(document.getElementById('f-cert').value) || 0;
   const gyeongTime = Number(document.getElementById('f-gyeong-time').value) || 0;
   const etc = Number(document.getElementById('f-etc').value) || 0;
-  const total = lecture + jasoseo + pilgi + interview + cert + gyeongTime + etc;
+  const total = lecture + jasoseo + faTime + pilgi + interview + cert + gyeongTime + etc;
   document.getElementById('total-time-display').textContent = total;
 };
 
@@ -372,7 +400,7 @@ window.toggleTotalTimeEdit = () => {
     manualInput.style.display = 'none';
     displayWrap.style.display = '';
     btn.textContent = '직접 수정';
-    hint.textContent = '수강+자소서+필기+면접+자격증 자동 합산';
+    hint.textContent = '수강+자소서+FA(산업/기업/인터뷰)+필기+면접+자격증+매십경+기타 자동 합산';
     updateTotalTime();
   } else {
     // 직접 수정 모드
@@ -425,6 +453,9 @@ window.saveRecord = async () => {
       myeon_pm: chk('r-myeon-2'),
       myeon_feedback: chk('r-myeon-3'),
       myeonScore: [chk('r-myeon-1'),chk('r-myeon-2'),chk('r-myeon-3')].filter(Boolean).length,
+      // 잠재의식 미션
+      subconGyeong: chk('r-subcon-gyeong'),
+      subconMyeon: chk('r-subcon-myeon'),
       // 기존 호환성 유지
       routineGyeong: chk('r-gyeong-1') && chk('r-gyeong-2') && chk('r-gyeong-3'),
       routineMyeon:  chk('r-myeon-1')  && chk('r-myeon-2')  && chk('r-myeon-3'),
@@ -437,6 +468,10 @@ window.saveRecord = async () => {
       lectureItems,
       jasoseo: Number(document.getElementById('f-jasoseo').value) || 0,
       jasoseoCount: Number(document.getElementById('f-jasoseo-count').value) || 0,
+      faIndustry: Number(document.getElementById('f-fa-industry').value) || 0,
+      faCompany: Number(document.getElementById('f-fa-company').value) || 0,
+      faInterviewer: Number(document.getElementById('f-fa-interviewer').value) || 0,
+      faTime: calcFaTime(),
       pilgi: Number(document.getElementById('f-pilgi').value) || 0,
       interview: Number(document.getElementById('f-interview').value) || 0,
       cert: Number(document.getElementById('f-cert').value) || 0,
@@ -447,7 +482,7 @@ window.saveRecord = async () => {
         if (manualInput && manualInput.style.display !== 'none') {
           return Number(manualInput.value) || 0;
         }
-        return lectureSum + (Number(document.getElementById('f-jasoseo').value)||0) + (Number(document.getElementById('f-pilgi').value)||0) + (Number(document.getElementById('f-interview').value)||0) + (Number(document.getElementById('f-cert').value)||0) + (Number(document.getElementById('f-gyeong-time').value)||0) + (Number(document.getElementById('f-etc').value)||0);
+        return lectureSum + (Number(document.getElementById('f-jasoseo').value)||0) + calcFaTime() + (Number(document.getElementById('f-pilgi').value)||0) + (Number(document.getElementById('f-interview').value)||0) + (Number(document.getElementById('f-cert').value)||0) + (Number(document.getElementById('f-gyeong-time').value)||0) + (Number(document.getElementById('f-etc').value)||0);
       })(),
       applications: Number(document.getElementById('f-applications').value) || 0,
       selfEsteem: scoreSelected || 0,
@@ -506,16 +541,23 @@ async function loadSummary() {
   // 나머지
   setPct('p-dok','pb-dok',Math.round((pct('routineDok')+pct('routinePilsa'))/2));
   setPct('p-un','pb-un',pct('routineUn'));
-  setPct('p-fa','pb-fa',pct('fa5050'));
   const avg = k => n ? Math.round(recs.reduce((a,r)=>a+(r[k]||0),0)/n) : 0;
   const total = k => recs.reduce((a,r)=>a+(r[k]||0),0);
+  // FA5050/현장방문 세부 — 산업분석·기업분석·현직자 인터뷰는 분 누적, 현장방문은 여부(%)
+  document.getElementById('p-fa-all').textContent = total('faTime') + '분';
+  document.getElementById('p-fa-industry').textContent = total('faIndustry') + '분';
+  document.getElementById('p-fa-company').textContent = total('faCompany') + '분';
+  document.getElementById('p-fa-interviewer').textContent = total('faInterviewer') + '분';
+  setPct('p-fa-visit','pb-fa-visit',pct('fa5050'));
   document.getElementById('s-lec-avg').textContent = avg('lecture');
   document.getElementById('s-jas-avg').textContent = avg('jasoseo');
+  document.getElementById('s-fa-avg').textContent = avg('faTime');
   document.getElementById('s-pil-avg').textContent = avg('pilgi');
   document.getElementById('s-int-avg').textContent = avg('interview');
   document.getElementById('s-cert-avg').textContent = avg('cert');
   document.getElementById('s-lec-total').textContent = total('lecture');
   document.getElementById('s-jas-total').textContent = total('jasoseo');
+  document.getElementById('s-fa-total').textContent = total('faTime');
   document.getElementById('s-pil-total').textContent = total('pilgi');
   document.getElementById('s-int-total').textContent = total('interview');
   document.getElementById('s-cert-total').textContent = total('cert');
@@ -887,7 +929,7 @@ window.editTodayRecord = () => {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-input').classList.add('active');
   document.querySelectorAll('.tab-btn')[0].classList.add('active');
-  ['r-gyeong-1','r-gyeong-2','r-gyeong-3','r-myeon-1','r-myeon-2','r-myeon-3','r-dok','r-pilsa'].forEach(id => {
+  ['r-gyeong-1','r-gyeong-2','r-gyeong-3','r-myeon-1','r-myeon-2','r-myeon-3','r-dok','r-pilsa','r-subcon-gyeong','r-subcon-myeon'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.classList.remove('checked'); el.closest('.routine-row')?.classList.remove('checked'); }
   });
@@ -899,12 +941,15 @@ window.editTodayRecord = () => {
   if (r.myeon_feedback)  { document.getElementById('r-myeon-3').classList.add('checked'); document.getElementById('r-myeon-3').closest('.routine-row').classList.add('checked'); }
   if (r.routineDok)      { document.getElementById('r-dok').classList.add('checked'); document.getElementById('r-dok').closest('.routine-row').classList.add('checked'); }
   if (r.routinePilsa)    { document.getElementById('r-pilsa').classList.add('checked'); document.getElementById('r-pilsa').closest('.routine-row').classList.add('checked'); }
+  if (r.subconGyeong)    { document.getElementById('r-subcon-gyeong').classList.add('checked'); document.getElementById('r-subcon-gyeong').closest('.routine-row').classList.add('checked'); }
+  if (r.subconMyeon)     { document.getElementById('r-subcon-myeon').classList.add('checked'); document.getElementById('r-subcon-myeon').closest('.routine-row').classList.add('checked'); }
   document.getElementById('f-book-title').value = r.bookTitle || '';
   const jasoseoCountEl = document.getElementById('f-jasoseo-count');
   if (jasoseoCountEl) jasoseoCountEl.value = r.jasoseoCount || '';
   updateDokStatus();
   updateGyeongPct();
   updateMyeonPct();
+  updateSubconPct();
 
   // 운동 선택 복원
   document.querySelectorAll('#exercise-tags .exercise-tag').forEach(tag => tag.classList.remove('selected'));
@@ -936,6 +981,9 @@ window.editTodayRecord = () => {
   renderFamilyList('interview');
   renderFamilyList('analysis');
   document.getElementById('f-jasoseo').value      = r.jasoseo || 0;
+  document.getElementById('f-fa-industry').value     = r.faIndustry || 0;
+  document.getElementById('f-fa-company').value      = r.faCompany || 0;
+  document.getElementById('f-fa-interviewer').value   = r.faInterviewer || 0;
   document.getElementById('f-pilgi').value        = r.pilgi || 0;
   document.getElementById('f-interview').value    = r.interview || 0;
   document.getElementById('f-cert').value         = r.cert || 0;
