@@ -32,6 +32,7 @@ onAuthStateChanged(auth, async u => {
   document.getElementById('admin-email').textContent = `로그인: ${u.email}`;
   await loadData();
   renderStats();
+  renderTodayStatus();
   renderGroups();
   renderUsers();
   renderDashboard();
@@ -57,6 +58,20 @@ function renderStats() {
   document.getElementById('st-groups').textContent = allGroups.length;
   document.getElementById('st-records').textContent = allRecords.length;
   document.getElementById('st-today').textContent = allRecords.filter(r=>r.date===today).length;
+}
+
+// ── 오늘 기록 현황 ──
+function renderTodayStatus() {
+  const el = document.getElementById('today-missing-list');
+  if (!el) return;
+  const today = new Date().toISOString().split('T')[0];
+  const todaySet = new Set(allRecords.filter(r => r.date === today).map(r => r.uid));
+  const missing = allUsers.filter(u => !todaySet.has(u.uid));
+  document.getElementById('today-done-count').textContent = allUsers.length - missing.length;
+  document.getElementById('today-missing-count').textContent = missing.length;
+  el.innerHTML = missing.length
+    ? missing.map(u => `<span class="member-chip">${u.nickname || u.email || '-'}</span>`).join('')
+    : '<span style="font-size:12px;color:#ccc">전원 기록 완료했어요 🎉</span>';
 }
 
 // 유저의 소속 조 목록 (groupIds 배열 / 구 단일 groupId 호환)
@@ -488,10 +503,16 @@ function renderUsers(search='') {
   allGroups.forEach(g => { groupMap[g.id] = g.name; });
   const filtered = search ? allUsers.filter(u =>
     u.nickname?.includes(search) || u.email?.includes(search)) : allUsers;
+  const today = new Date().toISOString().split('T')[0];
   const lastRecMap = {};
   allRecords.forEach(r => {
     if (!lastRecMap[r.uid] || r.date > lastRecMap[r.uid]) lastRecMap[r.uid] = r.date;
   });
+  const lastRecCell = (u) => {
+    const d = lastRecMap[u.uid];
+    if (!d) return '없음';
+    return d === today ? '<span style="color:#16a34a;font-weight:600">오늘 ✓</span>' : d;
+  };
   const groupChips = (u) => {
     const names = groupIdsOf(u).map(id => groupMap[id]).filter(Boolean);
     if (!names.length) return '<span style="background:#f0f0f0;color:#aaa;padding:2px 8px;border-radius:6px;font-size:11px">미배정</span>';
@@ -500,11 +521,11 @@ function renderUsers(search='') {
   document.getElementById('user-table-body').innerHTML = filtered.map(u => `
     <tr>
       <td><div class="user-avatar">${u.photoURL ? `<img src="${u.photoURL}">` : (u.nickname?.[0]||'?')}</div></td>
-      <td style="font-weight:500">${u.nickname||'-'}${userLeaderTagsHtml(u)}</td>
+      <td style="font-weight:500;white-space:nowrap">${u.nickname||'-'}${userLeaderTagsHtml(u)}</td>
       <td style="font-size:12px;color:#aaa">${u.email||'-'}</td>
       <td>${groupChips(u)}</td>
       <td style="font-size:12px;color:#aaa">${u.startDate ? calcWeek(u.startDate)+'주차' : '-'}</td>
-      <td style="font-size:12px;color:#aaa">${lastRecMap[u.uid]||'없음'}</td>
+      <td style="font-size:12px;color:#aaa">${lastRecCell(u)}</td>
       <td><button class="btn-sm btn-sm-primary" onclick="openUserDetail('${u.uid}')">상세보기</button></td>
       <td><button class="btn-sm btn-sm-primary" onclick="openUserManage('${u.uid}')">관리</button></td>
     </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;padding:20px;color:#ccc">검색 결과 없음</td></tr>';
@@ -527,6 +548,7 @@ window.createGroup = async () => {
     allGroups.sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true }));
     closeModal('create-group-modal');
     renderStats();
+    renderTodayStatus();
     renderGroups();
     renderDashboard();
     showToast(`"${name}" 그룹이 만들어졌어요!`);
@@ -583,6 +605,7 @@ window.deleteGroup = async () => {
     allGroups = allGroups.filter(x=>x.id!==id);
     closeModal('edit-group-modal');
     renderStats();
+    renderTodayStatus();
     renderGroups();
     renderDashboard();
     showToast('그룹이 삭제됐어요');
@@ -853,6 +876,7 @@ window.deleteUser = async () => {
 
     closeModal('user-manage-modal');
     renderStats();
+    renderTodayStatus();
     renderGroups();
     renderUsers();
     renderDashboard();
