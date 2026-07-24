@@ -132,6 +132,14 @@ function prevPeriodLabel() {
   return (dashPeriod === 'week' || dashPeriod === 'specific_week') ? '전주 대비' : '전월 대비';
 }
 
+function dashPeriodLabel() {
+  if (dashPeriod === 'week') return '이번 주';
+  if (dashPeriod === 'month') return '이번 달';
+  if (dashPeriod === 'specific_week') return '선택한 주';
+  if (dashPeriod === 'specific_month') return '선택한 달';
+  return '이 기간';
+}
+
 function dashUserStats(uid, periodRecs) {
   const recs = periodRecs.filter(r => r.uid === uid);
   const n = recs.length || 1;
@@ -246,6 +254,24 @@ function renderDashboard() {
   const avgOf = k => Math.round(users.reduce((a,u)=>a+(statsMap[u.uid][k]||0),0)/users.length);
   const totalApps = users.reduce((a,u)=>a+(statsMap[u.uid].apps||0),0);
 
+  // MVP — 이 기간에 실제 기록을 남긴 사람 중 루틴 종합 달성률이 가장 높은 사람(동률이면 모두 표시)
+  const mvpCandidates = users.filter(u => statsMap[u.uid].active);
+  const mvpHtml = (() => {
+    if (!mvpCandidates.length) {
+      return `<div style="background:#f8f8ff;border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:center;color:#ccc;font-size:13px">${dashPeriodLabel()} 기록이 있는 사람이 없어요</div>`;
+    }
+    const maxVal = Math.max(...mvpCandidates.map(u => statsMap[u.uid].routineTotal));
+    const top = mvpCandidates.filter(u => statsMap[u.uid].routineTotal === maxVal);
+    const names = top.map(u => u.nickname).join(', ');
+    return `<div style="background:linear-gradient(135deg,var(--main),var(--main-dark));border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:white">
+      <div style="font-size:28px;line-height:1">🏆</div>
+      <div>
+        <div style="font-size:11px;opacity:.85;letter-spacing:.03em">${dashPeriodLabel()} MVP</div>
+        <div style="font-size:16px;font-weight:700">${names} <span style="font-weight:500;opacity:.9">· 루틴 종합 달성률 ${maxVal}%</span></div>
+      </div>
+    </div>`;
+  })();
+
   // 이전 기간(전주/전월) 비교 — specific_week/specific_month에서 미선택이면 null
   const prevRecs = getPrevDashPeriodRecords();
   let prevAvgOf = () => null;
@@ -282,6 +308,7 @@ function renderDashboard() {
   };
 
   el.innerHTML = `
+    ${mvpHtml}
     <div class="stat-row">
       <div class="stat-box"><div class="num">${activeCount}/${users.length}</div><div class="lbl">기록 참여율 (${participRate}%)${deltaBadge(activeCount, prevActiveCount, '명')}</div></div>
       <div class="stat-box"><div class="num">${avgOf('routineTotal')}%</div><div class="lbl">루틴 종합 달성률${deltaBadge(avgOf('routineTotal'), prevAvgOf('routineTotal'), '%p')}</div></div>
