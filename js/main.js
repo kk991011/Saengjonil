@@ -887,6 +887,7 @@ window.loadRecords = async () => {
       <div class="record-grid">
         <div class="record-item">강의 <span>${r.lecture||0}분</span></div>
         <div class="record-item">자소서 <span>${r.jasoseo||0}분</span></div>
+        <div class="record-item">FA5050/현장방문 <span>${r.faTime||0}분</span></div>
         <div class="record-item">필기 <span>${r.pilgi||0}분</span></div>
         <div class="record-item">면접 <span>${r.interview||0}분</span></div>
         <div class="record-item">자격증 <span>${r.cert||0}분</span></div>
