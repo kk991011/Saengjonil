@@ -258,24 +258,23 @@
       </div>
     </div>
 
-    <!-- FA5050/현장방문 -->
+    <!-- FR5050 -->
     <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:8px">
-      <div style="font-size:12px;font-weight:600;color:var(--main);margin-bottom:8px">FA5050/현장방문</div>
+      <div style="font-size:12px;font-weight:600;color:var(--main);margin-bottom:8px">FR5050</div>
       <div class="row2" style="margin-bottom:6px">
         <div class="field" style="margin-bottom:0"><label>산업분석 <span style="color:#aaa;font-weight:400">(분)</span></label>
           <input type="number" id="f-fa-industry" min="0" placeholder="0" oninput="updateTotalTime()"></div>
         <div class="field" style="margin-bottom:0"><label>기업분석 <span style="color:#aaa;font-weight:400">(분)</span></label>
           <input type="number" id="f-fa-company" min="0" placeholder="0" oninput="updateTotalTime()"></div>
       </div>
-      <div class="field" style="margin-bottom:10px"><label>현직자 인터뷰 <span style="color:#aaa;font-weight:400">(분)</span></label>
+      <div class="field" style="margin-bottom:0"><label>현직자 인터뷰 <span style="color:#aaa;font-weight:400">(분)</span></label>
         <input type="number" id="f-fa-interviewer" min="0" placeholder="0" oninput="updateTotalTime()"></div>
-      <div class="field" style="margin-bottom:0">
-        <label>현장방문</label>
-        <div class="fa-row">
-          <button class="fa-btn yes" onclick="selectFA(true)">✓ 했어요</button>
-          <button class="fa-btn no" onclick="selectFA(false)">✗ 못 했어요</button>
-        </div>
-      </div>
+    </div>
+
+    <!-- 현장방문 -->
+    <div class="field">
+      <label>현장방문 횟수 <span style="color:#aaa;font-weight:400">(회)</span></label>
+      <input type="number" id="f-site-visit-count" min="0" step="1" placeholder="0">
     </div>
 
     <!-- 필기/인적성 + 면접 준비 + 자격증 준비 -->
@@ -305,7 +304,7 @@
         <input type="number" id="f-total-time-manual" min="0" placeholder="직접 입력"
           style="display:none;width:100px;font-size:14px;padding:6px 10px;border:1.5px solid var(--main-mid);border-radius:8px;font-family:inherit;outline:none">
       </div>
-      <div style="font-size:11px;color:#aaa;margin-top:4px" id="total-time-hint">수강+자소서+FA(산업/기업/인터뷰)+필기+면접+자격증+매십경+기타 자동 합산</div>
+      <div style="font-size:11px;color:#aaa;margin-top:4px" id="total-time-hint">수강+자소서+FR(산업/기업/인터뷰)+필기+면접+자격증+매십경+기타 자동 합산</div>
     </div>
 
     <div class="field"><label>지원 개수</label><input type="number" id="f-applications" min="0" placeholder="0"></div>
@@ -318,7 +317,8 @@
         <div class="focus-tag" onclick="toggleTag(this)">필기</div>
         <div class="focus-tag" onclick="toggleTag(this)">면접</div>
         <div class="focus-tag" onclick="toggleTag(this)">자격증</div>
-        <div class="focus-tag" onclick="toggleTag(this)">FA5050/현장방문</div>
+        <div class="focus-tag" onclick="toggleTag(this)">FR5050</div>
+        <div class="focus-tag" onclick="toggleTag(this)">현장방문</div>
         <div class="focus-tag" onclick="toggleTag(this)">골고루</div>
       </div>
     </div>
@@ -399,18 +399,17 @@
       <div class="prog-row"><div class="prog-header"><span>매십독</span><span class="prog-pct" id="p-dok">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-dok" style="width:0%;opacity:.6"></div></div></div>
       <div class="prog-row"><div class="prog-header"><span>매십운</span><span class="prog-pct" id="p-un">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-un" style="width:0%;opacity:.4"></div></div></div>
       <div style="background:var(--main-xlight);border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="font-size:12px;font-weight:600;color:var(--main);margin-bottom:6px">FA5050/현장방문</div>
+        <div style="font-size:12px;font-weight:600;color:var(--main);margin-bottom:6px">FR5050</div>
         <div class="prog-row" style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed rgba(83,74,183,.2)"><div class="prog-header"><span style="font-size:11px;font-weight:700">종합</span><span class="prog-pct" id="p-fa-all" style="font-weight:700">0분</span></div></div>
         <div class="prog-row"><div class="prog-header"><span style="font-size:11px">산업분석</span><span class="prog-pct" id="p-fa-industry">0분</span></div></div>
         <div class="prog-row"><div class="prog-header"><span style="font-size:11px">기업분석</span><span class="prog-pct" id="p-fa-company">0분</span></div></div>
         <div class="prog-row"><div class="prog-header"><span style="font-size:11px">현직자 인터뷰</span><span class="prog-pct" id="p-fa-interviewer">0분</span></div></div>
-        <div class="prog-row" style="margin-bottom:0"><div class="prog-header"><span style="font-size:11px">현장방문</span><span class="prog-pct" id="p-fa-visit">0%</span></div><div class="prog-track"><div class="prog-fill" id="pb-fa-visit" style="width:0%;opacity:.7"></div></div></div>
       </div>
       <div class="sec-label">취준 활동 일 평균</div>
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-label">강의</div><div><span class="stat-value" id="s-lec-avg">0</span><span class="stat-unit">분</span></div></div>
         <div class="stat-card"><div class="stat-label">자소서</div><div><span class="stat-value" id="s-jas-avg">0</span><span class="stat-unit">분</span></div></div>
-        <div class="stat-card"><div class="stat-label">FA5050/현장방문</div><div><span class="stat-value" id="s-fa-avg">0</span><span class="stat-unit">분</span></div></div>
+        <div class="stat-card"><div class="stat-label">FR5050</div><div><span class="stat-value" id="s-fa-avg">0</span><span class="stat-unit">분</span></div></div>
         <div class="stat-card"><div class="stat-label">필기</div><div><span class="stat-value" id="s-pil-avg">0</span><span class="stat-unit">분</span></div></div>
         <div class="stat-card"><div class="stat-label">면접</div><div><span class="stat-value" id="s-int-avg">0</span><span class="stat-unit">분</span></div></div>
         <div class="stat-card"><div class="stat-label">자격증</div><div><span class="stat-value" id="s-cert-avg">0</span><span class="stat-unit">분</span></div></div>
@@ -419,7 +418,8 @@
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-label">강의</div><div><span class="stat-value" id="s-lec-total">0</span><span class="stat-unit">분</span></div></div>
         <div class="stat-card"><div class="stat-label">자소서</div><div><span class="stat-value" id="s-jas-total">0</span><span class="stat-unit">분</span></div></div>
-        <div class="stat-card"><div class="stat-label">FA5050/현장방문</div><div><span class="stat-value" id="s-fa-total">0</span><span class="stat-unit">분</span></div></div>
+        <div class="stat-card"><div class="stat-label">FR5050</div><div><span class="stat-value" id="s-fa-total">0</span><span class="stat-unit">분</span></div></div>
+        <div class="stat-card"><div class="stat-label">현장방문</div><div><span class="stat-value" id="s-site-visit-total">0</span><span class="stat-unit">회</span></div></div>
         <div class="stat-card"><div class="stat-label">필기</div><div><span class="stat-value" id="s-pil-total">0</span><span class="stat-unit">분</span></div></div>
         <div class="stat-card"><div class="stat-label">면접</div><div><span class="stat-value" id="s-int-total">0</span><span class="stat-unit">분</span></div></div>
         <div class="stat-card"><div class="stat-label">자격증</div><div><span class="stat-value" id="s-cert-total">0</span><span class="stat-unit">분</span></div></div>
@@ -445,8 +445,8 @@
     <div style="position:relative;height:160px;margin-bottom:24px"><canvas id="itrend-un" role="img" aria-label="매십운 주차별 달성률">매십운 추이</canvas></div>
     <div class="sec-label">매십독 주차별 달성률</div>
     <div style="position:relative;height:160px;margin-bottom:24px"><canvas id="itrend-dok" role="img" aria-label="매십독 주차별 달성률">매십독 추이</canvas></div>
-    <div class="sec-label">FA5050/현장방문 주차별 달성률</div>
-    <div style="position:relative;height:160px;margin-bottom:24px"><canvas id="itrend-fa" role="img" aria-label="FA5050 현장방문 주차별 달성률">FA5050 추이</canvas></div>
+    <div class="sec-label">FR5050 주차별 달성률</div>
+    <div style="position:relative;height:160px;margin-bottom:24px"><canvas id="itrend-fa" role="img" aria-label="FR5050 주차별 달성률">FR5050 추이</canvas></div>
     <div class="sec-label">주간 목표 달성률</div>
     <div style="position:relative;height:160px"><canvas id="goal-chart" role="img" aria-label="주간 목표 달성률">목표 달성률 추이</canvas></div>
   </div>

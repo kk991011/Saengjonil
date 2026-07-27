@@ -45,7 +45,7 @@ export const NICKS = ['취준왕','면접고수','새벽러너','합격기원','
   '취준생K','면접의달인','노력파','슬기로운취준','내일은합격','루틴마스터','집중또집중','끝까지간다','희망회로','존버는승리'];
 export const BOOKS = ['클린 코드','함께 자라기','객체지향의 사실과 오해','이펙티브 자바','미움받을 용기','아주 작은 습관의 힘','원씽','데일 카네기 인간관계론','스피드 리딩','부의 추월차선'];
 export const LECTURE_ITEMS = ['자료구조 강의','알고리즘 특강','SQL 기초','네트워크 개론','운영체제','CS 면접대비','React 실전','Spring 부트캠프','파이썬 데이터분석','디자인패턴'];
-export const FOCUS_TAGS = ['자소서','필기','면접','FA5050/현장방문','골고루'];
+export const FOCUS_TAGS = ['자소서','필기','면접','FR5050','현장방문','골고루'];
 export const EXERCISES = ['헬스','러닝','요가','필라테스','홈트','등산','수영','축구·풋살','배드민턴'];
 export const THEME = ['#534AB7','#E4572E','#17BEBB','#2E86AB','#F25F5C','#3A7D44','#8E44AD','#D7263D','#1B998B','#C9184A'];
 export const PROGRAMS = ['careerpt','careerpt','careerpt','maesipgyeong','maesipmyeon','maesipboth'];
@@ -65,6 +65,11 @@ export function genRecord(u, date, r) {
   const jasoseo = full && chance(r, 0.4) ? ri(r, 30, 150) : 0;
   const pilgi = full && chance(r, 0.45) ? ri(r, 20, 100) : 0;
   const interview = (full || hasM) && chance(r, 0.3) ? ri(r, 15, 90) : 0;
+  const faIndustry = full && chance(r, 0.25) ? ri(r, 15, 60) : 0;
+  const faCompany = full && chance(r, 0.25) ? ri(r, 15, 60) : 0;
+  const faInterviewer = full && chance(r, 0.15) ? ri(r, 15, 60) : 0;
+  const faTime = faIndustry + faCompany + faInterviewer;
+  const siteVisitCount = full && chance(r, 0.08) ? ri(r, 1, 2) : 0;
   const dok = chance(r, dl * 0.55);
   return {
     uid: u.uid, nickname: u.nickname, date,
@@ -76,10 +81,11 @@ export function genRecord(u, date, r) {
     routineUn: exercises.length > 0, exercises,
     lecture, lectureItem: lecture > 0 ? pick(r, LECTURE_ITEMS) : '',
     jasoseo, jasoseoCount: jasoseo > 0 ? ri(r, 1, 3) : 0, pilgi, interview,
-    totalTime: lecture + jasoseo + pilgi + interview,
+    faIndustry, faCompany, faInterviewer, faTime, fr5050: faTime > 0, siteVisitCount,
+    totalTime: lecture + jasoseo + faTime + pilgi + interview,
     applications: chance(r, 0.15) ? ri(r, 1, 3) : 0,
     selfEsteem: Math.max(1, Math.min(5, Math.round(2 + dl * 2.5 + (r() - 0.5)))),
-    jobProb: u.jobProb, fa5050: chance(r, 0.18),
+    jobProb: u.jobProb,
     focusTags: subset(r, FOCUS_TAGS, ri(r, 1, 3)),
     createdAt: new Date(`${date}T21:00:00.000Z`).toISOString(),
   };

@@ -49,7 +49,15 @@ async function loadData() {
   allUsers = uSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
   allGroups = gSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   allGroups.sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true }));
-  allRecords = rSnap.docs.map(d => d.data());
+  allRecords = rSnap.docs.map(d => {
+    const data = d.data();
+    return {
+      ...data,
+      // 신규 fr5050 필드가 없는 기존 기록은 fa5050을 호환해서 사용
+      fr5050: data.fr5050 ?? data.fa5050 ?? ((data.faTime || 0) > 0),
+      siteVisitCount: data.siteVisitCount || 0,
+    };
+  });
 }
 
 // ── 통계 ──
@@ -179,7 +187,7 @@ function dashUserStats(uid, periodRecs) {
   const myeonAvg = Math.round((pct('myeon_am')+pct('myeon_pm')+pct('myeon_feedback'))/3);
   const dokAvg = Math.round((pct('routineDok')+pct('routinePilsa'))/2);
   const un = pct('routineUn');
-  const fa = pct('fa5050');
+  const fa = pct('fr5050');
   const type = allUsers.find(u=>u.uid===uid)?.programType || 'careerpt';
   const comps = type==='maesipgyeong' ? [gyeongAvg]
     : type==='maesipmyeon' ? [myeonAvg]
@@ -350,7 +358,7 @@ function renderDashboard() {
     ${barRow('매십면', avgOf('myeonAvg'), '%', null, prevAvgOf('myeonAvg'))}
     ${barRow('매십독', avgOf('dokAvg'), '%', null, prevAvgOf('dokAvg'))}
     ${barRow('매십운', avgOf('un'), '%', null, prevAvgOf('un'))}
-    ${barRow('FA5050/현장방문', avgOf('fa'), '%', null, prevAvgOf('fa'))}
+    ${barRow('FR5050', avgOf('fa'), '%', null, prevAvgOf('fa'))}
     <div class="sec-label">취준 활동 일평균 (분)</div>
     ${barRow('자소서', avgOf('jasoseo'), '분', 120, prevAvgOf('jasoseo'))}
     ${barRow('필기', avgOf('pilgi'), '분', 120, prevAvgOf('pilgi'))}
@@ -775,7 +783,7 @@ window.renderUserDetail = () => {
       ${[
         ['gyeong_article','매십경·기사읽기'],['gyeong_opinion','매십경·오피니언'],['gyeong_comment','매십경·댓글'],
         ['myeon_am','매십면·오전'],['myeon_pm','매십면·오후'],['myeon_feedback','매십면·피드백'],
-        ['routineDok','매십독·책읽기'],['routinePilsa','매십독·필사'],['routineUn','매십운'],['fa5050','FA5050/현장방문'],
+        ['routineDok','매십독·책읽기'],['routinePilsa','매십독·필사'],['routineUn','매십운'],['fr5050','FR5050'],
       ].map(([k,label]) => `
         <div style="background:#f8f8ff;border-radius:8px;padding:8px 10px">
           <div style="font-size:11px;color:#888;margin-bottom:4px">${label}</div>
@@ -798,7 +806,7 @@ window.renderUserDetail = () => {
     <div style="max-height:280px;overflow-y:auto;border:1px solid #f0f0f0;border-radius:10px">
       <table class="user-table" style="font-size:12px">
         <thead><tr>
-          <th>날짜</th><th>경</th><th>면</th><th>독</th><th>운</th><th>FA</th>
+          <th>날짜</th><th>경</th><th>면</th><th>독</th><th>운</th><th>FR</th><th>현장방문</th>
           <th>강의</th><th>자소서</th><th>지원</th>
         </tr></thead>
         <tbody>
@@ -809,7 +817,8 @@ window.renderUserDetail = () => {
               <td>${mark([r.myeon_am,r.myeon_pm,r.myeon_feedback])}</td>
               <td>${r.bookTitle || (r.routineDok?'✓':'-')}</td>
               <td>${(r.exercises&&r.exercises.length)?r.exercises.join('/'):(r.routineUn?'✓':'-')}</td>
-              <td>${r.fa5050===true?'✓':r.fa5050===false?'X':'-'}</td>
+              <td>${r.fr5050===true?'✓':r.fr5050===false?'X':'-'}</td>
+              <td>${r.siteVisitCount||0}회</td>
               <td>${r.lecture||0}</td>
               <td>${r.jasoseo||0}</td>
               <td>${r.applications||0}</td>

@@ -243,12 +243,13 @@ function calcStats(uid, period) {
     myeon: pct('routineMyeon'),
     myeon_am: mA, myeon_pm: mP, myeon_feedback: mF,
     myeonAvg,
-    dok: pct('routineDok'), dokAvg, un, fa: pct('fa5050'),
+    dok: pct('routineDok'), dokAvg, un, fa: recs.reduce((a,r)=>a+(r.faTime||0),0),
     subconGyeong: pct('subconGyeong'), subconMyeon: pct('subconMyeon'), subconAvg,
     routineTotal,
     lecture: avg('lecture'), jasoseo: avg('jasoseo'),
     pilgi: avg('pilgi'), interview: avg('interview'), cert: avg('cert'),
     apps: recs.reduce((a,r)=>a+(r.applications||0),0),
+    siteVisits: recs.reduce((a,r)=>a+(r.siteVisitCount||0),0),
     days: recs.length,
   };
 }
@@ -438,7 +439,7 @@ function renderRank() {
     { key:'myeonAvg',  label:'매십면 달성률', unit:'%' },
     { key:'dokAvg',    label:'매십독 달성률', unit:'%' },
     { key:'un',        label:'매십운 달성률', unit:'%' },
-    { key:'fa',     label:'FA5050/현장방문 달성률', unit:'%' },
+    { key:'fa',     label:'FR5050 누적 시간', unit:'분' },
     { key:'apps',   label:'총 지원 개수', unit:'개' },
     { key:'jasoseo',label:'자소서 시간 (일평균)', unit:'분' },
     { key:'lecture',label:'강의 시간 (일평균)', unit:'분' },
@@ -467,7 +468,7 @@ function renderCompare() {
   users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
 
   // 전체 평균 계산
-  const keys = ['subconAvg','gyeongAvg','myeonAvg','dokAvg','un','fa','jasoseo','pilgi','interview','cert','apps'];
+  const keys = ['subconAvg','gyeongAvg','myeonAvg','dokAvg','un','fa','siteVisits','jasoseo','pilgi','interview','cert','apps'];
   const avg = {};
   keys.forEach(k => {
     avg[k] = users.length ? Math.round(users.reduce((a,u)=>a+(statsMap[u.uid]?.[k]||0),0)/users.length) : 0;
@@ -505,7 +506,8 @@ function renderCompare() {
       <td class="${!isAvg&&s.myeonAvg===maxMap.myeonAvg?'hi':''}">${s.myeonAvg}%</td>
       <td class="${!isAvg&&s.dokAvg===maxMap.dokAvg?'hi':''}">${s.dokAvg}%</td>
       <td class="${!isAvg&&s.un===maxMap.un?'hi':''}">${s.un}%</td>
-      <td class="${!isAvg&&s.fa===maxMap.fa?'hi':''}">${s.fa}%</td>
+      <td class="${!isAvg&&s.fa===maxMap.fa?'hi':''}">${s.fa}분</td>
+      <td class="${!isAvg&&s.siteVisits===maxMap.siteVisits?'hi':''}">${s.siteVisits}</td>
       <td class="${!isAvg&&s.jasoseo===maxMap.jasoseo?'hi':''}">${s.jasoseo}</td>
       <td class="${!isAvg&&s.pilgi===maxMap.pilgi?'hi':''}">${s.pilgi}</td>
       <td class="${!isAvg&&s.interview===maxMap.interview?'hi':''}">${s.interview}</td>
@@ -535,14 +537,14 @@ window.downloadExcel = () => {
   const { users, statsMap, avg, prevAvg } = window._compareData;
   const PREV_KEYS = ['prevInterviewCount','prevInterviewHour','prevPilgiHour','prevApplications'];
   const pv = v => (v == null || v === '' ? '-' : v);
-  const headers = ['닉네임','주차','잠재의식','매십경','매십면','매십독','매십운','FA','자소서','필기','면접','자격증','지원수',
+  const headers = ['닉네임','주차','잠재의식','매십경','매십면','매십독','매십운','FR5050(분)','현장방문(회)','자소서','필기','면접','자격증','지원수',
     '이전_면접경험(회)','이전_면접준비(시간)','이전_필기준비(시간)','이전_지원수(개)'];
   const rows = [
-    ['전체 평균','—',...['subconAvg','gyeongAvg','myeonAvg','dokAvg','un','fa','jasoseo','pilgi','interview','cert','apps'].map(k=>avg[k]),
+    ['전체 평균','—',...['subconAvg','gyeongAvg','myeonAvg','dokAvg','un','fa','siteVisits','jasoseo','pilgi','interview','cert','apps'].map(k=>avg[k]),
       ...PREV_KEYS.map(k => pv(prevAvg?.[k]))],
     ...users.map(u => {
       const s = statsMap[u.uid];
-      return [u.nickname, calcWeek(u.startDate)+'주', s.subconAvg+'%', s.gyeongAvg+'%', s.myeonAvg+'%', s.dokAvg+'%', s.un+'%', s.fa+'%', s.jasoseo, s.pilgi, s.interview, s.cert, s.apps,
+      return [u.nickname, calcWeek(u.startDate)+'주', s.subconAvg+'%', s.gyeongAvg+'%', s.myeonAvg+'%', s.dokAvg+'%', s.un+'%', s.fa+'분', s.siteVisits, s.jasoseo, s.pilgi, s.interview, s.cert, s.apps,
         ...PREV_KEYS.map(k => pv(u[k]))];
     })
   ];

@@ -36,7 +36,7 @@ document.addEventListener('input', (e) => {
 }, true);
 
 let user = null, userProfile = null;
-let scoreSelected = 0, faSelected = null;
+let scoreSelected = 0;
 let allRecords = [], allGoals = [];
 let groupRecords = [], groupUsers = [];
 
@@ -365,12 +365,15 @@ function renderFamilyList(famId) {
   updateTotalTime();
 }
 
-// FA5050/현장방문 세부(산업분석·기업분석·현직자 인터뷰) 합계(분)
+// FR5050 세부(산업분석·기업분석·현직자 인터뷰) 합계(분)
 function calcFaTime() {
   return (Number(document.getElementById('f-fa-industry')?.value) || 0)
        + (Number(document.getElementById('f-fa-company')?.value) || 0)
        + (Number(document.getElementById('f-fa-interviewer')?.value) || 0);
 }
+
+// 신규 기록은 fr5050을 사용하고, 기존 기록은 fa5050을 호환해서 읽는다.
+const isFr5050Done = r => r?.fr5050 ?? r?.fa5050 ?? ((r?.faTime || 0) > 0);
 
 // 취준 활동 총 시간 자동 합산
 window.updateTotalTime = () => {
@@ -400,7 +403,7 @@ window.toggleTotalTimeEdit = () => {
     manualInput.style.display = 'none';
     displayWrap.style.display = '';
     btn.textContent = '직접 수정';
-    hint.textContent = '수강+자소서+FA(산업/기업/인터뷰)+필기+면접+자격증+매십경+기타 자동 합산';
+    hint.textContent = '수강+자소서+FR(산업/기업/인터뷰)+필기+면접+자격증+매십경+기타 자동 합산';
     updateTotalTime();
   } else {
     // 직접 수정 모드
@@ -418,13 +421,6 @@ window.selectScore = (btn, val) => {
   document.querySelectorAll('.score-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   scoreSelected = val;
-};
-
-// ── FA 선택 ──
-window.selectFA = (yes) => {
-  document.querySelectorAll('.fa-btn').forEach(b => b.classList.remove('selected'));
-  document.querySelector(yes ? '.fa-btn.yes' : '.fa-btn.no').classList.add('selected');
-  faSelected = yes;
 };
 
 // ── 태그 토글 ──
@@ -472,6 +468,8 @@ window.saveRecord = async () => {
       faCompany: Number(document.getElementById('f-fa-company').value) || 0,
       faInterviewer: Number(document.getElementById('f-fa-interviewer').value) || 0,
       faTime: calcFaTime(),
+      fr5050: calcFaTime() > 0,
+      siteVisitCount: Number(document.getElementById('f-site-visit-count').value) || 0,
       pilgi: Number(document.getElementById('f-pilgi').value) || 0,
       interview: Number(document.getElementById('f-interview').value) || 0,
       cert: Number(document.getElementById('f-cert').value) || 0,
@@ -487,7 +485,6 @@ window.saveRecord = async () => {
       applications: Number(document.getElementById('f-applications').value) || 0,
       selfEsteem: scoreSelected || 0,
       jobProb: userProfile.jobProb || 0,
-      fa5050: faSelected,
       focusTags,
       createdAt: new Date().toISOString(),
     };
@@ -543,12 +540,11 @@ async function loadSummary() {
   setPct('p-un','pb-un',pct('routineUn'));
   const avg = k => n ? Math.round(recs.reduce((a,r)=>a+(r[k]||0),0)/n) : 0;
   const total = k => recs.reduce((a,r)=>a+(r[k]||0),0);
-  // FA5050/현장방문 세부 — 산업분석·기업분석·현직자 인터뷰는 분 누적, 현장방문은 여부(%)
+  // FR5050 세부 시간과 현장방문 횟수를 각각 누적
   document.getElementById('p-fa-all').textContent = total('faTime') + '분';
   document.getElementById('p-fa-industry').textContent = total('faIndustry') + '분';
   document.getElementById('p-fa-company').textContent = total('faCompany') + '분';
   document.getElementById('p-fa-interviewer').textContent = total('faInterviewer') + '분';
-  setPct('p-fa-visit','pb-fa-visit',pct('fa5050'));
   document.getElementById('s-lec-avg').textContent = avg('lecture');
   document.getElementById('s-jas-avg').textContent = avg('jasoseo');
   document.getElementById('s-fa-avg').textContent = avg('faTime');
@@ -558,13 +554,19 @@ async function loadSummary() {
   document.getElementById('s-lec-total').textContent = total('lecture');
   document.getElementById('s-jas-total').textContent = total('jasoseo');
   document.getElementById('s-fa-total').textContent = total('faTime');
+  document.getElementById('s-site-visit-total').textContent = total('siteVisitCount');
   document.getElementById('s-pil-total').textContent = total('pilgi');
   document.getElementById('s-int-total').textContent = total('interview');
   document.getElementById('s-cert-total').textContent = total('cert');
 
   // 집중 활동 분포 도넛 차트
-  const focusCount = { '자소서':0, '필기':0, '면접':0, '자격증':0, 'FA5050/현장방문':0, '골고루':0 };
-  recs.forEach(r => { (r.focusTags||[]).forEach(t => { if(focusCount[t]!==undefined) focusCount[t]++; }); });
+  const focusCount = { '자소서':0, '필기':0, '면접':0, '자격증':0, 'FR5050':0, '현장방문':0, '골고루':0 };
+  recs.forEach(r => {
+    (r.focusTags||[]).forEach(t => {
+      const normalized = t === 'FA5050/현장방문' ? 'FR5050' : t;
+      if (focusCount[normalized] !== undefined) focusCount[normalized]++;
+    });
+  });
   const focusLabels = Object.keys(focusCount).filter(k => focusCount[k] > 0);
   const focusData = focusLabels.map(k => focusCount[k]);
   const color = getComputedStyle(document.documentElement).getPropertyValue('--main').trim() || '#534AB7';
@@ -635,7 +637,7 @@ const ITEM_COLORS = {
   myeon:  '#0CA678', // 매십면 — 틸
   dok:    '#E64980', // 매십독 — 마젠타
   un:     '#F59E0B', // 매십운 — 앰버
-  fa:     '#7950F2', // FA5050 — 바이올렛
+  fa:     '#7950F2', // FR5050 — 바이올렛
   apps:   '#868E96', // 지원수 — 그레이
 };
 
@@ -658,7 +660,7 @@ async function loadTrend() {
     {label:'면접',data:recs.map(r=>r.interview||0),borderColor:color+'44',borderWidth:1.5,borderDash:[4,3],pointRadius:2,tension:.3,fill:false},
     {label:'자격증',data:recs.map(r=>r.cert||0),borderColor:color+'22',borderWidth:1.5,pointRadius:2,tension:.3,fill:false},
   ]);
-  // 매십면·매십운·매십독·FA5050 주차별 달성률 (각 항목별 그래프)
+  // 매십면·매십운·매십독·FR5050 주차별 달성률 (각 항목별 그래프)
   const iWk = calcWeek(userProfile.startDate);
   const iFrom = Math.max(1, iWk - 7);
   // fields: 단일 필드명 또는 세부 항목 배열(각 비율의 평균 = 세부평균 달성률)
@@ -672,7 +674,7 @@ async function loadTrend() {
       const fs = localDate(f), ts = localDate(t);
       const wr = allRecords.filter(r => r.date >= fs && r.date <= ts);
       ls.push(`${w}주차`);
-      ds.push(wr.length ? Math.round(arr.reduce((a,fld)=>a + wr.filter(r=>r[fld]).length / wr.length * 100, 0) / arr.length) : null);
+      ds.push(wr.length ? Math.round(arr.reduce((a,fld)=>a + wr.filter(r=>typeof fld === 'function' ? fld(r) : r[fld]).length / wr.length * 100, 0) / arr.length) : null);
     }
     return { ls, ds };
   };
@@ -689,7 +691,7 @@ async function loadTrend() {
   mkRateChart('itrend-gyeong', ['gyeong_article','gyeong_opinion','gyeong_comment'], ITEM_COLORS.gyeong);
   mkRateChart('itrend-un', 'routineUn', ITEM_COLORS.un);
   mkRateChart('itrend-dok', ['routineDok','routinePilsa'], ITEM_COLORS.dok);
-  mkRateChart('itrend-fa', 'fa5050', ITEM_COLORS.fa);
+  mkRateChart('itrend-fa', isFr5050Done, ITEM_COLORS.fa);
 
   // 주간 목표 달성률 차트
   const wk = calcWeek(userProfile.startDate);
@@ -880,14 +882,15 @@ window.loadRecords = async () => {
           <div class="record-date">${dateStr}${isToday ? ' <span style="font-size:11px;background:var(--main);color:white;padding:1px 7px;border-radius:6px;margin-left:4px">오늘</span>' : ''}</div>
         </div>
         <div class="record-badges">
-          ${r.fa5050 ? '<span class="badge badge-purple">FA완료 ✦</span>' : ''}
+          ${isFr5050Done(r) ? '<span class="badge badge-purple">FR완료 ✦</span>' : ''}
           <span class="badge ${routineDone===4?'badge-purple':routineDone>=2?'badge-green':'badge-gray'}">루틴 ${routineDone}/4</span>
         </div>
       </div>
       <div class="record-grid">
         <div class="record-item">강의 <span>${r.lecture||0}분</span></div>
         <div class="record-item">자소서 <span>${r.jasoseo||0}분</span></div>
-        <div class="record-item">FA5050/현장방문 <span>${r.faTime||0}분</span></div>
+        <div class="record-item">FR5050 <span>${r.faTime||0}분</span></div>
+        <div class="record-item">현장방문 <span>${r.siteVisitCount||0}회</span></div>
         <div class="record-item">필기 <span>${r.pilgi||0}분</span></div>
         <div class="record-item">면접 <span>${r.interview||0}분</span></div>
         <div class="record-item">자격증 <span>${r.cert||0}분</span></div>
@@ -985,6 +988,7 @@ window.editTodayRecord = () => {
   document.getElementById('f-fa-industry').value     = r.faIndustry || 0;
   document.getElementById('f-fa-company').value      = r.faCompany || 0;
   document.getElementById('f-fa-interviewer').value   = r.faInterviewer || 0;
+  document.getElementById('f-site-visit-count').value = r.siteVisitCount || 0;
   document.getElementById('f-pilgi').value        = r.pilgi || 0;
   document.getElementById('f-interview').value    = r.interview || 0;
   document.getElementById('f-cert').value         = r.cert || 0;
@@ -994,8 +998,8 @@ window.editTodayRecord = () => {
   updateTotalTime();
   scoreSelected = r.selfEsteem || 0;
   document.querySelectorAll('.score-btn').forEach((btn,i) => btn.classList.toggle('selected', i+1 === r.selfEsteem));
-  if (r.fa5050 !== null && r.fa5050 !== undefined) selectFA(r.fa5050);
-  document.querySelectorAll('.tag-row:last-of-type .focus-tag').forEach(tag => tag.classList.toggle('selected', (r.focusTags||[]).includes(tag.textContent)));
+  const editFocusTags = (r.focusTags||[]).map(t => t === 'FA5050/현장방문' ? 'FR5050' : t);
+  document.querySelectorAll('.tag-row:last-of-type .focus-tag').forEach(tag => tag.classList.toggle('selected', editFocusTags.includes(tag.textContent)));
   showToast('오늘 기록을 불러왔어요. 수정 후 저장해주세요! ✏️');
   window.scrollTo(0, 0);
 };
@@ -1170,7 +1174,7 @@ window.downloadMyExcel = () => {
   const headers = [
     '날짜', '매십경', '매십면', '매십독(책제목)', '매십운(운동종류)',
     '강의(분)', '자소서(분)', '필기(분)', '면접(분)', '자격증(분)', '매십경(분)', '기타(분)', '총취준시간(분)', '지원개수',
-    '자존감(1-5)', '취업확률(%)', 'FA5050/현장방문', '집중활동'
+    '자존감(1-5)', '취업확률(%)', 'FR5050', '현장방문(회)', '집중활동'
   ];
 
   // 세부 항목 완료 정도: 전부=O, 일부=△, 없음=X
@@ -1192,7 +1196,8 @@ window.downloadMyExcel = () => {
     r.applications  || 0,
     r.selfEsteem    || '',
     r.jobProb       || '',
-    r.fa5050 === true ? 'O' : r.fa5050 === false ? 'X' : '',
+    isFr5050Done(r) ? 'O' : 'X',
+    r.siteVisitCount || 0,
     (r.focusTags || []).join('/'),
   ]);
 
