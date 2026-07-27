@@ -32,6 +32,7 @@ onAuthStateChanged(auth, async u => {
   document.getElementById('admin-email').textContent = `로그인: ${u.email}`;
   await loadData();
   renderStats();
+  renderTodayBirthdays();
   renderTodayStatus();
   renderGroups();
   renderUsers();
@@ -58,6 +59,20 @@ function renderStats() {
   document.getElementById('st-groups').textContent = allGroups.length;
   document.getElementById('st-records').textContent = allRecords.length;
   document.getElementById('st-today').textContent = allRecords.filter(r=>r.date===today).length;
+}
+
+// ── 오늘의 생일 ──
+function renderTodayBirthdays() {
+  const el = document.getElementById('today-birthday-list');
+  if (!el) return;
+  const now = new Date();
+  const monthDay = `${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const birthdayUsers = allUsers.filter(u =>
+    typeof u.birthday === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(u.birthday) && u.birthday.slice(5) === monthDay
+  );
+  el.innerHTML = birthdayUsers.length
+    ? birthdayUsers.map(u => `<span class="member-chip">🎉 ${u.nickname || u.email || '-'}</span>`).join('')
+    : '<span style="font-size:12px;color:#ccc">오늘 생일인 참여자가 없어요.</span>';
 }
 
 // ── 오늘 기록 현황 ──
@@ -523,12 +538,13 @@ function renderUsers(search='') {
       <td><div class="user-avatar">${u.photoURL ? `<img src="${u.photoURL}">` : (u.nickname?.[0]||'?')}</div></td>
       <td style="font-weight:500;white-space:nowrap">${u.nickname||'-'}${userLeaderTagsHtml(u)}</td>
       <td style="font-size:12px;color:#aaa">${u.email||'-'}</td>
+      <td style="font-size:12px;color:#aaa;white-space:nowrap">${u.birthday || '-'}</td>
       <td>${groupChips(u)}</td>
       <td style="font-size:12px;color:#aaa">${u.startDate ? calcWeek(u.startDate)+'주차' : '-'}</td>
       <td style="font-size:12px;color:#aaa">${lastRecCell(u)}</td>
       <td><button class="btn-sm btn-sm-primary" onclick="openUserDetail('${u.uid}')">상세보기</button></td>
       <td><button class="btn-sm btn-sm-primary" onclick="openUserManage('${u.uid}')">관리</button></td>
-    </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;padding:20px;color:#ccc">검색 결과 없음</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;padding:20px;color:#ccc">검색 결과 없음</td></tr>';
 }
 
 window.filterUsers = () => renderUsers(document.getElementById('user-search').value.trim());

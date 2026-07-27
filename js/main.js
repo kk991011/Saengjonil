@@ -1252,6 +1252,7 @@ window.openProfile = async () => {
 
   // 현재 값 채우기
   document.getElementById('pm-nickname').value = p.nickname;
+  document.getElementById('pm-birthday').value = p.birthday || '';
   document.getElementById('pm-startdate').value = p.startDate;
   document.getElementById('pm-jobprob').value = p.jobProb || '';
   // 이전 시즌 기록 (?? 로 채워 저장된 0도 0으로 표시, 미입력은 빈칸)
@@ -1362,6 +1363,7 @@ async function renderPmGroups() {
 
 window.saveProfile = async () => {
   const nickname = document.getElementById('pm-nickname').value.trim();
+  const birthday = document.getElementById('pm-birthday').value || '';
   const jobProb = Number(document.getElementById('pm-jobprob').value) || 0;
   const gyeongStartDate = document.getElementById('pm-gyeong-startdate').value || '';
   const myeonStartDate  = document.getElementById('pm-myeon-startdate').value  || '';
@@ -1393,6 +1395,7 @@ window.saveProfile = async () => {
     await setDoc(doc(db, 'users', user.uid), {
       ...userProfile,
       nickname,
+      birthday,
       startDate,
       gyeongStartDate,
       myeonStartDate,
@@ -1404,7 +1407,7 @@ window.saveProfile = async () => {
       themeColor: color,
     });
 
-    userProfile = { ...userProfile, nickname, startDate, gyeongStartDate, myeonStartDate, jobProb, prevInterviewCount, prevInterviewHour, prevPilgiHour, prevApplications, themeColor: color };
+    userProfile = { ...userProfile, nickname, birthday, startDate, gyeongStartDate, myeonStartDate, jobProb, prevInterviewCount, prevInterviewHour, prevPilgiHour, prevApplications, themeColor: color };
     applyTheme(color);
     initHeader();
     document.getElementById('f-nickname').value = nickname;

@@ -73,6 +73,7 @@
 | 필드 | 타입 | 설명 |
 |---|---|---|
 | `nickname` / `email` / `photoURL` | string | 프로필 |
+| `birthday` | string(YYYY-MM-DD) | 생일. 프로필 설정에서 입력하며 관리자 대시보드의 오늘 생일 및 참여자 목록에 표시 |
 | `startDate` / `gyeongStartDate` / `myeonStartDate` | string(YYYY-MM-DD) | 프로그램별 시작일 |
 | `programType` | string | `careerpt` / `maesipgyeong` / `maesipmyeon` / `maesipboth` |
 | `groupIds` | array | 소속 조 문서 ID 목록(**다중 가입**, → `groups`). **관리자만** 배정(온보딩/프로필에서 못 바꿈, 보안 규칙으로 강제). 구버전 단일 `groupId`는 코드 헬퍼 `groupIdsOf()`로 호환 |
