@@ -249,7 +249,12 @@ function calcStats(uid, period) {
     lecture: avg('lecture'), jasoseo: avg('jasoseo'),
     pilgi: avg('pilgi'), interview: avg('interview'), cert: avg('cert'),
     apps: recs.reduce((a,r)=>a+(r.applications||0),0),
-    siteVisits: recs.reduce((a,r)=>a+(r.siteVisitCount||0),0),
+    // 구 기록은 fa5050=true(현장방문 했어요)를 1회로 호환
+    siteVisits: recs.reduce((a,r)=>a+(
+      r.siteVisitCount !== undefined && r.siteVisitCount !== null
+        ? (Number(r.siteVisitCount)||0)
+        : (r.fa5050 === true ? 1 : 0)
+    ),0),
     days: recs.length,
   };
 }

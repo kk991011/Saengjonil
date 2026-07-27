@@ -107,6 +107,7 @@
 | 기타 | `selfEsteem`(1–5), `jobProb`(복사본), `focusTags`(array), `createdAt`(ISO) |
 
 > `lectureItems` 강의 목록은 `js/main.js`(입력)와 `js/compare.js`(강의 수강 탭)에 **각각 고정 배열로 정의**돼 있습니다. 강의를 추가/수정할 땐 **두 파일 모두** 맞춰야 합니다. 구 필드 `lectureItem`(자유 텍스트)은 폐기.
+> 구 기록의 `fa5050`은 현장방문 여부 필드입니다. `siteVisitCount`가 없는 기록은 `fa5050=true`를 현장방문 1회로 호환하며, FR5050 달성 여부에는 사용하지 않습니다.
 
 ### `weekly_goals` — 문서 ID = **`{uid}_week{N}`** 또는 **`{uid}_month_{YYYY-MM}`**
 | 필드 | 타입 | 설명 |

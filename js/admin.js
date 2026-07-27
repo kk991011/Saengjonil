@@ -53,9 +53,11 @@ async function loadData() {
     const data = d.data();
     return {
       ...data,
-      // 신규 fr5050 필드가 없는 기존 기록은 fa5050을 호환해서 사용
-      fr5050: data.fr5050 ?? data.fa5050 ?? ((data.faTime || 0) > 0),
-      siteVisitCount: data.siteVisitCount || 0,
+      // 구 fa5050은 현장방문 여부였으므로 true를 1회로 호환한다.
+      fr5050: data.fr5050 ?? ((data.faTime || 0) > 0),
+      siteVisitCount: data.siteVisitCount !== undefined && data.siteVisitCount !== null
+        ? (Number(data.siteVisitCount) || 0)
+        : (data.fa5050 === true ? 1 : 0),
     };
   });
 }

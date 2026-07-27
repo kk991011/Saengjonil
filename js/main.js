@@ -372,8 +372,14 @@ function calcFaTime() {
        + (Number(document.getElementById('f-fa-interviewer')?.value) || 0);
 }
 
-// 신규 기록은 fr5050을 사용하고, 기존 기록은 fa5050을 호환해서 읽는다.
-const isFr5050Done = r => r?.fr5050 ?? r?.fa5050 ?? ((r?.faTime || 0) > 0);
+// FR5050은 활동 시간으로 판정하고, 구 fa5050(현장방문 여부)은 방문 1회로 호환한다.
+const isFr5050Done = r => r?.fr5050 ?? ((r?.faTime || 0) > 0);
+const siteVisitCountOf = r => {
+  if (r?.siteVisitCount !== undefined && r?.siteVisitCount !== null) {
+    return Number(r.siteVisitCount) || 0;
+  }
+  return r?.fa5050 === true ? 1 : 0;
+};
 
 // 취준 활동 총 시간 자동 합산
 window.updateTotalTime = () => {
@@ -554,7 +560,7 @@ async function loadSummary() {
   document.getElementById('s-lec-total').textContent = total('lecture');
   document.getElementById('s-jas-total').textContent = total('jasoseo');
   document.getElementById('s-fa-total').textContent = total('faTime');
-  document.getElementById('s-site-visit-total').textContent = total('siteVisitCount');
+  document.getElementById('s-site-visit-total').textContent = recs.reduce((a,r)=>a+siteVisitCountOf(r),0);
   document.getElementById('s-pil-total').textContent = total('pilgi');
   document.getElementById('s-int-total').textContent = total('interview');
   document.getElementById('s-cert-total').textContent = total('cert');
@@ -890,7 +896,7 @@ window.loadRecords = async () => {
         <div class="record-item">강의 <span>${r.lecture||0}분</span></div>
         <div class="record-item">자소서 <span>${r.jasoseo||0}분</span></div>
         <div class="record-item">FR5050 <span>${r.faTime||0}분</span></div>
-        <div class="record-item">현장방문 <span>${r.siteVisitCount||0}회</span></div>
+        <div class="record-item">현장방문 <span>${siteVisitCountOf(r)}회</span></div>
         <div class="record-item">필기 <span>${r.pilgi||0}분</span></div>
         <div class="record-item">면접 <span>${r.interview||0}분</span></div>
         <div class="record-item">자격증 <span>${r.cert||0}분</span></div>
@@ -988,7 +994,7 @@ window.editTodayRecord = () => {
   document.getElementById('f-fa-industry').value     = r.faIndustry || 0;
   document.getElementById('f-fa-company').value      = r.faCompany || 0;
   document.getElementById('f-fa-interviewer').value   = r.faInterviewer || 0;
-  document.getElementById('f-site-visit-count').value = r.siteVisitCount || 0;
+  document.getElementById('f-site-visit-count').value = siteVisitCountOf(r);
   document.getElementById('f-pilgi').value        = r.pilgi || 0;
   document.getElementById('f-interview').value    = r.interview || 0;
   document.getElementById('f-cert').value         = r.cert || 0;
@@ -1197,7 +1203,7 @@ window.downloadMyExcel = () => {
     r.selfEsteem    || '',
     r.jobProb       || '',
     isFr5050Done(r) ? 'O' : 'X',
-    r.siteVisitCount || 0,
+    siteVisitCountOf(r),
     (r.focusTags || []).join('/'),
   ]);
 
