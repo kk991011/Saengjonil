@@ -115,6 +115,15 @@ let dashPeriod = 'week';       // week | month | specific_week | specific_month
 let dashSelectedWeek = null;   // 선택 주(월요일, YYYY-MM-DD)
 let dashSelectedMonth = null;  // 선택 월(YYYY-MM)
 let dashScope = 'all';         // 'all' 또는 groupId
+let dashProgram = 'all';       // 'all' 또는 programType
+
+const DASH_PROGRAMS = [
+  { id: 'all', name: '전체 프로그램' },
+  { id: 'careerpt', name: '커리어PT' },
+  { id: 'maesipgyeong', name: '매십경 전용' },
+  { id: 'maesipmyeon', name: '매십면 전용' },
+  { id: 'maesipboth', name: '매십경 + 매십면' },
+];
 
 function mondayOf(d) {
   const day = d.getDay() || 7;
@@ -205,7 +214,11 @@ function dashUserStats(uid, periodRecs) {
 }
 
 function getDashUsers() {
-  return dashScope === 'all' ? allUsers : allUsers.filter(u => groupIdsOf(u).includes(dashScope));
+  return allUsers.filter(u => {
+    const inScope = dashScope === 'all' || groupIdsOf(u).includes(dashScope);
+    const inProgram = dashProgram === 'all' || (u.programType || 'careerpt') === dashProgram;
+    return inScope && inProgram;
+  });
 }
 
 function renderDashScopeButtons() {
@@ -223,6 +236,26 @@ window.setDashScope = (id, btn) => {
   btn.classList.add('on');
   renderDashboard();
 };
+
+function renderDashProgramButtons() {
+  const el = document.getElementById('dash-program-row');
+  if (!el) return;
+  if (!DASH_PROGRAMS.some(p => p.id === dashProgram)) dashProgram = 'all';
+  el.innerHTML = DASH_PROGRAMS.map(p => `
+    <button class="btn-sm detail-filter-btn dash-program-btn ${p.id===dashProgram?'on':''}" onclick="setDashProgram('${p.id}',this)">${p.name}</button>
+  `).join('');
+}
+
+window.setDashProgram = (id, btn) => {
+  dashProgram = DASH_PROGRAMS.some(p => p.id === id) ? id : 'all';
+  document.querySelectorAll('.dash-program-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderDashboard();
+};
+
+function dashProgramLabel() {
+  return DASH_PROGRAMS.find(p => p.id === dashProgram)?.name || '전체 프로그램';
+}
 
 window.setDashPeriod = (val, btn) => {
   dashPeriod = val;
@@ -277,10 +310,11 @@ window.onDashMonthChange = () => {
 
 function renderDashboard() {
   renderDashScopeButtons();
+  renderDashProgramButtons();
   const el = document.getElementById('dash-content');
   const users = getDashUsers();
   if (!users.length) {
-    el.innerHTML = '<div style="text-align:center;padding:20px;color:#ccc;font-size:14px">인원이 없어요</div>';
+    el.innerHTML = `<div style="text-align:center;padding:20px;color:#ccc;font-size:14px">${dashProgramLabel()}에 해당하는 인원이 없어요</div>`;
     renderDashTrend();
     return;
   }
@@ -298,7 +332,7 @@ function renderDashboard() {
   const mvpCandidates = users.filter(u => statsMap[u.uid].active);
   const mvpHtml = (() => {
     if (!mvpCandidates.length) {
-      return `<div style="background:#f8f8ff;border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:center;color:#ccc;font-size:13px">${dashPeriodLabel()} 기록이 있는 사람이 없어요</div>`;
+      return `<div style="background:#f8f8ff;border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:center;color:#ccc;font-size:13px">${dashPeriodLabel()} · ${dashProgramLabel()} 기록이 있는 사람이 없어요</div>`;
     }
     const maxVal = Math.max(...mvpCandidates.map(u => statsMap[u.uid].routineTotal));
     const top = mvpCandidates.filter(u => statsMap[u.uid].routineTotal === maxVal);
@@ -306,7 +340,7 @@ function renderDashboard() {
     return `<div style="background:linear-gradient(135deg,var(--main),var(--main-dark));border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:white">
       <div style="font-size:28px;line-height:1">🏆</div>
       <div>
-        <div style="font-size:11px;opacity:.85;letter-spacing:.03em">${dashPeriodLabel()} MVP</div>
+        <div style="font-size:11px;opacity:.85;letter-spacing:.03em">${dashPeriodLabel()} · ${dashProgramLabel()} MVP</div>
         <div style="font-size:16px;font-weight:700">${names} <span style="font-weight:500;opacity:.9">· 루틴 종합 달성률 ${maxVal}%</span></div>
       </div>
     </div>`;

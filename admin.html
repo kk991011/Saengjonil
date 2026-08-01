@@ -87,6 +87,10 @@
       <div class="sec-label" style="margin-top:0">범위</div>
       <div id="dash-scope-row" style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap"></div>
 
+      <div class="sec-label" style="margin-top:0">프로그램</div>
+      <div id="dash-program-row" style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap"></div>
+      <div style="font-size:11px;color:#aaa;margin-bottom:16px">선택한 프로그램 참여자만 대상으로 MVP와 대시보드 통계를 계산합니다.</div>
+
       <div id="dash-content"><div style="text-align:center;padding:20px"><div class="spinner"></div></div></div>
     </div>
 
@@ -109,7 +113,7 @@
           <option value="participRate">기록 참여율</option>
         </select>
       </div>
-      <div style="font-size:11px;color:#aaa;margin-bottom:12px">최근 8주(월요일 시작 기준) · 위에서 선택한 범위(전체/조)를 따릅니다</div>
+      <div style="font-size:11px;color:#aaa;margin-bottom:12px">최근 8주(월요일 시작 기준) · 위에서 선택한 범위(전체/조)와 프로그램을 따릅니다</div>
       <div style="position:relative;height:220px">
         <canvas id="dash-trend-chart"></canvas>
       </div>
