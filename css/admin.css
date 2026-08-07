@@ -75,6 +75,23 @@
   .stat-box .num { font-size:22px; font-weight:700; color:var(--main); }
   .stat-box .lbl { font-size:11px; color:#aaa; margin-top:2px; }
 
+  .mvp-section { margin-bottom:16px; }
+  .mvp-title { font-size:11px; font-weight:700; color:#888; letter-spacing:.03em; margin-bottom:8px; }
+  .mvp-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+  .mvp-card { min-width:0; border-radius:12px; padding:13px 12px; display:flex; align-items:center; gap:9px; border:1px solid #eceaf8; background:#faf9ff; }
+  .mvp-rank-1 { color:white; border-color:transparent; background:linear-gradient(135deg,var(--main),var(--main-dark)); }
+  .mvp-rank-2 { background:#f4f3fb; border-color:#dedbea; }
+  .mvp-rank-3 { background:#fff6ed; border-color:#f4ddc7; }
+  .mvp-medal { font-size:25px; line-height:1; flex-shrink:0; }
+  .mvp-info { min-width:0; }
+  .mvp-rank-label { font-size:10px; font-weight:700; opacity:.72; margin-bottom:2px; }
+  .mvp-name { font-size:14px; font-weight:700; overflow-wrap:anywhere; }
+  .mvp-score { font-size:10px; opacity:.75; margin-top:2px; }
+
+  @media (max-width:600px) {
+    .mvp-list { grid-template-columns:1fr; }
+  }
+
   .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#222;
     color:white; padding:10px 22px; border-radius:24px; font-size:13px; opacity:0;
     transition:opacity .3s; pointer-events:none; z-index:999; white-space:nowrap; }

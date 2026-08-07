@@ -328,21 +328,35 @@ function renderDashboard() {
   const avgOf = k => Math.round(users.reduce((a,u)=>a+(statsMap[u.uid][k]||0),0)/users.length);
   const totalApps = users.reduce((a,u)=>a+(statsMap[u.uid].apps||0),0);
 
-  // MVP — 이 기간에 실제 기록을 남긴 사람 중 루틴 종합 달성률이 가장 높은 사람(동률이면 모두 표시)
+  // MVP — 이 기간에 실제 기록을 남긴 사람 중 루틴 종합 달성률 1~3위
+  // 동점자는 같은 순위로 모두 표시한다(서로 다른 점수 기준 dense ranking).
   const mvpCandidates = users.filter(u => statsMap[u.uid].active);
   const mvpHtml = (() => {
     if (!mvpCandidates.length) {
       return `<div style="background:#f8f8ff;border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:center;color:#ccc;font-size:13px">${dashPeriodLabel()} · ${dashProgramLabel()} 기록이 있는 사람이 없어요</div>`;
     }
-    const maxVal = Math.max(...mvpCandidates.map(u => statsMap[u.uid].routineTotal));
-    const top = mvpCandidates.filter(u => statsMap[u.uid].routineTotal === maxVal);
-    const names = top.map(u => u.nickname).join(', ');
-    return `<div style="background:linear-gradient(135deg,var(--main),var(--main-dark));border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:white">
-      <div style="font-size:28px;line-height:1">🏆</div>
-      <div>
-        <div style="font-size:11px;opacity:.85;letter-spacing:.03em">${dashPeriodLabel()} · ${dashProgramLabel()} MVP</div>
-        <div style="font-size:16px;font-weight:700">${names} <span style="font-weight:500;opacity:.9">· 루틴 종합 달성률 ${maxVal}%</span></div>
-      </div>
+    const topScores = [...new Set(mvpCandidates.map(u => statsMap[u.uid].routineTotal))]
+      .sort((a, b) => b - a)
+      .slice(0, 3);
+    const medals = ['🥇', '🥈', '🥉'];
+    const cards = topScores.map((score, index) => {
+      const names = mvpCandidates
+        .filter(u => statsMap[u.uid].routineTotal === score)
+        .map(u => u.nickname || u.email || '-')
+        .sort((a, b) => a.localeCompare(b, 'ko'))
+        .join(', ');
+      return `<div class="mvp-card mvp-rank-${index + 1}">
+        <div class="mvp-medal">${medals[index]}</div>
+        <div class="mvp-info">
+          <div class="mvp-rank-label">${index + 1}위</div>
+          <div class="mvp-name">${names}</div>
+          <div class="mvp-score">루틴 종합 달성률 ${score}%</div>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="mvp-section">
+      <div class="mvp-title">${dashPeriodLabel()} · ${dashProgramLabel()} MVP TOP 3</div>
+      <div class="mvp-list">${cards}</div>
     </div>`;
   })();
 
