@@ -176,6 +176,9 @@
   .coupon-issue-card > div:first-child span { color:#777; font-size:11px; }
   .coupon-issue-meta { display:flex; justify-content:space-between; gap:10px; color:#aaa; font-size:10px; margin-top:7px; }
   .coupon-issue-meta b { color:var(--main); font-weight:700; }
+  .coupon-issue-footer { display:flex; justify-content:flex-end; margin-top:9px; padding-top:8px; border-top:1px solid #f1eff8; }
+  .coupon-cancel-btn { border:0; background:transparent; color:#dc2626; font:inherit; font-size:10px; font-weight:600; cursor:pointer; padding:2px 0; }
+  .coupon-cancel-btn:hover { text-decoration:underline; }
   #coupon-submit-btn:disabled { opacity:.55; cursor:not-allowed; }
 
   @media (max-width:600px) {

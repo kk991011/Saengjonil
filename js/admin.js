@@ -428,9 +428,54 @@ window.openCouponDetail = recipientId => {
     <div class="sec-label">개별 발급 내역</div>
     <div class="coupon-issue-list">${issues.length ? issues.map(c => {
       const active = isActiveCoupon(c), days = couponDaysLeft(c);
-      return `<div class="coupon-issue-card ${active ? '' : 'expired'}"><div><strong>${won(c.amount)}</strong><span>${couponEsc(c.note || '생존 쿠폰 발급')}</span></div><div class="coupon-issue-meta"><span>${couponDate(c.issuedAt)} 발급</span><b class="${active && days <= 7 ? 'soon' : ''}">${active ? `${couponDate(c.expiresAt)}까지 · D-${days}` : '만료'}</b></div></div>`;
+      return `<div class="coupon-issue-card ${active ? '' : 'expired'}">
+        <div><strong>${won(c.amount)}</strong><span>${couponEsc(c.note || '생존 쿠폰 발급')}</span></div>
+        <div class="coupon-issue-meta"><span>${couponDate(c.issuedAt)} 발급</span><b class="${active && days <= 7 ? 'soon' : ''}">${active ? `${couponDate(c.expiresAt)}까지 · D-${days}` : '만료'}</b></div>
+        <div class="coupon-issue-footer"><button class="coupon-cancel-btn" onclick="cancelCouponIssue('${c.id}','${recipientId}')">발급 취소</button></div>
+      </div>`;
     }).join('') : '<div style="text-align:center;padding:24px;color:#bbb">발급 내역이 없어요</div>'}</div>`;
   openModal('coupon-detail-modal');
+};
+
+window.cancelCouponIssue = async (issueId, recipientId) => {
+  const person = couponPerson(recipientId);
+  const issue = allCoupons.find(c => c.id === issueId && couponRecipientIdOf(c) === recipientId);
+  if (!person || !issue) { showToast('발급 내역을 찾을 수 없어요'); return; }
+  if (!confirm(`${person.name}님의 ${won(issue.amount)} 쿠폰 발급을 취소할까요?\n누적 발급 금액과 횟수도 함께 되돌아갑니다.`)) return;
+
+  try {
+    const issueRef = doc(db, 'coupon_issues', issueId);
+    const statRef = doc(db, 'coupon_stats', recipientId);
+    await runTransaction(db, async transaction => {
+      const issueSnap = await transaction.get(issueRef);
+      const statSnap = await transaction.get(statRef);
+      if (!issueSnap.exists()) throw new Error('coupon-issue-not-found');
+
+      const savedIssue = issueSnap.data();
+      if (couponRecipientIdOf(savedIssue) !== recipientId) throw new Error('coupon-recipient-mismatch');
+      const prev = statSnap.exists() ? statSnap.data() : {};
+      const nextAmount = Math.max(0, Number(prev.totalIssuedAmount || 0) - Number(savedIssue.amount || 0));
+      const nextCount = Math.max(0, Number(prev.totalIssueCount || 0) - 1);
+
+      transaction.delete(issueRef);
+      if (nextCount === 0) transaction.delete(statRef);
+      else transaction.update(statRef, { totalIssuedAmount:nextAmount, totalIssueCount:nextCount });
+    });
+
+    allCoupons = allCoupons.filter(c => c.id !== issueId);
+    const stat = allCouponStats.find(s => couponRecipientIdOf(s) === recipientId);
+    if (stat) {
+      stat.totalIssuedAmount = Math.max(0, Number(stat.totalIssuedAmount || 0) - Number(issue.amount || 0));
+      stat.totalIssueCount = Math.max(0, Number(stat.totalIssueCount || 0) - 1);
+      if (stat.totalIssueCount === 0) allCouponStats = allCouponStats.filter(s => couponRecipientIdOf(s) !== recipientId);
+    }
+    renderCoupons(document.getElementById('coupon-search').value);
+    openCouponDetail(recipientId);
+    showToast(`${person.name}님의 ${won(issue.amount)} 발급을 취소했어요`);
+  } catch(e) {
+    showToast(e.message === 'coupon-issue-not-found' ? '이미 삭제되었거나 만료된 발급 내역이에요' : '발급 취소 중 오류가 발생했어요');
+    console.error(e);
+  }
 };
 
 window.openCouponRecipientCreate = () => {
