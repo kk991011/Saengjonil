@@ -142,7 +142,7 @@
   .coupon-search-wrap:focus-within { border-color:var(--main); }
   .coupon-search-wrap input { border:0; outline:0; width:100%; padding:10px 0; font:inherit; font-size:13px; }
   .coupon-title-actions { display:flex; gap:6px; align-items:center; }
-  .coupon-scope-row { display:flex; gap:6px; margin:-3px 0 13px; }
+  .coupon-scope-row { display:flex; flex-wrap:wrap; gap:6px; margin:-3px 0 13px; }
   .coupon-scope-btn.on { background:var(--main); color:white; border-color:var(--main); }
   .coupon-person { display:flex; align-items:center; gap:9px; min-width:170px; }
   .coupon-person strong { display:block; font-size:13px; }
@@ -177,8 +177,10 @@
   .coupon-issue-meta { display:flex; justify-content:space-between; gap:10px; color:#aaa; font-size:10px; margin-top:7px; }
   .coupon-issue-meta b { color:var(--main); font-weight:700; }
   .coupon-issue-footer { display:flex; justify-content:flex-end; margin-top:9px; padding-top:8px; border-top:1px solid #f1eff8; }
-  .coupon-cancel-btn { border:0; background:transparent; color:#dc2626; font:inherit; font-size:10px; font-weight:600; cursor:pointer; padding:2px 0; }
-  .coupon-cancel-btn:hover { text-decoration:underline; }
+  .coupon-cancel-btn { border:1px solid #fecaca; border-radius:8px; background:#fff5f5; color:#dc2626; font:inherit; font-size:12px; font-weight:700; cursor:pointer; padding:8px 13px; }
+  .coupon-cancel-btn:hover { background:#fee2e2; }
+  .coupon-expired-delete-btn { border-color:#ddd; background:#f7f7f7; color:#666; }
+  .coupon-expired-delete-btn:hover { background:#ececec; }
   #coupon-submit-btn:disabled { opacity:.55; cursor:not-allowed; }
 
   @media (max-width:600px) {

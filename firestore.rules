@@ -50,9 +50,11 @@ service cloud.firestore {
                          || isAdmin();
     }
 
-    // 생존 쿠폰 — 금액 및 활동 통계는 관리자만 조회/발급할 수 있음.
+    // 생존 쿠폰 — 관리자는 전체 관리, 가입 회원은 본인에게 발급된 내역만 조회.
     match /coupon_issues/{issueId} {
-      allow read, write: if isAdmin();
+      allow read: if isAdmin()
+                  || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow write: if isAdmin();
     }
 
     match /coupon_stats/{recipientId} {

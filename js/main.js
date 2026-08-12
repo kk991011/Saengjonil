@@ -39,6 +39,7 @@ let user = null, userProfile = null;
 let scoreSelected = 0;
 let allRecords = [], allGoals = [];
 let groupRecords = [], groupUsers = [];
+let myCoupons = [];
 
 // ── 클래스 수강 항목 ──
 // 단일 클래스는 직접 입력, 변형이 많은 패밀리(생존면접클래스·기업분석자료)는 드롭다운+추가.
@@ -66,9 +67,50 @@ onAuthStateChanged(auth, async u => {
   initHeader();
   initInputForm();
   loadGoals();
+  loadMyCoupons();
   await loadAllRecords();
   loadDashboard();
 });
+
+const couponWon = value => `${Number(value || 0).toLocaleString('ko-KR')}원`;
+const couponEscape = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[ch]));
+const couponTime = value => value?.toMillis ? value.toMillis() : new Date(value).getTime();
+const couponDateLabel = value => {
+  const d = value?.toDate ? value.toDate() : new Date(value);
+  if (!d || Number.isNaN(d.getTime())) return '-';
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+};
+
+async function loadMyCoupons() {
+  try {
+    const snap = await getDocs(query(collection(db, 'coupon_issues'), where('uid', '==', user.uid)));
+    myCoupons = snap.docs
+      .map(d => ({ id:d.id, ...d.data() }))
+      .filter(c => couponTime(c.expiresAt) > Date.now())
+      .sort((a, b) => couponTime(a.expiresAt) - couponTime(b.expiresAt));
+    renderMyCoupons();
+  } catch(e) {
+    document.getElementById('my-coupon-total').textContent = '-';
+    document.getElementById('my-coupon-list').innerHTML = '<div class="my-coupon-empty">쿠폰 내역을 불러오지 못했어요.</div>';
+    console.error(e);
+  }
+}
+
+function renderMyCoupons() {
+  myCoupons = myCoupons.filter(c => couponTime(c.expiresAt) > Date.now());
+  const total = myCoupons.reduce((sum, c) => sum + Number(c.amount || 0), 0);
+  document.getElementById('my-coupon-total').textContent = couponWon(total);
+  document.getElementById('my-coupon-list').innerHTML = myCoupons.length ? myCoupons.map(c => {
+    const days = Math.max(0, Math.ceil((couponTime(c.expiresAt) - Date.now()) / 86400000));
+    return `<div class="my-coupon-item">
+      <div><strong>${couponWon(c.amount)}</strong><small>${couponEscape(c.note || '생존 쿠폰')}</small></div>
+      <div class="my-coupon-expiry">${couponDateLabel(c.expiresAt)}까지<b class="${days <= 7 ? 'soon' : ''}">D-${days}</b></div>
+    </div>`;
+  }).join('') : '<div class="my-coupon-empty">현재 이용 가능한 쿠폰이 없어요.</div>';
+}
+
+// 페이지를 오래 열어둔 경우에도 만료된 쿠폰이 잔액에 남지 않도록 주기적으로 갱신한다.
+setInterval(() => { if (user && myCoupons.length) renderMyCoupons(); }, 60000);
 
 function applyTheme(color) {
   document.documentElement.style.setProperty('--main', color);
