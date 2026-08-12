@@ -49,5 +49,19 @@ service cloud.firestore {
       allow read, write: if (isSignedIn() && goalId.split('_')[0] == request.auth.uid)
                          || isAdmin();
     }
+
+    // 생존 쿠폰 — 금액 및 활동 통계는 관리자만 조회/발급할 수 있음.
+    match /coupon_issues/{issueId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /coupon_stats/{recipientId} {
+      allow read, write: if isAdmin();
+    }
+
+    // 생존일지 미가입 쿠폰 수령인 — 일반 회원 목록/통계와 완전히 분리.
+    match /coupon_recipients/{recipientId} {
+      allow read, write: if isAdmin();
+    }
   }
 }

@@ -2,7 +2,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, addDoc, deleteDoc,
-  updateDoc, collection, getDocs, query, orderBy, where }
+  updateDoc, collection, getDocs, query, orderBy, where, runTransaction, writeBatch, Timestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 // Firebase 설정은 환경(운영/dev)에 따라 firebase-config.js에서 자동 선택됩니다.
@@ -15,7 +15,10 @@ const db = getFirestore(app);
 // ★ 관리자 UID 목록 — Firebase 콘솔에서 본인 UID 확인 후 추가
 // Authentication → 사용자 탭에서 UID 확인 가능
 // 관리자 판정은 users 문서의 isAdmin === true (아래 onAuthStateChanged 참고)
-let allUsers = [], allGroups = [], allRecords = [];
+let allUsers = [], allGroups = [], allRecords = [], allCoupons = [], allCouponStats = [], allCouponRecipients = [];
+let currentAdmin = null;
+let couponScope = 'all';
+let couponNewRange = 'week';
 
 // ── 인증 ──
 onAuthStateChanged(auth, async u => {
@@ -27,6 +30,7 @@ onAuthStateChanged(auth, async u => {
     document.getElementById('access-denied').style.display = 'block';
     return;
   }
+  currentAdmin = u;
 
   document.getElementById('admin-content').style.display = 'block';
   document.getElementById('admin-email').textContent = `로그인: ${u.email}`;
@@ -37,14 +41,18 @@ onAuthStateChanged(auth, async u => {
   renderGroups();
   renderUsers();
   renderDashboard();
+  renderCoupons();
 });
 
 // ── 전체 데이터 로드 ──
 async function loadData() {
-  const [uSnap, gSnap, rSnap] = await Promise.all([
+  const [uSnap, gSnap, rSnap, cSnap, csSnap, crSnap] = await Promise.all([
     getDocs(collection(db, 'users')),
     getDocs(collection(db, 'groups')),
     getDocs(collection(db, 'records')),
+    getDocs(collection(db, 'coupon_issues')),
+    getDocs(collection(db, 'coupon_stats')),
+    getDocs(collection(db, 'coupon_recipients')),
   ]);
   allUsers = uSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
   allGroups = gSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -60,6 +68,9 @@ async function loadData() {
         : (data.fa5050 === true ? 1 : 0),
     };
   });
+  allCoupons = cSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  allCouponStats = csSnap.docs.map(d => ({ recipientId: d.id, ...d.data() }));
+  allCouponRecipients = crSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
 // ── 통계 ──
@@ -220,6 +231,232 @@ function getDashUsers() {
     return inScope && inProgram;
   });
 }
+
+// ── 생존 쿠폰 ──
+const won = value => `${Number(value || 0).toLocaleString('ko-KR')}원`;
+const couponEsc = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[ch]));
+const couponDate = value => {
+  const d = value?.toDate ? value.toDate() : new Date(value);
+  if (!d || Number.isNaN(d.getTime())) return '-';
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+};
+const couponMillis = value => value?.toMillis ? value.toMillis() : new Date(value).getTime();
+const isActiveCoupon = c => couponMillis(c.expiresAt) > Date.now();
+const couponDaysLeft = c => Math.max(0, Math.ceil((couponMillis(c.expiresAt) - Date.now()) / 86400000));
+const couponWeekRange = () => {
+  const now = new Date();
+  const day = now.getDay() || 7;
+  const from = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day + 1);
+  const to = new Date(from); to.setDate(to.getDate() + 6); to.setHours(23,59,59,999);
+  return { from, to };
+};
+const couponTodayRange = () => {
+  const now = new Date();
+  const from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const to = new Date(from); to.setHours(23,59,59,999);
+  return { from, to };
+};
+
+const couponRecipientIdOf = value => value.recipientId || value.uid;
+const couponPeople = () => [
+  ...allUsers.map(u => ({
+    recipientId: u.uid, uid: u.uid, type: 'member', name: u.nickname || u.email || '-',
+    nickname: u.nickname, email: u.email || '', contact: u.email || '', photoURL: u.photoURL || '',
+  })),
+  ...allCouponRecipients.map(r => ({
+    recipientId: r.id, uid: null, type: 'guest', name: r.name || '-', nickname: r.name || '-',
+    email: r.contact || '', contact: r.contact || '', note: r.note || '', photoURL: '',
+  })),
+];
+const couponPerson = recipientId => couponPeople().find(p => p.recipientId === recipientId);
+
+function couponSummary(recipientId) {
+  const active = allCoupons.filter(c => couponRecipientIdOf(c) === recipientId && isActiveCoupon(c));
+  const stat = allCouponStats.find(s => couponRecipientIdOf(s) === recipientId) || {};
+  return {
+    active,
+    activeAmount: active.reduce((sum, c) => sum + Number(c.amount || 0), 0),
+    totalAmount: Number(stat.totalIssuedAmount || 0),
+    issueCount: Number(stat.totalIssueCount || 0),
+    nextExpiry: active.length ? Math.min(...active.map(c => couponMillis(c.expiresAt))) : null,
+  };
+}
+
+function renderCoupons(search='') {
+  const normalized = search.trim().toLocaleLowerCase('ko');
+  const { from: weekFrom, to: weekTo } = couponWeekRange();
+  const { from: todayFrom, to: todayTo } = couponTodayRange();
+  const weeklyCoupons = allCoupons.filter(c => {
+    const issued = couponMillis(c.issuedAt);
+    return issued >= weekFrom.getTime() && issued <= weekTo.getTime();
+  });
+  const todayCoupons = allCoupons.filter(c => {
+    const issued = couponMillis(c.issuedAt);
+    return issued >= todayFrom.getTime() && issued <= todayTo.getTime();
+  });
+  const weeklyRecipientIds = new Set(weeklyCoupons.map(couponRecipientIdOf));
+  const todayRecipientIds = new Set(todayCoupons.map(couponRecipientIdOf));
+  const people = couponPeople();
+  const filteredPeople = people.filter(p =>
+    (couponScope !== 'week' || weeklyRecipientIds.has(p.recipientId))
+    && (couponScope !== 'today' || todayRecipientIds.has(p.recipientId))
+    && (!normalized || `${p.name} ${p.contact}`.toLocaleLowerCase('ko').includes(normalized))
+  );
+  const summaries = people.map(p => couponSummary(p.recipientId));
+  const activeTotal = summaries.reduce((sum, s) => sum + s.activeAmount, 0);
+  const lifetimeTotal = allCouponStats.reduce((sum, s) => sum + Number(s.totalIssuedAmount || 0), 0);
+  const issueCount = allCouponStats.reduce((sum, s) => sum + Number(s.totalIssueCount || 0), 0);
+  document.getElementById('coupon-active-total').textContent = won(activeTotal);
+  document.getElementById('coupon-lifetime-total').textContent = won(lifetimeTotal);
+  document.getElementById('coupon-issue-count').textContent = `${issueCount}회`;
+  document.getElementById('coupon-holder-count').textContent = `${summaries.filter(s => s.activeAmount > 0).length}명`;
+
+  const newCoupons = couponNewRange === 'today' ? todayCoupons : weeklyCoupons;
+  const newRecipientIds = couponNewRange === 'today' ? todayRecipientIds : weeklyRecipientIds;
+  document.getElementById('coupon-week-range').textContent = couponNewRange === 'today'
+    ? couponDate(todayFrom)
+    : `${couponDate(weekFrom)}–${couponDate(weekTo)}`;
+  document.getElementById('coupon-week-count').textContent = `${newRecipientIds.size}명`;
+  const weeklyList = [...newRecipientIds].map(recipientId => {
+    const person = couponPerson(recipientId);
+    if (!person) return '';
+    const issues = newCoupons.filter(c => couponRecipientIdOf(c) === recipientId);
+    const amount = issues.reduce((sum, c) => sum + Number(c.amount || 0), 0);
+    return `<button class="coupon-week-person" onclick="showWeeklyCouponUser('${recipientId}')"><span class="coupon-week-avatar">${couponEsc(person.name?.[0] || '?')}</span><span><strong>${couponEsc(person.name)}</strong><small>${person.type === 'guest' ? '미가입 · ' : ''}${issues.length}건 · ${won(amount)}</small></span></button>`;
+  }).join('');
+  document.getElementById('coupon-weekly-list').innerHTML = weeklyList || `<div class="coupon-week-empty">${couponNewRange === 'today' ? '오늘' : '이번 주'} 새로 발급된 수령인이 없어요.</div>`;
+
+  const rows = filteredPeople.map(person => {
+    const s = couponSummary(person.recipientId);
+    const days = s.nextExpiry ? Math.max(0, Math.ceil((s.nextExpiry - Date.now()) / 86400000)) : null;
+    const expiry = s.nextExpiry
+      ? `<div>${couponDate(new Date(s.nextExpiry))}</div><span class="coupon-dday ${days <= 7 ? 'soon' : ''}">D-${days}</span>`
+      : '<span style="color:#bbb">-</span>';
+    return `<tr>
+      <td><div class="coupon-person"><div class="user-avatar">${person.photoURL ? `<img src="${couponEsc(person.photoURL)}">` : couponEsc(person.name?.[0] || '?')}</div><div><div><strong>${couponEsc(person.name)}</strong><span class="coupon-person-type ${person.type}">${person.type === 'guest' ? '미가입자' : '가입자'}</span></div><span>${couponEsc(person.contact || (person.type === 'guest' ? '연락처 미입력' : '-'))}</span></div></div></td>
+      <td><strong class="coupon-active-amount">${won(s.activeAmount)}</strong><span class="coupon-sub">${s.active.length}건 유효</span></td>
+      <td>${won(s.totalAmount)}</td>
+      <td><span class="coupon-count-badge">${s.issueCount}회</span></td>
+      <td>${expiry}</td>
+      <td><div class="coupon-actions"><button class="btn-sm btn-sm-primary" onclick="openCouponIssue('${person.recipientId}')">발급</button><button class="btn-sm" onclick="openCouponDetail('${person.recipientId}')">내역</button></div></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('coupon-table-body').innerHTML = rows || '<tr><td colspan="6" style="text-align:center;padding:28px;color:#bbb">검색 결과가 없어요</td></tr>';
+}
+
+window.filterCoupons = () => renderCoupons(document.getElementById('coupon-search').value);
+window.setCouponNewRange = (range, btn) => {
+  couponNewRange = range;
+  document.querySelectorAll('.coupon-new-range-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderCoupons(document.getElementById('coupon-search').value);
+};
+window.setCouponScope = (scope, btn) => {
+  couponScope = scope;
+  document.querySelectorAll('.coupon-scope-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderCoupons(document.getElementById('coupon-search').value);
+};
+window.showWeeklyCouponUser = recipientId => {
+  const person = couponPerson(recipientId);
+  couponScope = couponNewRange;
+  document.querySelectorAll('.coupon-scope-btn').forEach(b => b.classList.toggle('on', b.textContent.includes(couponNewRange === 'today' ? '오늘' : '이번 주')));
+  const search = document.getElementById('coupon-search');
+  search.value = person?.name || '';
+  renderCoupons(search.value);
+};
+window.setCouponAmount = amount => { document.getElementById('coupon-amount').value = amount; };
+
+window.openCouponIssue = (recipientId='') => {
+  const select = document.getElementById('coupon-user-select');
+  const people = couponPeople().sort((a,b) => a.name.localeCompare(b.name, 'ko'));
+  const options = type => people.filter(p => p.type === type).map(p => `<option value="${p.recipientId}" ${p.recipientId === recipientId ? 'selected' : ''}>${couponEsc(p.name)} · ${couponEsc(p.contact || '연락처 없음')}</option>`).join('');
+  select.innerHTML = `<optgroup label="생존일지 가입자">${options('member')}</optgroup><optgroup label="미가입자">${options('guest')}</optgroup>`;
+  document.getElementById('coupon-amount').value = '';
+  document.getElementById('coupon-note').value = '';
+  openModal('coupon-issue-modal');
+};
+
+window.issueCoupon = async () => {
+  const recipientId = document.getElementById('coupon-user-select').value;
+  const amount = Number(document.getElementById('coupon-amount').value);
+  const note = document.getElementById('coupon-note').value.trim();
+  const person = couponPerson(recipientId);
+  if (!person) { showToast('수령인을 선택해주세요'); return; }
+  if (!Number.isInteger(amount) || amount <= 0) { showToast('발급 금액을 올바르게 입력해주세요'); return; }
+  const btn = document.getElementById('coupon-submit-btn');
+  btn.disabled = true;
+  try {
+    const issuedAt = new Date();
+    const expiresAt = new Date(issuedAt); expiresAt.setDate(expiresAt.getDate() + 30);
+    const issueRef = doc(collection(db, 'coupon_issues'));
+    const statRef = doc(db, 'coupon_stats', recipientId);
+    await runTransaction(db, async transaction => {
+      const statSnap = await transaction.get(statRef);
+      const prev = statSnap.exists() ? statSnap.data() : {};
+      transaction.set(issueRef, {
+        recipientId, uid: person.uid, recipientType: person.type, recipientName: person.name,
+        amount, note, issuedAt: Timestamp.fromDate(issuedAt), expiresAt: Timestamp.fromDate(expiresAt),
+        issuedBy: currentAdmin.uid, issuedByEmail: currentAdmin.email || '',
+      });
+      transaction.set(statRef, {
+        recipientId, uid: person.uid, recipientType: person.type, recipientName: person.name,
+        totalIssuedAmount: Number(prev.totalIssuedAmount || 0) + amount,
+        totalIssueCount: Number(prev.totalIssueCount || 0) + 1,
+        lastIssuedAt: Timestamp.fromDate(issuedAt),
+      }, { merge: true });
+    });
+    allCoupons.push({ id: issueRef.id, recipientId, uid:person.uid, recipientType:person.type, recipientName:person.name, amount, note, issuedAt: Timestamp.fromDate(issuedAt), expiresAt: Timestamp.fromDate(expiresAt), issuedBy: currentAdmin.uid, issuedByEmail: currentAdmin.email || '' });
+    const stat = allCouponStats.find(s => couponRecipientIdOf(s) === recipientId);
+    if (stat) { stat.totalIssuedAmount = Number(stat.totalIssuedAmount || 0) + amount; stat.totalIssueCount = Number(stat.totalIssueCount || 0) + 1; stat.lastIssuedAt = Timestamp.fromDate(issuedAt); }
+    else allCouponStats.push({ recipientId, uid:person.uid, recipientType:person.type, recipientName:person.name, totalIssuedAmount: amount, totalIssueCount: 1, lastIssuedAt: Timestamp.fromDate(issuedAt) });
+    closeModal('coupon-issue-modal');
+    renderCoupons(document.getElementById('coupon-search').value);
+    showToast(`${person.name}님에게 ${won(amount)} 쿠폰을 발급했어요`);
+  } catch(e) { showToast('쿠폰 발급 중 오류가 발생했어요'); console.error(e); }
+  finally { btn.disabled = false; }
+};
+
+window.openCouponDetail = recipientId => {
+  const person = couponPerson(recipientId);
+  if (!person) return;
+  const s = couponSummary(recipientId);
+  const issues = allCoupons.filter(c => couponRecipientIdOf(c) === recipientId).sort((a,b) => couponMillis(b.issuedAt) - couponMillis(a.issuedAt));
+  document.getElementById('coupon-detail-title').textContent = `${person.name}님의 생존 쿠폰`;
+  document.getElementById('coupon-detail-content').innerHTML = `
+    <div class="coupon-detail-summary"><div><span>현재 유효 금액</span><strong>${won(s.activeAmount)}</strong></div><div><span>누적 발급</span><strong>${s.issueCount}회 · ${won(s.totalAmount)}</strong></div></div>
+    <div class="sec-label">개별 발급 내역</div>
+    <div class="coupon-issue-list">${issues.length ? issues.map(c => {
+      const active = isActiveCoupon(c), days = couponDaysLeft(c);
+      return `<div class="coupon-issue-card ${active ? '' : 'expired'}"><div><strong>${won(c.amount)}</strong><span>${couponEsc(c.note || '생존 쿠폰 발급')}</span></div><div class="coupon-issue-meta"><span>${couponDate(c.issuedAt)} 발급</span><b class="${active && days <= 7 ? 'soon' : ''}">${active ? `${couponDate(c.expiresAt)}까지 · D-${days}` : '만료'}</b></div></div>`;
+    }).join('') : '<div style="text-align:center;padding:24px;color:#bbb">발급 내역이 없어요</div>'}</div>`;
+  openModal('coupon-detail-modal');
+};
+
+window.openCouponRecipientCreate = () => {
+  document.getElementById('coupon-recipient-name').value = '';
+  document.getElementById('coupon-recipient-contact').value = '';
+  document.getElementById('coupon-recipient-note').value = '';
+  openModal('coupon-recipient-modal');
+};
+
+window.createCouponRecipient = async () => {
+  const name = document.getElementById('coupon-recipient-name').value.trim();
+  const contact = document.getElementById('coupon-recipient-contact').value.trim();
+  const note = document.getElementById('coupon-recipient-note').value.trim();
+  if (!name) { showToast('미가입자 이름을 입력해주세요'); return; }
+  try {
+    const ref = await addDoc(collection(db, 'coupon_recipients'), {
+      name, contact, note, createdAt:Timestamp.fromDate(new Date()),
+      createdBy:currentAdmin.uid, createdByEmail:currentAdmin.email || '',
+    });
+    allCouponRecipients.push({ id:ref.id, name, contact, note });
+    closeModal('coupon-recipient-modal');
+    renderCoupons(document.getElementById('coupon-search').value);
+    openCouponIssue(ref.id);
+    showToast(`${name}님을 쿠폰 수령인으로 추가했어요`);
+  } catch(e) { showToast('미가입자 추가 중 오류가 발생했어요'); console.error(e); }
+};
 
 function renderDashScopeButtons() {
   const el = document.getElementById('dash-scope-row');
@@ -884,6 +1121,7 @@ window.openUserManage = (uid) => {
   const u = allUsers.find(x => x.uid === uid);
   document.getElementById('manage-user-uid').value = uid;
   document.getElementById('user-modal-title').textContent = `${u?.nickname || ''} 관리`;
+  document.getElementById('user-nickname-input').value = u?.nickname || '';
   // 소속 조 다중 체크박스 (현재 소속 반영)
   const mine = new Set(groupIdsOf(u || {}));
   document.getElementById('user-group-checks').innerHTML = allGroups.length
@@ -900,17 +1138,32 @@ window.openUserManage = (uid) => {
 
 window.saveUserGroup = async () => {
   const uid = document.getElementById('manage-user-uid').value;
+  const nickname = document.getElementById('user-nickname-input').value.trim();
   const groupIds = [...document.querySelectorAll('#user-group-checks .ug-check:checked')].map(c => c.value);
   const programType = document.getElementById('user-program-select').value;
+  const u = allUsers.find(x => x.uid === uid);
+  if (!u) { showToast('참여자 정보를 찾을 수 없어요'); return; }
+  if (!nickname) { showToast('닉네임을 입력해주세요'); return; }
+  if (nickname.length > 12) { showToast('닉네임은 12자 이내로 입력해주세요'); return; }
   try {
-    await updateDoc(doc(db, 'users', uid), { groupIds, programType });
-    const u = allUsers.find(x=>x.uid===uid);
-    if (u) { u.groupIds = groupIds; u.programType = programType; }
+    const updates = [
+      { ref:doc(db, 'users', uid), data:{ nickname, groupIds, programType } },
+      ...allRecords.filter(r => r.uid === uid && r.nickname !== nickname)
+        .map(r => ({ ref:doc(db, 'records', uid + '_' + r.date), data:{ nickname } })),
+    ];
+    for (let start = 0; start < updates.length; start += 450) {
+      const batch = writeBatch(db);
+      updates.slice(start, start + 450).forEach(item => batch.update(item.ref, item.data));
+      await batch.commit();
+    }
+    u.nickname = nickname; u.groupIds = groupIds; u.programType = programType;
+    allRecords.filter(r => r.uid === uid).forEach(r => { r.nickname = nickname; });
     closeModal('user-manage-modal');
     renderGroups();
     renderUsers();
     renderDashboard();
-    showToast('변경사항이 저장됐어요');
+    renderCoupons();
+    showToast(nickname + '님의 정보가 변경됐어요');
   } catch(e) { showToast('오류가 발생했어요'); console.error(e); }
 };
 
@@ -932,7 +1185,7 @@ window.deleteUser = async () => {
   if (!u) return;
   if (u.isAdmin === true) { showToast('관리자 계정은 삭제할 수 없어요'); return; }
 
-  const ok1 = confirm(`"${u.nickname}" 회원을 삭제할까요?\n이 회원의 모든 기록(${allRecords.filter(r=>r.uid===uid).length}개)도 함께 삭제됩니다.`);
+  const ok1 = confirm(`"${u.nickname}" 회원을 삭제할까요?\n활동 기록과 쿠폰 기록도 함께 삭제됩니다.`);
   if (!ok1) return;
   const ok2 = confirm('정말로 삭제하시겠어요?\n이 작업은 되돌릴 수 없어요.');
   if (!ok2) return;
@@ -943,11 +1196,19 @@ window.deleteUser = async () => {
     for (const r of userRecords) {
       await deleteDoc(doc(db, 'records', `${uid}_${r.date}`));
     }
-    // 2) users 문서 삭제
+    // 2) 쿠폰 발급 기록과 누적 통계 삭제
+    const userCoupons = allCoupons.filter(c => couponRecipientIdOf(c) === uid);
+    for (const coupon of userCoupons) {
+      await deleteDoc(doc(db, 'coupon_issues', coupon.id));
+    }
+    await deleteDoc(doc(db, 'coupon_stats', uid));
+    // 3) users 문서 삭제
     await deleteDoc(doc(db, 'users', uid));
 
     allUsers = allUsers.filter(x => x.uid !== uid);
     allRecords = allRecords.filter(r => r.uid !== uid);
+    allCoupons = allCoupons.filter(c => couponRecipientIdOf(c) !== uid);
+    allCouponStats = allCouponStats.filter(s => couponRecipientIdOf(s) !== uid);
 
     closeModal('user-manage-modal');
     renderStats();
@@ -955,6 +1216,7 @@ window.deleteUser = async () => {
     renderGroups();
     renderUsers();
     renderDashboard();
+    renderCoupons();
     showToast(`"${u.nickname}" 회원이 삭제됐어요`);
   } catch(e) { showToast('삭제 중 오류가 발생했어요'); console.error(e); }
 };

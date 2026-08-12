@@ -37,6 +37,7 @@
       <button class="tab-btn active" onclick="switchAdminTab('dashboard',this)">대시보드</button>
       <button class="tab-btn" onclick="switchAdminTab('groups',this)">그룹 관리</button>
       <button class="tab-btn" onclick="switchAdminTab('users',this)">참여자 관리</button>
+      <button class="tab-btn" onclick="switchAdminTab('coupons',this)">생존 쿠폰</button>
     </div>
   </nav>
 
@@ -175,6 +176,72 @@
       </div>
     </div>
   </div>
+
+  <!-- 생존 쿠폰 탭 -->
+  <div class="tab-panel" id="tab-coupons">
+    <div class="section">
+      <div class="section-title">생존 쿠폰 현황</div>
+      <div class="stat-row">
+        <div class="stat-box"><div class="num" id="coupon-active-total">-</div><div class="lbl">현재 유효 금액</div></div>
+        <div class="stat-box"><div class="num" id="coupon-lifetime-total">-</div><div class="lbl">누적 발급 금액</div></div>
+        <div class="stat-box"><div class="num" id="coupon-issue-count">-</div><div class="lbl">누적 발급 횟수</div></div>
+        <div class="stat-box"><div class="num" id="coupon-holder-count">-</div><div class="lbl">현재 보유 인원</div></div>
+      </div>
+    </div>
+
+    <div class="section coupon-weekly-section">
+      <div class="section-title">
+        <div>신규 발급자 <span class="coupon-week-range" id="coupon-week-range"></span></div>
+        <span class="coupon-week-count" id="coupon-week-count">0명</span>
+      </div>
+      <div class="coupon-new-range-row">
+        <button class="coupon-new-range-btn" onclick="setCouponNewRange('today',this)">오늘</button>
+        <button class="coupon-new-range-btn on" onclick="setCouponNewRange('week',this)">이번 주</button>
+      </div>
+      <div id="coupon-weekly-list" class="coupon-weekly-list"></div>
+    </div>
+
+    <div class="section coupon-guide">
+      <div class="coupon-guide-kicker">COUPON GUIDE</div>
+      <div class="section-title" style="margin-bottom:10px">생존 쿠폰 사용 가능 항목</div>
+      <ul>
+        <li>매십경, 매십면, 그로잉업 <span>(커리어PT 제외)</span></li>
+        <li>자소서 1문항 첨삭 <strong>45,000원</strong>, 자소서 첨삭(전체)</li>
+        <li>15분 유선 모의면접 <strong>45,000원</strong>, 모의면접, 경험력 클래스</li>
+        <li>면접 1문항 피드백 <strong>45,000원</strong></li>
+        <li>각 단과 클래스 등</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        수령인별 쿠폰
+        <div class="coupon-title-actions">
+          <button class="btn-sm" onclick="openCouponRecipientCreate()">+ 미가입자 추가</button>
+          <button class="btn btn-primary" onclick="openCouponIssue()" style="font-size:12px;padding:7px 14px">+ 쿠폰 발급</button>
+        </div>
+      </div>
+      <div class="coupon-search-wrap">
+        <span aria-hidden="true">⌕</span>
+        <input type="text" id="coupon-search" placeholder="이름·이메일·연락처로 검색" oninput="filterCoupons()">
+      </div>
+      <div class="coupon-scope-row">
+        <button class="btn-sm coupon-scope-btn on" onclick="setCouponScope('all',this)">전체 수령인</button>
+        <button class="btn-sm coupon-scope-btn" onclick="setCouponScope('today',this)">오늘 발급자만</button>
+        <button class="btn-sm coupon-scope-btn" onclick="setCouponScope('week',this)">이번 주 발급자만</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="user-table coupon-table">
+          <thead><tr>
+            <th>수령인</th><th>현재 유효 금액</th><th>누적 발급 금액</th><th>발급 횟수</th><th>다음 만료일</th><th>관리</th>
+          </tr></thead>
+          <tbody id="coupon-table-body">
+            <tr><td colspan="6" style="text-align:center;padding:24px;color:#ccc">불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- 그룹 생성 모달 -->
@@ -223,6 +290,11 @@
       <button class="modal-close" onclick="closeModal('user-manage-modal')">×</button>
     </div>
     <div class="modal-body">
+      <div class="field">
+        <label>닉네임</label>
+        <input type="text" id="user-nickname-input" maxlength="12" placeholder="서비스 내 표시 이름">
+        <div style="font-size:11px;color:#aaa;margin-top:5px">참여자 목록과 기존 활동 기록의 이름도 함께 변경돼요.</div>
+      </div>
       <div class="field">
         <label>소속 조 <span style="font-size:11px;color:#aaa;font-weight:400">(복수 선택)</span></label>
         <div id="user-group-checks" style="display:flex;flex-direction:column;gap:6px;margin-top:6px;max-height:180px;overflow-y:auto"></div>
@@ -275,6 +347,75 @@
       </div>
       <div id="user-detail-content"></div>
     </div>
+  </div>
+</div>
+
+<!-- 쿠폰 발급 모달 -->
+<div class="modal-overlay" id="coupon-issue-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>생존 쿠폰 발급</h3>
+      <button class="modal-close" onclick="closeModal('coupon-issue-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>수령인</label>
+        <select id="coupon-user-select"></select>
+        <button type="button" class="coupon-add-guest-link" onclick="closeModal('coupon-issue-modal');openCouponRecipientCreate()">찾는 사람이 없나요? 미가입자 추가</button>
+      </div>
+      <div class="field">
+        <label>발급 금액</label>
+        <div class="coupon-amount-input"><input type="number" id="coupon-amount" min="1" step="1000" placeholder="예: 45000"><span>원</span></div>
+        <div class="coupon-quick-row">
+          <button type="button" class="btn-sm" onclick="setCouponAmount(30000)">+ 3만원</button>
+          <button type="button" class="btn-sm" onclick="setCouponAmount(45000)">+ 4만5천원</button>
+          <button type="button" class="btn-sm" onclick="setCouponAmount(50000)">+ 5만원</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>메모 <span style="font-size:11px;color:#aaa;font-weight:400">(선택)</span></label>
+        <input type="text" id="coupon-note" maxlength="60" placeholder="예: 8월 활동 우수">
+      </div>
+      <div class="coupon-expiry-note">발급일로부터 30일 동안 사용할 수 있어요. 각 발급 건의 만료일은 별도로 관리됩니다.</div>
+      <button class="btn btn-primary" id="coupon-submit-btn" style="width:100%;padding:12px" onclick="issueCoupon()">쿠폰 발급하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 미가입 쿠폰 수령인 추가 모달 -->
+<div class="modal-overlay" id="coupon-recipient-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>미가입자 추가</h3>
+      <button class="modal-close" onclick="closeModal('coupon-recipient-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="coupon-recipient-info">생존일지 회원으로 등록하지 않고 쿠폰 수령인 명단에만 추가합니다. 참여자 수와 활동 통계에는 포함되지 않아요.</div>
+      <div class="field">
+        <label>이름</label>
+        <input type="text" id="coupon-recipient-name" maxlength="30" placeholder="예: 김생존">
+      </div>
+      <div class="field">
+        <label>연락처 또는 이메일 <span style="font-size:11px;color:#aaa;font-weight:400">(선택·동명이인 구분용)</span></label>
+        <input type="text" id="coupon-recipient-contact" maxlength="80" placeholder="예: 010-1234-5678">
+      </div>
+      <div class="field">
+        <label>메모 <span style="font-size:11px;color:#aaa;font-weight:400">(선택)</span></label>
+        <input type="text" id="coupon-recipient-note" maxlength="80" placeholder="예: 그로잉업 참여자">
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:12px" onclick="createCouponRecipient()">추가하고 쿠폰 발급하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 쿠폰 상세 모달 -->
+<div class="modal-overlay" id="coupon-detail-modal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h3 id="coupon-detail-title">쿠폰 상세</h3>
+      <button class="modal-close" onclick="closeModal('coupon-detail-modal')">×</button>
+    </div>
+    <div class="modal-body" id="coupon-detail-content" style="max-height:70vh;overflow-y:auto"></div>
   </div>
 </div>
 

@@ -63,11 +63,11 @@
 | `index.html` | 로그인·온보딩 | 구글 로그인, 신규 유저 **3단계 온보딩(기본정보 → 프로그램 → 완료)** — 조 선택 없음(미배정으로 시작, 관리자가 배정), 인앱 브라우저 탈출 |
 | `main.html` | 내 일지 | 오늘 기록(매십경·면·독·운 루틴 + 취준활동: **강의 수강[정해진 강의별 분 입력]**·자소서·필기·면접·지원), 대시보드(내 추이 + **조별 추이[내 조 선택기]**), 주차별 추이, 주간/월간 목표, 누적 요약, 프로필/테마 설정(+**이전 시즌 기록** 입력, 소속 조 읽기전용) |
 | `compare.html` | 함께 생존 | 탭 6개: **랭킹 / 매십경 상세 / 매십면 상세 / 항목 비교(+이전 시즌 컬럼·엑셀) / 강의 수강(강의별 기간 합산·엑셀) / 그룹별 현황**. 상단 **"내 조" 선택기**(다중 소속 시 노출, 그룹별 현황 탭에선 숨김) |
-| `admin.html` | 관리자 | 전체 현황, **기간·조·프로그램별 MVP TOP 3/통계**, 그룹 CRUD, 유저 **조 다중 배정(체크박스)**·프로그램 변경·온보딩 초기화·삭제, **그룹 수정에서 조장 지정**, 유저 상세 |
+| `admin.html` | 관리자 | 전체 현황, **기간·조·프로그램별 MVP TOP 3/통계**, 그룹 CRUD, 유저 **닉네임 변경**·조 다중 배정(체크박스)·프로그램 변경·온보딩 초기화·삭제, **그룹 수정에서 조장 지정**, 유저 상세, **생존 쿠폰 개별 발급·검색·누적 통계** |
 
 ## 데이터 모델 (Firestore)
 
-컬렉션은 4개이며 모두 **평면 구조**(서브컬렉션 없음)입니다. 문서 ID에 식별자를 넣는 **복합 키** 방식을 씁니다.
+컬렉션은 7개이며 모두 **평면 구조**(서브컬렉션 없음)입니다. 문서 ID에 식별자를 넣는 **복합 키** 방식을 씁니다.
 
 ### `users` — 문서 ID = **Firebase Auth UID**
 | 필드 | 타입 | 설명 |
@@ -117,12 +117,40 @@
 
 > 주간·월간 목표가 **한 컬렉션**을 공유하고 문서 ID 접두(`_week` / `_month_`)로 구분됩니다.
 
+### `coupon_issues` — 문서 ID = **자동 생성 ID**
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `recipientId` / `uid` | string / string \| null | 쿠폰 수령인 ID, 가입 회원일 때의 Auth UID. 구 데이터의 `uid` 단독 형식도 호환 |
+| `recipientType` / `recipientName` | string / string | `member` 또는 `guest`, 발급 당시 이름 복사본 |
+| `amount` / `note` | number / string | 발급 금액, 관리자 메모 |
+| `issuedAt` / `expiresAt` | timestamp | 발급 시각과 발급 건별 30일 만료 시각 |
+| `issuedBy` / `issuedByEmail` | string | 발급 관리자 기록 |
+
+### `coupon_stats` — 문서 ID = **쿠폰 수령인 ID**
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `totalIssuedAmount` | number | 만료 후에도 유지되는 누적 발급 금액 |
+| `totalIssueCount` | number | 만료 후에도 유지되는 누적 발급 횟수 |
+| `lastIssuedAt` | timestamp | 최근 발급 시각 |
+
+`coupon_issues.expiresAt`은 Firestore TTL 필드로 설정한다. TTL 삭제는 지연될 수 있으므로 관리자 화면에서는 `expiresAt <= 현재 시각`인 문서를 즉시 유효 금액에서 제외한다. TTL 정책은 Google Cloud Console의 Firestore → Time-to-live에서 컬렉션 그룹 `coupon_issues`, 필드 `expiresAt`으로 활성화해야 한다.
+
+### `coupon_recipients` — 문서 ID = **자동 생성 ID**
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `name` / `contact` / `note` | string | 생존일지 미가입 수령인의 이름, 선택 연락처, 관리자 메모 |
+| `createdAt` / `createdBy` | timestamp / string | 등록 시각과 등록 관리자 UID |
+
+미가입자는 `users`에 만들지 않으므로 전체 참여자 수, 그룹, 활동률, MVP 통계에 포함되지 않는다. 쿠폰 검색과 통계에서만 가입자와 합쳐 표시한다.
+
 **관계 (수동 참조, FK 강제 없음):**
 ```
 users(uid) ──groupIds[]──▶ groups(docId)        (다중 소속)
 groups(docId).leaderUids[] ──▶ users(uid)        (조장)
 records(`{uid}_{date}`).uid ──▶ users(uid)
 weekly_goals(`{uid}_...`) ── uid를 문서 ID에 내장
+coupon_stats(recipientId) ──▶ 쿠폰 수령인        (누적 통계 유지)
+coupon_issues.recipientId ──▶ users(uid) 또는 coupon_recipients(docId) (30일 후 TTL 삭제)
 ```
 JOIN이 없으므로 `records`에 `nickname`·`jobProb`를 **복사(비정규화)** 해 저장합니다.
 
