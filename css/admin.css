@@ -186,8 +186,15 @@
   .coupon-usage-item { display:flex; justify-content:space-between; gap:12px; border-radius:9px; background:#f7f7f7; padding:10px 12px; }
   .coupon-usage-item strong { color:#444; font-size:12px; }
   .coupon-usage-item span { display:block; color:#999; font-size:10px; margin-top:3px; }
-  .coupon-usage-item > span { margin:0; white-space:nowrap; }
+  .coupon-usage-side { text-align:right; white-space:nowrap; }
+  .coupon-usage-side > span { margin:0; }
+  .coupon-usage-actions { display:flex; gap:5px; margin-top:7px; }
+  .coupon-usage-actions button { border:1px solid #ddd; border-radius:7px; background:white; color:#666; padding:5px 8px; font:inherit; font-size:10px; cursor:pointer; }
+  .coupon-usage-actions button:last-child { color:#dc2626; border-color:#fecaca; background:#fff8f8; }
+  .coupon-usage-actions button:hover { background:#f1f1f1; }
+  .coupon-usage-actions button:last-child:hover { background:#fee2e2; }
   #coupon-submit-btn:disabled { opacity:.55; cursor:not-allowed; }
+  #coupon-usage-edit-submit:disabled { opacity:.55; cursor:not-allowed; }
 
   @media (max-width:600px) {
     .coupon-detail-summary { grid-template-columns:1fr; }

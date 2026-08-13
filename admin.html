@@ -409,6 +409,33 @@
   </div>
 </div>
 
+<!-- 쿠폰 사용 내용 수정 모달 -->
+<div class="modal-overlay" id="coupon-usage-edit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>쿠폰 사용 내용 수정</h3>
+      <button class="modal-close" onclick="closeModal('coupon-usage-edit-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>사용 항목</label>
+        <select id="coupon-usage-edit-item">
+          <option>매십경</option><option>매십면</option><option>그로잉업(커리어PT 제외)</option>
+          <option>자소서 1문항 첨삭</option><option>자소서 첨삭(전체)</option>
+          <option>15분 유선 모의면접</option><option>모의면접</option><option>경험력 클래스</option>
+          <option>면접 1문항 피드백</option><option>각 단과클래스</option><option>기타</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>상세 내용 <span style="font-size:11px;color:#aaa;font-weight:400">(선택)</span></label>
+        <input type="text" id="coupon-usage-edit-note" maxlength="80">
+      </div>
+      <div class="coupon-expiry-note">사용 금액을 잘못 기록했다면 내용 수정이 아니라 사용 취소·금액 복구 후 회원이 다시 기록해야 합니다.</div>
+      <button class="btn btn-primary" id="coupon-usage-edit-submit" style="width:100%;padding:12px" onclick="saveCouponUsageEdit()">수정 저장</button>
+    </div>
+  </div>
+</div>
+
 <!-- 쿠폰 상세 모달 -->
 <div class="modal-overlay" id="coupon-detail-modal">
   <div class="modal" style="max-width:560px">

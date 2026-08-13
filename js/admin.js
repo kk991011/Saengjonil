@@ -19,6 +19,8 @@ let allUsers = [], allGroups = [], allRecords = [], allCoupons = [], allCouponSt
 let currentAdmin = null;
 let couponScope = 'all';
 let couponNewRange = 'week';
+let editingCouponUsageId = null;
+let editingCouponUsageRecipientId = null;
 
 // ── 인증 ──
 onAuthStateChanged(auth, async u => {
@@ -475,8 +477,106 @@ window.openCouponDetail = recipientId => {
       </div>`;
     }).join('') : '<div style="text-align:center;padding:24px;color:#bbb">발급 내역이 없어요</div>'}</div>
     <div class="sec-label">사용 내역</div>
-    <div class="coupon-usage-list">${usages.length ? usages.map(u => `<div class="coupon-usage-item"><div><strong>-${won(u.amount)} · ${couponEsc(u.usageItem || '쿠폰 사용')}</strong><span>${couponEsc(u.note || '상세 메모 없음')}</span></div><span>${couponDate(u.usedAt)}</span></div>`).join('') : '<div style="text-align:center;padding:18px;color:#bbb">사용 내역이 없어요</div>'}</div>`;
+    <div class="coupon-usage-list">${usages.length ? usages.map(u => `<div class="coupon-usage-item"><div><strong>-${won(u.amount)} · ${couponEsc(u.usageItem || '쿠폰 사용')}</strong><span>${couponEsc(u.note || '상세 메모 없음')}</span></div><div class="coupon-usage-side"><span>${couponDate(u.usedAt)}</span><div class="coupon-usage-actions"><button onclick="openCouponUsageEdit('${u.id}','${recipientId}')">내용 수정</button><button onclick="restoreCouponUsage('${u.id}','${recipientId}')">사용 취소·복구</button></div></div></div>`).join('') : '<div style="text-align:center;padding:18px;color:#bbb">사용 내역이 없어요</div>'}</div>`;
   openModal('coupon-detail-modal');
+};
+
+window.openCouponUsageEdit = (usageId, recipientId) => {
+  const usage = allCouponUsages.find(u => u.id === usageId && couponRecipientIdOf(u) === recipientId);
+  if (!usage) { showToast('사용 내역을 찾을 수 없어요'); return; }
+  editingCouponUsageId = usageId;
+  editingCouponUsageRecipientId = recipientId;
+  const select = document.getElementById('coupon-usage-edit-item');
+  const item = usage.usageItem || '기타';
+  if (![...select.options].some(o => o.value === item)) select.add(new Option(item, item));
+  select.value = item;
+  document.getElementById('coupon-usage-edit-note').value = usage.note || '';
+  closeModal('coupon-detail-modal');
+  openModal('coupon-usage-edit-modal');
+};
+
+window.saveCouponUsageEdit = async () => {
+  const usage = allCouponUsages.find(u => u.id === editingCouponUsageId);
+  const usageItem = document.getElementById('coupon-usage-edit-item').value;
+  const note = document.getElementById('coupon-usage-edit-note').value.trim();
+  if (!usage || !usageItem) { showToast('수정할 사용 내역을 찾을 수 없어요'); return; }
+  const btn = document.getElementById('coupon-usage-edit-submit');
+  btn.disabled = true;
+  try {
+    await updateDoc(doc(db, 'coupon_usages', usage.id), { usageItem, note });
+    usage.usageItem = usageItem;
+    usage.note = note;
+    closeModal('coupon-usage-edit-modal');
+    openCouponDetail(editingCouponUsageRecipientId);
+    showToast('쿠폰 사용 내용을 수정했어요');
+  } catch(e) {
+    showToast('사용 내용 수정 중 오류가 발생했어요');
+    console.error(e);
+  } finally { btn.disabled = false; }
+};
+
+window.restoreCouponUsage = async (usageId, recipientId) => {
+  const usage = allCouponUsages.find(u => u.id === usageId && couponRecipientIdOf(u) === recipientId);
+  const person = couponPerson(recipientId);
+  if (!usage || !person) { showToast('사용 내역을 찾을 수 없어요'); return; }
+  if (!Array.isArray(usage.allocations) || !usage.allocations.length) { showToast('복구 정보가 없는 사용 내역이에요'); return; }
+  if (!confirm(`${person.name}님의 ${won(usage.amount)} 사용을 취소하고 금액을 복구할까요?\n발급일과 만료일은 원래 날짜 그대로 유지됩니다.`)) return;
+
+  const grouped = new Map();
+  usage.allocations.forEach(a => grouped.set(a.issueId, Number(grouped.get(a.issueId) || 0) + Number(a.amount || 0)));
+  const allocations = [...grouped].map(([issueId, amount]) => ({ issueId, amount }));
+  try {
+    await runTransaction(db, async transaction => {
+      const usageRef = doc(db, 'coupon_usages', usageId);
+      const usageSnap = await transaction.get(usageRef);
+      if (!usageSnap.exists()) throw new Error('coupon-usage-not-found');
+
+      const rows = [];
+      for (const allocation of allocations) {
+        const issueRef = doc(db, 'coupon_issues', allocation.issueId);
+        const historyRef = doc(db, 'coupon_history', allocation.issueId);
+        const issueSnap = await transaction.get(issueRef);
+        const historySnap = await transaction.get(historyRef);
+        rows.push({ ...allocation, issueRef, issueSnap, historySnap });
+      }
+
+      for (const row of rows) {
+        if (row.issueSnap.exists()) {
+          const saved = row.issueSnap.data();
+          const original = Number(saved.amount || 0);
+          const nextRemaining = Math.min(original, couponRemaining(saved) + row.amount);
+          transaction.update(row.issueRef, { remainingAmount:nextRemaining, lastRestoredAt:Timestamp.fromDate(new Date()) });
+        } else {
+          if (!row.historySnap.exists()) throw new Error('coupon-restore-history-missing');
+          const history = row.historySnap.data();
+          transaction.set(row.issueRef, {
+            ...history,
+            remainingAmount:Math.min(Number(history.amount || 0), row.amount),
+            lastRestoredAt:Timestamp.fromDate(new Date()),
+          });
+        }
+      }
+      transaction.delete(usageRef);
+    });
+
+    allocations.forEach(a => {
+      const issue = allCoupons.find(c => c.id === a.issueId);
+      if (issue) issue.remainingAmount = Math.min(Number(issue.amount || 0), couponRemaining(issue) + a.amount);
+      else {
+        const history = allCouponHistory.find(h => h.id === a.issueId);
+        if (history) allCoupons.push({ ...history, remainingAmount:Math.min(Number(history.amount || 0), a.amount) });
+      }
+    });
+    allCouponUsages = allCouponUsages.filter(u => u.id !== usageId);
+    renderCoupons(document.getElementById('coupon-search').value);
+    openCouponDetail(recipientId);
+    showToast(`${won(usage.amount)}을 원래 발급 건으로 복구했어요`);
+  } catch(e) {
+    if (e.message === 'coupon-restore-history-missing') showToast('원래 발급 이력을 찾을 수 없어 복구할 수 없어요');
+    else if (e.message === 'coupon-usage-not-found') showToast('이미 취소된 사용 내역이에요');
+    else showToast('쿠폰 금액 복구 중 오류가 발생했어요');
+    console.error(e);
+  }
 };
 
 window.cancelCouponIssue = async (issueId, recipientId) => {
