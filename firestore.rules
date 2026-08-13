@@ -61,6 +61,11 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // 쿠폰 사용 처리 내역은 관리자만 기록·조회한다.
+    match /coupon_usages/{usageId} {
+      allow read, write: if isAdmin();
+    }
+
     // 생존일지 미가입 쿠폰 수령인 — 일반 회원 목록/통계와 완전히 분리.
     match /coupon_recipients/{recipientId} {
       allow read, write: if isAdmin();

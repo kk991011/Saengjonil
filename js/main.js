@@ -86,7 +86,7 @@ async function loadMyCoupons() {
     const snap = await getDocs(query(collection(db, 'coupon_issues'), where('uid', '==', user.uid)));
     myCoupons = snap.docs
       .map(d => ({ id:d.id, ...d.data() }))
-      .filter(c => couponTime(c.expiresAt) > Date.now())
+      .filter(c => couponTime(c.expiresAt) > Date.now() && Number(c.remainingAmount ?? c.amount ?? 0) > 0)
       .sort((a, b) => couponTime(a.expiresAt) - couponTime(b.expiresAt));
     renderMyCoupons();
   } catch(e) {
@@ -97,13 +97,13 @@ async function loadMyCoupons() {
 }
 
 function renderMyCoupons() {
-  myCoupons = myCoupons.filter(c => couponTime(c.expiresAt) > Date.now());
-  const total = myCoupons.reduce((sum, c) => sum + Number(c.amount || 0), 0);
+  myCoupons = myCoupons.filter(c => couponTime(c.expiresAt) > Date.now() && Number(c.remainingAmount ?? c.amount ?? 0) > 0);
+  const total = myCoupons.reduce((sum, c) => sum + Number(c.remainingAmount ?? c.amount ?? 0), 0);
   document.getElementById('my-coupon-total').textContent = couponWon(total);
   document.getElementById('my-coupon-list').innerHTML = myCoupons.length ? myCoupons.map(c => {
     const days = Math.max(0, Math.ceil((couponTime(c.expiresAt) - Date.now()) / 86400000));
     return `<div class="my-coupon-item">
-      <div><strong>${couponWon(c.amount)}</strong><small>${couponEscape(c.note || '생존 쿠폰')}</small></div>
+      <div><strong>${couponWon(c.remainingAmount ?? c.amount)}</strong><small>${couponEscape(c.note || '생존 쿠폰')}</small></div>
       <div class="my-coupon-expiry">${couponDateLabel(c.expiresAt)}까지<b class="${days <= 7 ? 'soon' : ''}">D-${days}</b></div>
     </div>`;
   }).join('') : '<div class="my-coupon-empty">현재 이용 가능한 쿠폰이 없어요.</div>';
