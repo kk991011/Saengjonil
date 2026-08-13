@@ -3,7 +3,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, onAuthStateChanged, signOut }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, collection, query,
-  where, orderBy, getDocs, deleteDoc, documentId, getCountFromServer }
+  where, orderBy, getDocs, deleteDoc, documentId, getCountFromServer, runTransaction, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 // Firebase 설정은 환경(운영/dev)에 따라 firebase-config.js에서 자동 선택됩니다.
@@ -39,7 +39,8 @@ let user = null, userProfile = null;
 let scoreSelected = 0;
 let allRecords = [], allGoals = [];
 let groupRecords = [], groupUsers = [];
-let myCoupons = [];
+let myCoupons = [], myCouponIssues = [], myCouponHistory = [], myCouponStats = {};
+let myCouponUsages = [];
 
 // ── 클래스 수강 항목 ──
 // 단일 클래스는 직접 입력, 변형이 많은 패밀리(생존면접클래스·기업분석자료)는 드롭다운+추가.
@@ -83,11 +84,23 @@ const couponDateLabel = value => {
 
 async function loadMyCoupons() {
   try {
-    const snap = await getDocs(query(collection(db, 'coupon_issues'), where('uid', '==', user.uid)));
-    myCoupons = snap.docs
-      .map(d => ({ id:d.id, ...d.data() }))
+    const [snap, usageSnap, historySnap, statSnap] = await Promise.all([
+      getDocs(query(collection(db, 'coupon_issues'), where('uid', '==', user.uid))),
+      getDocs(query(collection(db, 'coupon_usages'), where('uid', '==', user.uid))).catch(e => { console.warn('쿠폰 사용 내역 조회 실패', e); return null; }),
+      getDocs(query(collection(db, 'coupon_history'), where('uid', '==', user.uid))).catch(e => { console.warn('쿠폰 발급 이력 조회 실패', e); return null; }),
+      getDoc(doc(db, 'coupon_stats', user.uid)).catch(e => { console.warn('쿠폰 누적 통계 조회 실패', e); return null; }),
+    ]);
+    myCouponIssues = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    myCoupons = myCouponIssues
       .filter(c => couponTime(c.expiresAt) > Date.now() && Number(c.remainingAmount ?? c.amount ?? 0) > 0)
       .sort((a, b) => couponTime(a.expiresAt) - couponTime(b.expiresAt));
+    myCouponUsages = usageSnap?.docs.map(d => ({ id:d.id, ...d.data() }))
+      .sort((a,b) => couponTime(b.usedAt) - couponTime(a.usedAt)) || [];
+    const savedHistory = historySnap?.docs.map(d => ({ id:d.id, ...d.data() })) || [];
+    const savedIds = new Set(savedHistory.map(h => h.id));
+    myCouponHistory = [...savedHistory, ...myCouponIssues.filter(c => !savedIds.has(c.id))]
+      .sort((a,b) => couponTime(b.issuedAt) - couponTime(a.issuedAt));
+    myCouponStats = statSnap?.exists() ? statSnap.data() : {};
     renderMyCoupons();
   } catch(e) {
     document.getElementById('my-coupon-total').textContent = '-';
@@ -99,7 +112,16 @@ async function loadMyCoupons() {
 function renderMyCoupons() {
   myCoupons = myCoupons.filter(c => couponTime(c.expiresAt) > Date.now() && Number(c.remainingAmount ?? c.amount ?? 0) > 0);
   const total = myCoupons.reduce((sum, c) => sum + Number(c.remainingAmount ?? c.amount ?? 0), 0);
+  const fallbackIssued = myCouponHistory.reduce((sum,c) => sum + Number(c.amount || 0), 0);
+  const issuedTotal = Number(myCouponStats.totalIssuedAmount ?? fallbackIssued);
+  const issueCount = Number(myCouponStats.totalIssueCount ?? myCouponHistory.length);
+  const usedTotal = myCouponUsages.reduce((sum,u) => sum + Number(u.amount || 0), 0);
   document.getElementById('my-coupon-total').textContent = couponWon(total);
+  document.getElementById('my-coupon-stat-active').textContent = couponWon(total);
+  document.getElementById('my-coupon-stat-issued').textContent = couponWon(issuedTotal);
+  document.getElementById('my-coupon-stat-count').textContent = `${issueCount}회`;
+  document.getElementById('my-coupon-stat-used').textContent = couponWon(usedTotal);
+  document.getElementById('my-coupon-use-btn').style.display = total > 0 ? '' : 'none';
   document.getElementById('my-coupon-list').innerHTML = myCoupons.length ? myCoupons.map(c => {
     const days = Math.max(0, Math.ceil((couponTime(c.expiresAt) - Date.now()) / 86400000));
     return `<div class="my-coupon-item">
@@ -107,7 +129,86 @@ function renderMyCoupons() {
       <div class="my-coupon-expiry">${couponDateLabel(c.expiresAt)}까지<b class="${days <= 7 ? 'soon' : ''}">D-${days}</b></div>
     </div>`;
   }).join('') : '<div class="my-coupon-empty">현재 이용 가능한 쿠폰이 없어요.</div>';
+  const currentById = new Map(myCouponIssues.map(c => [c.id, c]));
+  document.getElementById('my-coupon-issue-history').innerHTML = myCouponHistory.length ? myCouponHistory.map(h => {
+    const current = currentById.get(h.id);
+    const expired = couponTime(h.expiresAt) <= Date.now();
+    const remaining = current ? Number(current.remainingAmount ?? current.amount ?? 0) : 0;
+    const status = expired ? '만료' : !current ? '종료' : remaining <= 0 ? '사용 완료' : `${couponWon(remaining)} 남음`;
+    return `<div class="my-coupon-history-row"><div><strong>+${couponWon(h.amount)}</strong><small>${couponEscape(h.note || '생존 쿠폰 발급')} · ${couponDateLabel(h.issuedAt)} 발급</small></div><div class="my-coupon-history-side">${couponDateLabel(h.expiresAt)}까지<b class="${expired || !current ? 'expired' : ''}">${status}</b></div></div>`;
+  }).join('') : '<div class="my-coupon-history-empty">발급 내역이 없어요.</div>';
+  document.getElementById('my-coupon-usage-list').innerHTML = myCouponUsages.length ? myCouponUsages.map(u => `
+    <div class="my-coupon-history-row"><div><strong>-${couponWon(u.amount)} · ${couponEscape(u.usageItem || '쿠폰 사용')}</strong><small>${couponEscape(u.note || '상세 메모 없음')}</small></div><div class="my-coupon-history-side">${couponDateLabel(u.usedAt)}</div></div>
+  `).join('') : '<div class="my-coupon-history-empty">사용 내역이 없어요.</div>';
 }
+
+window.openMyCouponUse = () => {
+  const total = myCoupons.reduce((sum,c) => sum + Number(c.remainingAmount ?? c.amount ?? 0), 0);
+  if (total <= 0) { showToast('이용 가능한 쿠폰이 없어요'); return; }
+  document.getElementById('my-coupon-use-balance').textContent = couponWon(total);
+  document.getElementById('my-coupon-use-item').value = '';
+  document.getElementById('my-coupon-use-amount').value = '';
+  document.getElementById('my-coupon-use-note').value = '';
+  document.getElementById('my-coupon-use-overlay').classList.add('open');
+};
+window.closeMyCouponUse = () => document.getElementById('my-coupon-use-overlay').classList.remove('open');
+window.setMyCouponFullAmount = () => {
+  document.getElementById('my-coupon-use-amount').value = myCoupons.reduce((sum,c) => sum + Number(c.remainingAmount ?? c.amount ?? 0), 0);
+};
+
+window.submitMyCouponUse = async () => {
+  const usageItem = document.getElementById('my-coupon-use-item').value;
+  const amount = Number(document.getElementById('my-coupon-use-amount').value);
+  const note = document.getElementById('my-coupon-use-note').value.trim();
+  const candidates = myCoupons
+    .filter(c => couponTime(c.expiresAt) > Date.now() && Number(c.remainingAmount ?? c.amount ?? 0) > 0)
+    .sort((a,b) => couponTime(a.expiresAt) - couponTime(b.expiresAt));
+  const available = candidates.reduce((sum,c) => sum + Number(c.remainingAmount ?? c.amount ?? 0), 0);
+  if (!usageItem) { showToast('사용 항목을 선택해주세요'); return; }
+  if (!Number.isInteger(amount) || amount <= 0) { showToast('사용 금액을 올바르게 입력해주세요'); return; }
+  if (amount > available) { showToast(`이용 가능 금액은 ${couponWon(available)}이에요`); return; }
+  if (!confirm(`${usageItem}에 생존 쿠폰 ${couponWon(amount)}을 사용 기록할까요?\n기록 후에는 되돌릴 수 없습니다.`)) return;
+
+  const btn = document.getElementById('my-coupon-use-submit');
+  btn.disabled = true;
+  const usageRef = doc(collection(db, 'coupon_usages'));
+  try {
+    await runTransaction(db, async transaction => {
+      const snapshots = [];
+      for (const candidate of candidates) snapshots.push(await transaction.get(doc(db, 'coupon_issues', candidate.id)));
+      let left = amount;
+      const allocations = [];
+      const now = Date.now();
+      for (const snap of snapshots) {
+        if (!snap.exists() || left <= 0) continue;
+        const data = snap.data();
+        if (data.uid !== user.uid || couponTime(data.expiresAt) <= now) continue;
+        const remaining = Math.max(0, Number(data.remainingAmount ?? data.amount ?? 0));
+        const deducted = Math.min(remaining, left);
+        if (deducted <= 0) continue;
+        allocations.push({ issueId:snap.id, amount:deducted });
+        transaction.update(snap.ref, { remainingAmount:remaining - deducted, lastUsedAt:serverTimestamp() });
+        left -= deducted;
+      }
+      if (left > 0) throw new Error('coupon-insufficient-balance');
+      transaction.set(usageRef, {
+        recipientId:user.uid, uid:user.uid, recipientType:'member', recipientName:userProfile.nickname || user.email || '-',
+        amount, usageItem, note, allocations, usedAt:serverTimestamp(), usedBy:user.uid,
+      });
+    });
+    closeMyCouponUse();
+    await loadMyCoupons();
+    showToast(`${couponWon(amount)} 사용 내역을 기록했어요`);
+  } catch(e) {
+    if (e.code === 'permission-denied') showToast('쿠폰 사용 권한이 아직 적용되지 않았어요. 관리자에게 문의해주세요');
+    else showToast(e.message === 'coupon-insufficient-balance' ? '잔액이 변경됐어요. 다시 확인해주세요' : '쿠폰 사용 기록 중 오류가 발생했어요');
+    console.error(e);
+  } finally { btn.disabled = false; }
+};
+
+document.getElementById('my-coupon-use-overlay').addEventListener('click', e => {
+  if (e.target.id === 'my-coupon-use-overlay') closeMyCouponUse();
+});
 
 // 페이지를 오래 열어둔 경우에도 만료된 쿠폰이 잔액에 남지 않도록 주기적으로 갱신한다.
 setInterval(() => { if (user && myCoupons.length) renderMyCoupons(); }, 60000);

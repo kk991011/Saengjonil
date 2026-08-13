@@ -15,11 +15,10 @@ const db = getFirestore(app);
 // ★ 관리자 UID 목록 — Firebase 콘솔에서 본인 UID 확인 후 추가
 // Authentication → 사용자 탭에서 UID 확인 가능
 // 관리자 판정은 users 문서의 isAdmin === true (아래 onAuthStateChanged 참고)
-let allUsers = [], allGroups = [], allRecords = [], allCoupons = [], allCouponStats = [], allCouponRecipients = [], allCouponUsages = [];
+let allUsers = [], allGroups = [], allRecords = [], allCoupons = [], allCouponStats = [], allCouponRecipients = [], allCouponUsages = [], allCouponHistory = [];
 let currentAdmin = null;
 let couponScope = 'all';
 let couponNewRange = 'week';
-let couponUseRecipientId = null;
 
 // ── 인증 ──
 onAuthStateChanged(auth, async u => {
@@ -47,7 +46,7 @@ onAuthStateChanged(auth, async u => {
 
 // ── 전체 데이터 로드 ──
 async function loadData() {
-  const [uSnap, gSnap, rSnap, cSnap, csSnap, crSnap, cuSnap] = await Promise.all([
+  const [uSnap, gSnap, rSnap, cSnap, csSnap, crSnap, cuSnap, chSnap] = await Promise.all([
     getDocs(collection(db, 'users')),
     getDocs(collection(db, 'groups')),
     getDocs(collection(db, 'records')),
@@ -56,6 +55,7 @@ async function loadData() {
     getDocs(collection(db, 'coupon_recipients')),
     // 규칙 게시보다 사이트 배포가 먼저 되어도 관리자 페이지 전체가 막히지 않도록 사용 내역만 선택 로드.
     getDocs(collection(db, 'coupon_usages')).catch(e => { console.warn('쿠폰 사용 내역을 불러오지 못했습니다.', e); return null; }),
+    getDocs(collection(db, 'coupon_history')).catch(e => { console.warn('쿠폰 발급 이력을 불러오지 못했습니다.', e); return null; }),
   ]);
   allUsers = uSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
   allGroups = gSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -75,6 +75,26 @@ async function loadData() {
   allCouponStats = csSnap.docs.map(d => ({ recipientId: d.id, ...d.data() }));
   allCouponRecipients = crSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   allCouponUsages = cuSnap?.docs.map(d => ({ id: d.id, ...d.data() })) || [];
+  allCouponHistory = chSnap?.docs.map(d => ({ id: d.id, ...d.data() })) || [];
+  if (chSnap) await backfillCouponHistory().catch(e => console.warn('기존 쿠폰 발급 이력 복사 실패', e));
+}
+
+// 기존에 발급되어 있던 쿠폰도 누적 발급 이력에서 빠지지 않도록 한 번만 복사한다.
+async function backfillCouponHistory() {
+  const savedIds = new Set(allCouponHistory.map(h => h.id));
+  const missing = allCoupons.filter(c => !savedIds.has(c.id));
+  for (let start = 0; start < missing.length; start += 400) {
+    const batch = writeBatch(db);
+    const chunk = missing.slice(start, start + 400);
+    chunk.forEach(c => batch.set(doc(db, 'coupon_history', c.id), {
+      recipientId:c.recipientId || c.uid || '', uid:c.uid || null,
+      recipientType:c.recipientType || (c.uid ? 'member' : 'guest'), recipientName:c.recipientName || '',
+      amount:Number(c.amount || 0), note:c.note || '', issuedAt:c.issuedAt, expiresAt:c.expiresAt,
+      issuedBy:c.issuedBy || '', issuedByEmail:c.issuedByEmail || '',
+    }));
+    await batch.commit();
+    allCouponHistory.push(...chunk.map(c => ({ ...c })));
+  }
 }
 
 // ── 통계 ──
@@ -397,6 +417,7 @@ window.issueCoupon = async () => {
     const issuedAt = new Date();
     const expiresAt = new Date(issuedAt); expiresAt.setDate(expiresAt.getDate() + 30);
     const issueRef = doc(collection(db, 'coupon_issues'));
+    const historyRef = doc(db, 'coupon_history', issueRef.id);
     const statRef = doc(db, 'coupon_stats', recipientId);
     await runTransaction(db, async transaction => {
       const statSnap = await transaction.get(statRef);
@@ -406,6 +427,11 @@ window.issueCoupon = async () => {
         amount, remainingAmount:amount, note, issuedAt: Timestamp.fromDate(issuedAt), expiresAt: Timestamp.fromDate(expiresAt),
         issuedBy: currentAdmin.uid, issuedByEmail: currentAdmin.email || '',
       });
+      transaction.set(historyRef, {
+        recipientId, uid:person.uid, recipientType:person.type, recipientName:person.name,
+        amount, note, issuedAt:Timestamp.fromDate(issuedAt), expiresAt:Timestamp.fromDate(expiresAt),
+        issuedBy:currentAdmin.uid, issuedByEmail:currentAdmin.email || '',
+      });
       transaction.set(statRef, {
         recipientId, uid: person.uid, recipientType: person.type, recipientName: person.name,
         totalIssuedAmount: Number(prev.totalIssuedAmount || 0) + amount,
@@ -414,6 +440,7 @@ window.issueCoupon = async () => {
       }, { merge: true });
     });
     allCoupons.push({ id: issueRef.id, recipientId, uid:person.uid, recipientType:person.type, recipientName:person.name, amount, remainingAmount:amount, note, issuedAt: Timestamp.fromDate(issuedAt), expiresAt: Timestamp.fromDate(expiresAt), issuedBy: currentAdmin.uid, issuedByEmail: currentAdmin.email || '' });
+    allCouponHistory.push({ id:issueRef.id, recipientId, uid:person.uid, recipientType:person.type, recipientName:person.name, amount, note, issuedAt:Timestamp.fromDate(issuedAt), expiresAt:Timestamp.fromDate(expiresAt), issuedBy:currentAdmin.uid, issuedByEmail:currentAdmin.email || '' });
     const stat = allCouponStats.find(s => couponRecipientIdOf(s) === recipientId);
     if (stat) { stat.totalIssuedAmount = Number(stat.totalIssuedAmount || 0) + amount; stat.totalIssueCount = Number(stat.totalIssueCount || 0) + 1; stat.lastIssuedAt = Timestamp.fromDate(issuedAt); }
     else allCouponStats.push({ recipientId, uid:person.uid, recipientType:person.type, recipientName:person.name, totalIssuedAmount: amount, totalIssueCount: 1, lastIssuedAt: Timestamp.fromDate(issuedAt) });
@@ -433,7 +460,6 @@ window.openCouponDetail = recipientId => {
   document.getElementById('coupon-detail-title').textContent = `${person.name}님의 생존 쿠폰`;
   document.getElementById('coupon-detail-content').innerHTML = `
     <div class="coupon-detail-summary"><div><span>현재 이용 가능 금액</span><strong>${won(s.activeAmount)}</strong></div><div><span>누적 발급</span><strong>${s.issueCount}회 · ${won(s.totalAmount)}</strong></div></div>
-    ${s.activeAmount > 0 ? `<button class="coupon-use-btn" onclick="openCouponUse('${recipientId}')">쿠폰 사용 처리</button>` : ''}
     <div class="sec-label">개별 발급 내역</div>
     <div class="coupon-issue-list">${issues.length ? issues.map(c => {
       const active = isActiveCoupon(c), remaining = couponRemaining(c), original = Number(c.amount || 0), days = couponDaysLeft(c);
@@ -449,85 +475,8 @@ window.openCouponDetail = recipientId => {
       </div>`;
     }).join('') : '<div style="text-align:center;padding:24px;color:#bbb">발급 내역이 없어요</div>'}</div>
     <div class="sec-label">사용 내역</div>
-    <div class="coupon-usage-list">${usages.length ? usages.map(u => `<div class="coupon-usage-item"><div><strong>-${won(u.amount)}</strong><span>${couponEsc(u.note || '쿠폰 사용')}</span></div><span>${couponDate(u.usedAt)}</span></div>`).join('') : '<div style="text-align:center;padding:18px;color:#bbb">사용 내역이 없어요</div>'}</div>`;
+    <div class="coupon-usage-list">${usages.length ? usages.map(u => `<div class="coupon-usage-item"><div><strong>-${won(u.amount)} · ${couponEsc(u.usageItem || '쿠폰 사용')}</strong><span>${couponEsc(u.note || '상세 메모 없음')}</span></div><span>${couponDate(u.usedAt)}</span></div>`).join('') : '<div style="text-align:center;padding:18px;color:#bbb">사용 내역이 없어요</div>'}</div>`;
   openModal('coupon-detail-modal');
-};
-
-window.openCouponUse = recipientId => {
-  const person = couponPerson(recipientId);
-  const s = couponSummary(recipientId);
-  if (!person || s.activeAmount <= 0) { showToast('이용 가능한 쿠폰이 없어요'); return; }
-  couponUseRecipientId = recipientId;
-  document.getElementById('coupon-use-balance').textContent = won(s.activeAmount);
-  document.getElementById('coupon-use-amount').value = '';
-  document.getElementById('coupon-use-note').value = '';
-  closeModal('coupon-detail-modal');
-  openModal('coupon-use-modal');
-};
-window.setCouponUseAmount = amount => { document.getElementById('coupon-use-amount').value = amount; };
-window.setCouponUseFullAmount = () => {
-  document.getElementById('coupon-use-amount').value = couponSummary(couponUseRecipientId).activeAmount;
-};
-
-window.useCoupon = async () => {
-  const recipientId = couponUseRecipientId;
-  const person = couponPerson(recipientId);
-  const amount = Number(document.getElementById('coupon-use-amount').value);
-  const note = document.getElementById('coupon-use-note').value.trim();
-  const candidates = allCoupons
-    .filter(c => couponRecipientIdOf(c) === recipientId && isAvailableCoupon(c))
-    .sort((a,b) => couponMillis(a.expiresAt) - couponMillis(b.expiresAt));
-  const available = candidates.reduce((sum,c) => sum + couponRemaining(c), 0);
-  if (!person) { showToast('수령인을 찾을 수 없어요'); return; }
-  if (!Number.isInteger(amount) || amount <= 0) { showToast('사용 금액을 올바르게 입력해주세요'); return; }
-  if (amount > available) { showToast(`이용 가능 금액은 ${won(available)}이에요`); return; }
-  if (!confirm(`${person.name}님의 쿠폰 ${won(amount)}을 사용 처리할까요?`)) return;
-
-  const btn = document.getElementById('coupon-use-submit-btn');
-  btn.disabled = true;
-  const usageRef = doc(collection(db, 'coupon_usages'));
-  let finalAllocations = [];
-  try {
-    await runTransaction(db, async transaction => {
-      const snapshots = [];
-      for (const candidate of candidates) snapshots.push(await transaction.get(doc(db, 'coupon_issues', candidate.id)));
-      let left = amount;
-      const allocations = [];
-      const now = Date.now();
-      for (const snap of snapshots) {
-        if (!snap.exists() || left <= 0) continue;
-        const data = snap.data();
-        if (couponRecipientIdOf(data) !== recipientId || couponMillis(data.expiresAt) <= now) continue;
-        const remaining = couponRemaining(data);
-        const deducted = Math.min(remaining, left);
-        if (deducted <= 0) continue;
-        allocations.push({ issueId:snap.id, amount:deducted });
-        transaction.update(snap.ref, { remainingAmount:remaining - deducted, lastUsedAt:Timestamp.fromDate(new Date()) });
-        left -= deducted;
-      }
-      if (left > 0) throw new Error('coupon-insufficient-balance');
-      const usedAt = Timestamp.fromDate(new Date());
-      transaction.set(usageRef, {
-        recipientId, uid:person.uid, recipientType:person.type, recipientName:person.name,
-        amount, note, allocations, usedAt, usedBy:currentAdmin.uid, usedByEmail:currentAdmin.email || '',
-      });
-      finalAllocations = allocations;
-    });
-
-    finalAllocations.forEach(a => {
-      const issue = allCoupons.find(c => c.id === a.issueId);
-      if (issue) issue.remainingAmount = couponRemaining(issue) - a.amount;
-    });
-    const usedAt = Timestamp.fromDate(new Date());
-    allCouponUsages.push({ id:usageRef.id, recipientId, uid:person.uid, recipientType:person.type, recipientName:person.name, amount, note, allocations:finalAllocations, usedAt, usedBy:currentAdmin.uid });
-    closeModal('coupon-use-modal');
-    renderCoupons(document.getElementById('coupon-search').value);
-    openCouponDetail(recipientId);
-    showToast(`${person.name}님의 쿠폰 ${won(amount)}을 사용 처리했어요`);
-  } catch(e) {
-    showToast(e.message === 'coupon-insufficient-balance' ? '잔액이 변경되었어요. 다시 확인해주세요' : '쿠폰 사용 처리 중 오류가 발생했어요');
-    console.error(e);
-  } finally { btn.disabled = false; }
 };
 
 window.cancelCouponIssue = async (issueId, recipientId) => {
@@ -539,6 +488,7 @@ window.cancelCouponIssue = async (issueId, recipientId) => {
   try {
     const issueRef = doc(db, 'coupon_issues', issueId);
     const statRef = doc(db, 'coupon_stats', recipientId);
+    const historyRef = doc(db, 'coupon_history', issueId);
     await runTransaction(db, async transaction => {
       const issueSnap = await transaction.get(issueRef);
       const statSnap = await transaction.get(statRef);
@@ -553,11 +503,13 @@ window.cancelCouponIssue = async (issueId, recipientId) => {
       const nextCount = Math.max(0, Number(prev.totalIssueCount || 0) - 1);
 
       transaction.delete(issueRef);
+      transaction.delete(historyRef);
       if (nextCount === 0) transaction.delete(statRef);
       else transaction.update(statRef, { totalIssuedAmount:nextAmount, totalIssueCount:nextCount });
     });
 
     allCoupons = allCoupons.filter(c => c.id !== issueId);
+    allCouponHistory = allCouponHistory.filter(h => h.id !== issueId);
     const stat = allCouponStats.find(s => couponRecipientIdOf(s) === recipientId);
     if (stat) {
       stat.totalIssuedAmount = Math.max(0, Number(stat.totalIssuedAmount || 0) - Number(issue.amount || 0));
@@ -1377,6 +1329,10 @@ window.deleteUser = async () => {
     for (const usage of userCouponUsages) {
       await deleteDoc(doc(db, 'coupon_usages', usage.id));
     }
+    const userCouponHistory = allCouponHistory.filter(history => couponRecipientIdOf(history) === uid);
+    for (const history of userCouponHistory) {
+      await deleteDoc(doc(db, 'coupon_history', history.id));
+    }
     await deleteDoc(doc(db, 'coupon_stats', uid));
     // 3) users 문서 삭제
     await deleteDoc(doc(db, 'users', uid));
@@ -1386,6 +1342,7 @@ window.deleteUser = async () => {
     allCoupons = allCoupons.filter(c => couponRecipientIdOf(c) !== uid);
     allCouponStats = allCouponStats.filter(s => couponRecipientIdOf(s) !== uid);
     allCouponUsages = allCouponUsages.filter(usage => couponRecipientIdOf(usage) !== uid);
+    allCouponHistory = allCouponHistory.filter(history => couponRecipientIdOf(history) !== uid);
 
     closeModal('user-manage-modal');
     renderStats();

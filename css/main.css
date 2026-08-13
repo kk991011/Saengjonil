@@ -45,6 +45,11 @@
   .tab-panel.active { display: block; }
 
   /* 내 생존 쿠폰 */
+  .my-coupon-stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:12px; }
+  .my-coupon-stat-grid > div { background:white; border:1px solid #eee; border-radius:12px; padding:13px; }
+  .my-coupon-stat-grid span, .my-coupon-stat-grid small { display:block; color:#999; font-size:10px; }
+  .my-coupon-stat-grid strong { display:block; color:var(--main); font-size:16px; margin-top:5px; }
+  .my-coupon-stat-grid small { margin-top:3px; }
   .my-coupon-panel { background:linear-gradient(135deg,var(--main),var(--main-dark)); color:white; border-radius:16px; padding:17px; margin-bottom:22px; box-shadow:0 8px 22px rgba(50,43,120,.14); }
   .my-coupon-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
   .my-coupon-kicker { font-size:9px; font-weight:800; letter-spacing:.16em; color:rgba(255,255,255,.65); margin-bottom:4px; }
@@ -58,6 +63,39 @@
   .my-coupon-expiry b { display:block; color:white; font-size:11px; margin-top:2px; }
   .my-coupon-expiry b.soon { color:#ffe08a; }
   .my-coupon-empty { padding:10px 0 2px; color:rgba(255,255,255,.7); font-size:12px; }
+  .my-coupon-use-btn { width:100%; border:0; border-radius:10px; background:white; color:var(--main-dark); padding:11px 14px; margin-top:12px; font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+  .my-coupon-guide, .my-coupon-history-section { background:white; border:1px solid #eceaf8; border-radius:14px; padding:16px; margin-bottom:13px; }
+  .my-coupon-guide-kicker { color:var(--main); font-size:9px; font-weight:800; letter-spacing:.16em; margin-bottom:4px; }
+  .my-coupon-guide h2, .my-coupon-history-section h2 { font-size:14px; color:#282832; margin-bottom:11px; }
+  .my-coupon-guide ul { list-style:none; display:grid; gap:7px; }
+  .my-coupon-guide li { position:relative; padding-left:16px; color:#555; font-size:12px; line-height:1.45; }
+  .my-coupon-guide li::before { content:'✓'; position:absolute; left:0; color:var(--main); font-weight:800; }
+  .my-coupon-guide li span { color:#999; font-size:10px; }
+  .my-coupon-guide li strong { color:var(--main-dark); }
+  .my-coupon-history-list { display:grid; gap:7px; }
+  .my-coupon-history-row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; background:#f8f8fb; border-radius:10px; padding:11px 12px; }
+  .my-coupon-history-row strong { display:block; color:#333; font-size:12px; }
+  .my-coupon-history-row small { display:block; color:#999; font-size:10px; margin-top:3px; line-height:1.4; }
+  .my-coupon-history-side { text-align:right; color:#999; font-size:10px; white-space:nowrap; }
+  .my-coupon-history-side b { display:block; color:var(--main); font-size:10px; margin-top:3px; }
+  .my-coupon-history-side b.expired { color:#999; }
+  .my-coupon-history-empty { text-align:center; padding:18px 8px; color:#bbb; font-size:12px; }
+  .my-coupon-use-overlay { display:none; position:fixed; inset:0; z-index:250; background:rgba(0,0,0,.45); align-items:center; justify-content:center; padding:16px; }
+  .my-coupon-use-overlay.open { display:flex; }
+  .my-coupon-use-modal { width:100%; max-width:420px; max-height:90vh; overflow:hidden; background:white; border-radius:18px; }
+  .my-coupon-use-modal-head { display:flex; align-items:center; justify-content:space-between; background:var(--main); color:white; padding:15px 18px; }
+  .my-coupon-use-modal-head button { border:0; background:none; color:white; font-size:21px; cursor:pointer; }
+  .my-coupon-use-modal-body { padding:18px; max-height:calc(90vh - 54px); overflow-y:auto; }
+  .my-coupon-use-balance { display:flex; align-items:center; justify-content:space-between; background:var(--main-light); border-radius:10px; padding:12px 14px; color:#777; font-size:12px; margin-bottom:16px; }
+  .my-coupon-use-balance strong { color:var(--main); font-size:18px; }
+  .my-coupon-use-amount { display:flex; align-items:center; border:1.5px solid #e8e8e8; border-radius:10px; padding-right:13px; }
+  .my-coupon-use-amount:focus-within { border-color:var(--main); }
+  .my-coupon-use-amount input { border:0; }
+  .my-coupon-use-amount span { color:#777; font-size:13px; }
+  .my-coupon-full-btn { border:0; background:none; color:var(--main); font:inherit; font-size:11px; cursor:pointer; padding:7px 1px 0; }
+  .my-coupon-use-notice { background:#fff8e8; color:#866a35; border-radius:9px; padding:10px 12px; font-size:11px; line-height:1.5; margin-bottom:14px; }
+  .my-coupon-use-submit { width:100%; border:0; border-radius:11px; background:var(--main); color:white; padding:13px; font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+  .my-coupon-use-submit:disabled { opacity:.55; cursor:not-allowed; }
 
   /* 섹션 라벨 */
   .sec-label { font-size: 11px; font-weight: 600; color: #aaa; letter-spacing: .06em;
@@ -234,4 +272,5 @@
   @media (max-width: 480px) {
     .row2 { grid-template-columns: 1fr; }
     .stat-grid { grid-template-columns: 1fr 1fr; }
+    .my-coupon-stat-grid { grid-template-columns:1fr 1fr; }
   }

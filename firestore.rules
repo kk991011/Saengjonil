@@ -50,20 +50,59 @@ service cloud.firestore {
                          || isAdmin();
     }
 
-    // 생존 쿠폰 — 관리자는 전체 관리, 가입 회원은 본인에게 발급된 내역만 조회.
+    // 생존 쿠폰 — 관리자는 전체 관리. 가입 회원은 본인 내역을 읽고 잔액만 감소시킬 수 있음.
     match /coupon_issues/{issueId} {
+      allow read: if isAdmin()
+                  || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+                    || (isSignedIn()
+                        && resource.data.uid == request.auth.uid
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['remainingAmount', 'lastUsedAt'])
+                        && request.resource.data.remainingAmount is int
+                        && request.resource.data.remainingAmount >= 0
+                        && request.resource.data.remainingAmount
+                             < resource.data.get('remainingAmount', resource.data.amount)
+                        && request.resource.data.lastUsedAt == request.time);
+    }
+
+    match /coupon_stats/{recipientId} {
+      allow read: if isAdmin()
+                  || (isSignedIn() && recipientId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    // 만료된 실제 쿠폰 문서를 삭제해도 발급 이력은 별도로 보존한다.
+    match /coupon_history/{historyId} {
       allow read: if isAdmin()
                   || (isSignedIn() && resource.data.uid == request.auth.uid);
       allow write: if isAdmin();
     }
 
-    match /coupon_stats/{recipientId} {
-      allow read, write: if isAdmin();
-    }
-
-    // 쿠폰 사용 처리 내역은 관리자만 기록·조회한다.
+    // 회원은 본인의 사용 내역만 생성·조회. 수정·삭제와 전체 조회는 관리자만 가능.
     match /coupon_usages/{usageId} {
-      allow read, write: if isAdmin();
+      allow read: if isAdmin()
+                  || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow create: if isAdmin()
+                    || (isSignedIn()
+                        && request.resource.data.keys().hasOnly([
+                             'recipientId', 'uid', 'recipientType', 'recipientName',
+                             'amount', 'usageItem', 'note', 'allocations', 'usedAt', 'usedBy'
+                           ])
+                        && request.resource.data.uid == request.auth.uid
+                        && request.resource.data.recipientId == request.auth.uid
+                        && request.resource.data.usedBy == request.auth.uid
+                        && request.resource.data.recipientType == 'member'
+                        && request.resource.data.amount is int
+                        && request.resource.data.amount > 0
+                        && request.resource.data.usageItem is string
+                        && request.resource.data.usageItem.size() > 0
+                        && request.resource.data.note is string
+                        && request.resource.data.allocations is list
+                        && request.resource.data.allocations.size() > 0
+                        && request.resource.data.usedAt == request.time);
+      allow update, delete: if isAdmin();
     }
 
     // 생존일지 미가입 쿠폰 수령인 — 일반 회원 목록/통계와 완전히 분리.

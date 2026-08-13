@@ -32,6 +32,7 @@
 <nav class="tab-nav">
   <div class="tab-nav-inner">
     <button class="tab-btn active" onclick="switchTab('dashboard', this)">대시보드</button>
+    <button class="tab-btn" onclick="switchTab('coupon', this)">생존 쿠폰</button>
     <button class="tab-btn" onclick="switchTab('input', this)">오늘 입력</button>
     <button class="tab-btn" onclick="switchTab('goal', this)">이번 달 & 이번 주 목표</button>
     <button class="tab-btn" onclick="switchTab('summary', this)">누적 요약</button>
@@ -43,8 +44,13 @@
 <!-- 본문 -->
 <main class="content">
 
-  <!-- ── 대시보드 ── -->
-  <div class="tab-panel active" id="tab-dashboard">
+  <!-- ── 생존 쿠폰 ── -->
+  <div class="tab-panel" id="tab-coupon">
+    <div class="my-coupon-stat-grid">
+      <div><span>현재 이용 가능</span><strong id="my-coupon-stat-active">0원</strong></div>
+      <div><span>누적 발급</span><strong id="my-coupon-stat-issued">0원</strong><small id="my-coupon-stat-count">0회</small></div>
+      <div><span>누적 사용</span><strong id="my-coupon-stat-used">0원</strong></div>
+    </div>
     <section class="my-coupon-panel" aria-labelledby="my-coupon-title">
       <div class="my-coupon-head">
         <div>
@@ -56,7 +62,33 @@
       <div id="my-coupon-list" class="my-coupon-list">
         <div class="my-coupon-empty">쿠폰을 불러오고 있어요.</div>
       </div>
+      <button id="my-coupon-use-btn" class="my-coupon-use-btn" onclick="openMyCouponUse()" style="display:none">쿠폰 사용 기록하기</button>
     </section>
+
+    <section class="my-coupon-guide">
+      <div class="my-coupon-guide-kicker">COUPON GUIDE</div>
+      <h2>생존 쿠폰 사용 가능 항목</h2>
+      <ul>
+        <li>매십경, 매십면, 그로잉업 <span>(커리어PT 제외)</span></li>
+        <li>자소서 1문항 첨삭 <strong>45,000원</strong>, 자소서 첨삭(전체)</li>
+        <li>15분 유선 모의면접 <strong>45,000원</strong>, 모의면접, 경험력 클래스</li>
+        <li>면접 1문항 피드백 <strong>45,000원</strong></li>
+        <li>각 단과 클래스 등</li>
+      </ul>
+    </section>
+
+    <section class="my-coupon-history-section">
+      <h2>누적 발급 내역</h2>
+      <div id="my-coupon-issue-history" class="my-coupon-history-list"><div class="my-coupon-history-empty">발급 내역을 불러오고 있어요.</div></div>
+    </section>
+    <section class="my-coupon-history-section">
+      <h2>사용 내역</h2>
+      <div id="my-coupon-usage-list" class="my-coupon-history-list"><div class="my-coupon-history-empty">사용 내역이 없어요.</div></div>
+    </section>
+  </div>
+
+  <!-- ── 대시보드 ── -->
+  <div class="tab-panel active" id="tab-dashboard">
 
     <div class="sec-label">내 추이</div>
     <div style="position:relative;height:200px;margin-bottom:8px"><canvas id="dash-my-chart" role="img" aria-label="내 주차별 매십경 매십면 매십독 매십운 지원수 추이"></canvas></div>
@@ -481,6 +513,47 @@
 </main>
 
 <div class="toast" id="toast"></div>
+
+<!-- 내 쿠폰 사용 기록 모달 -->
+<div id="my-coupon-use-overlay" class="my-coupon-use-overlay">
+  <div class="my-coupon-use-modal">
+    <div class="my-coupon-use-modal-head">
+      <strong>생존 쿠폰 사용 기록</strong>
+      <button onclick="closeMyCouponUse()">×</button>
+    </div>
+    <div class="my-coupon-use-modal-body">
+      <div class="my-coupon-use-balance">현재 이용 가능 금액 <strong id="my-coupon-use-balance">0원</strong></div>
+      <div class="field">
+        <label>사용 항목</label>
+        <select id="my-coupon-use-item">
+          <option value="">사용한 항목을 선택해주세요</option>
+          <option>매십경</option>
+          <option>매십면</option>
+          <option>그로잉업(커리어PT 제외)</option>
+          <option>자소서 1문항 첨삭</option>
+          <option>자소서 첨삭(전체)</option>
+          <option>15분 유선 모의면접</option>
+          <option>모의면접</option>
+          <option>경험력 클래스</option>
+          <option>면접 1문항 피드백</option>
+          <option>각 단과클래스</option>
+          <option>기타</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>사용 금액</label>
+        <div class="my-coupon-use-amount"><input type="number" id="my-coupon-use-amount" min="1" step="1000" placeholder="예: 45000"><span>원</span></div>
+        <button type="button" class="my-coupon-full-btn" onclick="setMyCouponFullAmount()">잔액 전액 입력</button>
+      </div>
+      <div class="field">
+        <label>상세 내용 <span style="color:#aaa;font-weight:400">(선택)</span></label>
+        <input type="text" id="my-coupon-use-note" maxlength="80" placeholder="예: 자소서 국민은행 1번 문항">
+      </div>
+      <div class="my-coupon-use-notice">기록하면 만료일이 가까운 쿠폰부터 즉시 차감되며 되돌릴 수 없습니다. 내용을 확인한 후 기록해주세요.</div>
+      <button id="my-coupon-use-submit" class="my-coupon-use-submit" onclick="submitMyCouponUse()">사용 기록하기</button>
+    </div>
+  </div>
+</div>
 
 <!-- 프로필 수정 모달 -->
 <div id="profile-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:16px">

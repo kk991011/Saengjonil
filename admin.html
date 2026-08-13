@@ -383,34 +383,6 @@
   </div>
 </div>
 
-<!-- 쿠폰 사용 처리 모달 -->
-<div class="modal-overlay" id="coupon-use-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>생존 쿠폰 사용 처리</h3>
-      <button class="modal-close" onclick="closeModal('coupon-use-modal')">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="coupon-use-balance">현재 이용 가능 금액 <strong id="coupon-use-balance">0원</strong></div>
-      <div class="field">
-        <label>사용 금액</label>
-        <div class="coupon-amount-input"><input type="number" id="coupon-use-amount" min="1" step="1000" placeholder="예: 20000"><span>원</span></div>
-        <div class="coupon-quick-row">
-          <button type="button" class="btn-sm" onclick="setCouponUseAmount(10000)">1만원</button>
-          <button type="button" class="btn-sm" onclick="setCouponUseAmount(30000)">3만원</button>
-          <button type="button" class="btn-sm" onclick="setCouponUseFullAmount()">전액 사용</button>
-        </div>
-      </div>
-      <div class="field">
-        <label>사용 메모 <span style="font-size:11px;color:#aaa;font-weight:400">(선택)</span></label>
-        <input type="text" id="coupon-use-note" maxlength="80" placeholder="예: 자소서 1문항 첨삭">
-      </div>
-      <div class="coupon-expiry-note">만료일이 가까운 쿠폰부터 자동으로 차감됩니다. 누적 발급 금액과 발급 횟수는 변경되지 않습니다.</div>
-      <button class="btn btn-primary" id="coupon-use-submit-btn" style="width:100%;padding:12px" onclick="useCoupon()">사용 처리하기</button>
-    </div>
-  </div>
-</div>
-
 <!-- 미가입 쿠폰 수령인 추가 모달 -->
 <div class="modal-overlay" id="coupon-recipient-modal">
   <div class="modal">
