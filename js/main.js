@@ -57,6 +57,7 @@ const CLASS_FAMILIES = {
     variants: ['실전편','우리','국민','신한','농협','기업','하나','지역농축협'] },
 };
 let familyEntries = { interview: {}, analysis: {} };  // { famId: { variant: 분 } }
+let customActivityEntries = []; // [{ name: 직접 입력한 항목명, minutes: 분 }]
 
 // ── 인증 확인 ──
 onAuthStateChanged(auth, async u => {
@@ -508,6 +509,54 @@ function renderFamilyList(famId) {
   updateTotalTime();
 }
 
+// ── 직접 추가 활동 ──
+window.addCustomActivityEntry = () => {
+  const nameEl = document.getElementById('f-custom-activity-name');
+  const minEl = document.getElementById('f-custom-activity-min');
+  const name = nameEl.value.trim();
+  const minutes = Number(minEl.value) || 0;
+  if (!name) { showToast('추가할 항목명을 입력해주세요'); nameEl.focus(); return; }
+  if (minutes <= 0) { showToast('활동 시간(분)을 입력해주세요'); minEl.focus(); return; }
+  const existing = customActivityEntries.find(entry => entry.name === name);
+  if (existing) existing.minutes += minutes;
+  else customActivityEntries.push({ name, minutes });
+  nameEl.value = '';
+  minEl.value = '';
+  renderCustomActivityList();
+  nameEl.focus();
+};
+
+window.removeCustomActivityEntry = index => {
+  customActivityEntries.splice(index, 1);
+  renderCustomActivityList();
+};
+
+function renderCustomActivityList() {
+  const listEl = document.getElementById('custom-activity-list');
+  if (!listEl) return;
+  listEl.innerHTML = customActivityEntries.map((entry, index) => `
+    <div class="class-entry-row">
+      <span class="class-entry-name">${couponEscape(entry.name)}</span>
+      <span class="class-entry-min">${entry.minutes}분</span>
+      <button type="button" class="class-entry-del" onclick="removeCustomActivityEntry(${index})" aria-label="${couponEscape(entry.name)} 삭제">✕</button>
+    </div>`).join('');
+  updateTotalTime();
+}
+
+function customActivityTotal() {
+  return customActivityEntries.reduce((sum, entry) => sum + (Number(entry.minutes) || 0), 0);
+}
+
+// 새 additionalActivities 형식과 기존 etc 숫자 형식을 모두 읽는다.
+function additionalActivitiesOf(record) {
+  if (Array.isArray(record?.additionalActivities)) {
+    return record.additionalActivities
+      .map(entry => ({ name: String(entry?.name || '').trim(), minutes: Number(entry?.minutes) || 0 }))
+      .filter(entry => entry.name && entry.minutes > 0);
+  }
+  return Number(record?.etc) > 0 ? [{ name: '기타', minutes: Number(record.etc) }] : [];
+}
+
 // FR5050 세부(산업분석·기업분석·현직자 인터뷰) 합계(분)
 function calcFaTime() {
   return (Number(document.getElementById('f-fa-industry')?.value) || 0)
@@ -535,8 +584,8 @@ window.updateTotalTime = () => {
   const interview = Number(document.getElementById('f-interview').value) || 0;
   const cert = Number(document.getElementById('f-cert').value) || 0;
   const gyeongTime = Number(document.getElementById('f-gyeong-time').value) || 0;
-  const etc = Number(document.getElementById('f-etc').value) || 0;
-  const total = lecture + jasoseo + faTime + pilgi + interview + cert + gyeongTime + etc;
+  const additional = customActivityTotal();
+  const total = lecture + jasoseo + faTime + pilgi + interview + cert + gyeongTime + additional;
   document.getElementById('total-time-display').textContent = total;
 };
 
@@ -552,7 +601,7 @@ window.toggleTotalTimeEdit = () => {
     manualInput.style.display = 'none';
     displayWrap.style.display = '';
     btn.textContent = '직접 수정';
-    hint.textContent = '수강+자소서+FR(산업/기업/인터뷰)+필기+면접+자격증+매십경+기타 자동 합산';
+    hint.textContent = '수강+자소서+FR(산업/기업/인터뷰)+필기+면접+자격증+매십경+직접 추가 항목 자동 합산';
     updateTotalTime();
   } else {
     // 직접 수정 모드
@@ -623,13 +672,15 @@ window.saveRecord = async () => {
       interview: Number(document.getElementById('f-interview').value) || 0,
       cert: Number(document.getElementById('f-cert').value) || 0,
       gyeongTime: Number(document.getElementById('f-gyeong-time').value) || 0,
-      etc: Number(document.getElementById('f-etc').value) || 0,
+      additionalActivities: customActivityEntries.map(entry => ({ name: entry.name, minutes: entry.minutes })),
+      // 기존 통계·내보내기 코드와의 호환을 위해 직접 추가 시간 합계도 유지한다.
+      etc: customActivityTotal(),
       totalTime: (() => {
         const manualInput = document.getElementById('f-total-time-manual');
         if (manualInput && manualInput.style.display !== 'none') {
           return Number(manualInput.value) || 0;
         }
-        return lectureSum + (Number(document.getElementById('f-jasoseo').value)||0) + calcFaTime() + (Number(document.getElementById('f-pilgi').value)||0) + (Number(document.getElementById('f-interview').value)||0) + (Number(document.getElementById('f-cert').value)||0) + (Number(document.getElementById('f-gyeong-time').value)||0) + (Number(document.getElementById('f-etc').value)||0);
+        return lectureSum + (Number(document.getElementById('f-jasoseo').value)||0) + calcFaTime() + (Number(document.getElementById('f-pilgi').value)||0) + (Number(document.getElementById('f-interview').value)||0) + (Number(document.getElementById('f-cert').value)||0) + (Number(document.getElementById('f-gyeong-time').value)||0) + customActivityTotal();
       })(),
       applications: Number(document.getElementById('f-applications').value) || 0,
       selfEsteem: scoreSelected || 0,
@@ -1044,7 +1095,7 @@ window.loadRecords = async () => {
         <div class="record-item">면접 <span>${r.interview||0}분</span></div>
         <div class="record-item">자격증 <span>${r.cert||0}분</span></div>
         <div class="record-item">매십경 <span>${r.gyeongTime||0}분</span></div>
-        <div class="record-item">기타 <span>${r.etc||0}분</span></div>
+        ${additionalActivitiesOf(r).map(entry => `<div class="record-item">${couponEscape(entry.name)} <span>${entry.minutes}분</span></div>`).join('')}
         <div class="record-item">지원 <span>${r.applications||0}개</span></div>
       </div>
       <div class="routine-tags">
@@ -1142,7 +1193,8 @@ window.editTodayRecord = () => {
   document.getElementById('f-interview').value    = r.interview || 0;
   document.getElementById('f-cert').value         = r.cert || 0;
   document.getElementById('f-gyeong-time').value  = r.gyeongTime || 0;
-  document.getElementById('f-etc').value          = r.etc || 0;
+  customActivityEntries = additionalActivitiesOf(r);
+  renderCustomActivityList();
   document.getElementById('f-applications').value = r.applications || 0;
   updateTotalTime();
   scoreSelected = r.selfEsteem || 0;
@@ -1322,7 +1374,7 @@ window.downloadMyExcel = () => {
 
   const headers = [
     '날짜', '매십경', '매십면', '매십독(책제목)', '매십운(운동종류)',
-    '강의(분)', '자소서(분)', '필기(분)', '면접(분)', '자격증(분)', '매십경(분)', '기타(분)', '총취준시간(분)', '지원개수',
+    '강의(분)', '자소서(분)', '필기(분)', '면접(분)', '자격증(분)', '매십경(분)', '직접 추가 항목', '직접 추가 시간(분)', '총취준시간(분)', '지원개수',
     '자존감(1-5)', '취업확률(%)', 'FR5050', '현장방문(회)', '집중활동'
   ];
 
@@ -1340,7 +1392,8 @@ window.downloadMyExcel = () => {
     r.interview     || 0,
     r.cert          || 0,
     r.gyeongTime    || 0,
-    r.etc           || 0,
+    additionalActivitiesOf(r).map(entry => `${entry.name}:${entry.minutes}분`).join('/'),
+    additionalActivitiesOf(r).reduce((sum, entry) => sum + entry.minutes, 0),
     r.totalTime || ((r.lecture||0)+(r.jasoseo||0)+(r.pilgi||0)+(r.interview||0)+(r.cert||0)+(r.gyeongTime||0)+(r.etc||0)),
     r.applications  || 0,
     r.selfEsteem    || '',

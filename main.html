@@ -334,8 +334,17 @@
 
     <div class="field"><label>매십경 <span style="color:#aaa;font-weight:400">(분)</span></label>
       <input type="number" id="f-gyeong-time" min="0" placeholder="0" oninput="updateTotalTime()"></div>
-    <div class="field"><label>기타 <span style="color:#aaa;font-weight:400">(분)</span></label>
-      <input type="number" id="f-etc" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+    <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;color:var(--main);margin-bottom:8px">직접 항목 추가</div>
+      <div class="class-add-row">
+        <input type="text" id="f-custom-activity-name" maxlength="30" placeholder="항목명 (예: 포트폴리오)" class="class-select"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomActivityEntry()}">
+        <input type="number" id="f-custom-activity-min" min="1" placeholder="분" class="class-min-input"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomActivityEntry()}">
+        <button type="button" class="class-add-btn" onclick="addCustomActivityEntry()">추가</button>
+      </div>
+      <div id="custom-activity-list" class="class-entry-list"></div>
+    </div>
 
     <!-- 총 취준 시간: 자동 합산 + 직접 수정 가능 -->
     <div style="background:var(--main-xlight);border-radius:10px;padding:10px 14px;margin-bottom:14px">
@@ -349,7 +358,7 @@
         <input type="number" id="f-total-time-manual" min="0" placeholder="직접 입력"
           style="display:none;width:100px;font-size:14px;padding:6px 10px;border:1.5px solid var(--main-mid);border-radius:8px;font-family:inherit;outline:none">
       </div>
-      <div style="font-size:11px;color:#aaa;margin-top:4px" id="total-time-hint">수강+자소서+FR(산업/기업/인터뷰)+필기+면접+자격증+매십경+기타 자동 합산</div>
+      <div style="font-size:11px;color:#aaa;margin-top:4px" id="total-time-hint">수강+자소서+FR(산업/기업/인터뷰)+필기+면접+자격증+매십경+직접 추가 항목 자동 합산</div>
     </div>
 
     <div class="field"><label>지원 개수</label><input type="number" id="f-applications" min="0" placeholder="0"></div>
