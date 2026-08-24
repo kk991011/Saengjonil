@@ -401,6 +401,10 @@ window.openCouponIssue = (recipientId='') => {
   const people = couponPeople().sort((a,b) => a.name.localeCompare(b.name, 'ko'));
   const options = type => people.filter(p => p.type === type).map(p => `<option value="${p.recipientId}" ${p.recipientId === recipientId ? 'selected' : ''}>${couponEsc(p.name)} · ${couponEsc(p.contact || '연락처 없음')}</option>`).join('');
   select.innerHTML = `<optgroup label="생존일지 가입자">${options('member')}</optgroup><optgroup label="미가입자">${options('guest')}</optgroup>`;
+  const today = localDateStr(new Date());
+  const issuedDateInput = document.getElementById('coupon-issued-date');
+  issuedDateInput.value = today;
+  issuedDateInput.max = today;
   document.getElementById('coupon-amount').value = '';
   document.getElementById('coupon-note').value = '';
   openModal('coupon-issue-modal');
@@ -408,15 +412,23 @@ window.openCouponIssue = (recipientId='') => {
 
 window.issueCoupon = async () => {
   const recipientId = document.getElementById('coupon-user-select').value;
+  const issuedDate = document.getElementById('coupon-issued-date').value;
   const amount = Number(document.getElementById('coupon-amount').value);
   const note = document.getElementById('coupon-note').value.trim();
   const person = couponPerson(recipientId);
   if (!person) { showToast('수령인을 선택해주세요'); return; }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(issuedDate)) { showToast('발급일을 선택해주세요'); return; }
+  if (issuedDate > localDateStr(new Date())) { showToast('발급일은 오늘 이후로 지정할 수 없어요'); return; }
   if (!Number.isInteger(amount) || amount <= 0) { showToast('발급 금액을 올바르게 입력해주세요'); return; }
   const btn = document.getElementById('coupon-submit-btn');
   btn.disabled = true;
   try {
-    const issuedAt = new Date();
+    const now = new Date();
+    const [year, month, day] = issuedDate.split('-').map(Number);
+    const issuedAt = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+    if (issuedAt.getFullYear() !== year || issuedAt.getMonth() !== month - 1 || issuedAt.getDate() !== day) {
+      throw new Error('coupon-invalid-issued-date');
+    }
     const expiresAt = new Date(issuedAt); expiresAt.setDate(expiresAt.getDate() + 30);
     const issueRef = doc(collection(db, 'coupon_issues'));
     const historyRef = doc(db, 'coupon_history', issueRef.id);
@@ -449,7 +461,10 @@ window.issueCoupon = async () => {
     closeModal('coupon-issue-modal');
     renderCoupons(document.getElementById('coupon-search').value);
     showToast(`${person.name}님에게 ${won(amount)} 쿠폰을 발급했어요`);
-  } catch(e) { showToast('쿠폰 발급 중 오류가 발생했어요'); console.error(e); }
+  } catch(e) {
+    showToast(e.message === 'coupon-invalid-issued-date' ? '발급일을 올바르게 선택해주세요' : '쿠폰 발급 중 오류가 발생했어요');
+    console.error(e);
+  }
   finally { btn.disabled = false; }
 };
 

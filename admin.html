@@ -365,6 +365,10 @@
         <button type="button" class="coupon-add-guest-link" onclick="closeModal('coupon-issue-modal');openCouponRecipientCreate()">찾는 사람이 없나요? 미가입자 추가</button>
       </div>
       <div class="field">
+        <label for="coupon-issued-date">발급일</label>
+        <input type="date" id="coupon-issued-date" required>
+      </div>
+      <div class="field">
         <label>발급 금액</label>
         <div class="coupon-amount-input"><input type="number" id="coupon-amount" min="1" step="1000" placeholder="예: 45000"><span>원</span></div>
         <div class="coupon-quick-row">
