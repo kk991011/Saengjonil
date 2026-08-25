@@ -149,6 +149,12 @@
 
     <div class="section">
       <div class="section-title">참여자 관리</div>
+      <div class="user-filter-row" aria-label="참여자 목록 필터">
+        <button class="detail-filter-btn on" id="user-scope-all" onclick="setUserScope('all')">전체 <span id="user-count-all">0</span></button>
+        <button class="detail-filter-btn" id="user-scope-new" onclick="setUserScope('new')">신규 가입 <span id="user-count-new">0</span></button>
+        <button class="detail-filter-btn" id="user-scope-unassigned" onclick="setUserScope('unassigned')">미배정 <span id="user-count-unassigned">0</span></button>
+        <span class="user-filter-help">신규 가입은 최근 7일 기준이에요.</span>
+      </div>
       <div style="margin-bottom:12px">
         <input type="text" id="user-search" placeholder="닉네임 또는 이메일 검색..."
           oninput="filterUsers()"
@@ -161,6 +167,7 @@
               <th style="width:36px"></th>
               <th>닉네임</th>
               <th>이메일</th>
+              <th>가입일</th>
               <th>생일</th>
               <th>그룹</th>
               <th>주차</th>
@@ -170,7 +177,7 @@
             </tr>
           </thead>
           <tbody id="user-table-body">
-            <tr><td colspan="9" style="text-align:center;padding:24px;color:#ccc">불러오는 중...</td></tr>
+            <tr><td colspan="10" style="text-align:center;padding:24px;color:#ccc">불러오는 중...</td></tr>
           </tbody>
         </table>
       </div>

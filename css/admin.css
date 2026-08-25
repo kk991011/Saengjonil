@@ -69,6 +69,15 @@
     display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600;
     color:var(--main-dark); overflow:hidden; }
   .user-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  .user-filter-row { display:flex; align-items:center; flex-wrap:wrap; gap:7px; margin-bottom:10px; }
+  .user-filter-row .detail-filter-btn span { margin-left:3px; font-size:10px; opacity:.75; }
+  .user-filter-help { margin-left:auto; font-size:11px; color:#aaa; }
+  .new-user-badge { display:inline-block; margin-left:5px; padding:1px 6px; border-radius:6px;
+    background:#dcfce7; color:#15803d; font-size:10px; font-weight:700; vertical-align:1px; }
+
+  @media (max-width:600px) {
+    .user-filter-help { width:100%; margin-left:0; }
+  }
 
   .stat-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:16px; }
   .stat-box { background:#f8f8ff; border-radius:10px; padding:12px; text-align:center; }

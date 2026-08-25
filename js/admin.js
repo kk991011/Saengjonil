@@ -21,6 +21,8 @@ let couponScope = 'all';
 let couponNewRange = 'week';
 let editingCouponUsageId = null;
 let editingCouponUsageRecipientId = null;
+let userScope = 'all';
+const NEW_USER_DAYS = 7;
 
 // ── 인증 ──
 onAuthStateChanged(auth, async u => {
@@ -1050,8 +1052,32 @@ function userLeaderTagsHtml(u) {
 function renderUsers(search='') {
   const groupMap = {};
   allGroups.forEach(g => { groupMap[g.id] = g.name; });
-  const filtered = search ? allUsers.filter(u =>
-    u.nickname?.includes(search) || u.email?.includes(search)) : allUsers;
+  const createdAtMs = (u) => {
+    if (!u.createdAt) return 0;
+    if (typeof u.createdAt.toMillis === 'function') return u.createdAt.toMillis();
+    const ms = new Date(u.createdAt).getTime();
+    return Number.isFinite(ms) ? ms : 0;
+  };
+  const newCutoff = Date.now() - NEW_USER_DAYS * 24 * 60 * 60 * 1000;
+  const isNewUser = (u) => createdAtMs(u) >= newCutoff;
+  const scopeUsers = userScope === 'new'
+    ? allUsers.filter(isNewUser)
+    : userScope === 'unassigned'
+      ? allUsers.filter(u => groupIdsOf(u).length === 0)
+      : allUsers;
+  const normalizedSearch = search.toLocaleLowerCase('ko');
+  const filtered = scopeUsers.filter(u => !normalizedSearch
+    || u.nickname?.toLocaleLowerCase('ko').includes(normalizedSearch)
+    || u.email?.toLocaleLowerCase('ko').includes(normalizedSearch))
+    .sort((a, b) => createdAtMs(b) - createdAtMs(a));
+  const formatJoinedAt = (u) => {
+    const ms = createdAtMs(u);
+    if (!ms) return '-';
+    return new Intl.DateTimeFormat('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date(ms));
+  };
+  document.getElementById('user-count-all').textContent = allUsers.length;
+  document.getElementById('user-count-new').textContent = allUsers.filter(isNewUser).length;
+  document.getElementById('user-count-unassigned').textContent = allUsers.filter(u => groupIdsOf(u).length === 0).length;
   const today = new Date().toISOString().split('T')[0];
   const lastRecMap = {};
   allRecords.forEach(r => {
@@ -1070,18 +1096,26 @@ function renderUsers(search='') {
   document.getElementById('user-table-body').innerHTML = filtered.map(u => `
     <tr>
       <td><div class="user-avatar">${u.photoURL ? `<img src="${u.photoURL}">` : (u.nickname?.[0]||'?')}</div></td>
-      <td style="font-weight:500;white-space:nowrap">${u.nickname||'-'}${userLeaderTagsHtml(u)}</td>
+      <td style="font-weight:500;white-space:nowrap">${u.nickname||'-'}${isNewUser(u) ? '<span class="new-user-badge">NEW</span>' : ''}${userLeaderTagsHtml(u)}</td>
       <td style="font-size:12px;color:#aaa">${u.email||'-'}</td>
+      <td style="font-size:12px;color:#777;white-space:nowrap">${formatJoinedAt(u)}</td>
       <td style="font-size:12px;color:#aaa;white-space:nowrap">${u.birthday || '-'}</td>
       <td>${groupChips(u)}</td>
       <td style="font-size:12px;color:#aaa">${u.startDate ? calcWeek(u.startDate)+'주차' : '-'}</td>
       <td style="font-size:12px;color:#aaa">${lastRecCell(u)}</td>
       <td><button class="btn-sm btn-sm-primary" onclick="openUserDetail('${u.uid}')">상세보기</button></td>
       <td><button class="btn-sm btn-sm-primary" onclick="openUserManage('${u.uid}')">관리</button></td>
-    </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;padding:20px;color:#ccc">검색 결과 없음</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="10" style="text-align:center;padding:20px;color:#ccc">조건에 맞는 참여자가 없어요.</td></tr>';
 }
 
 window.filterUsers = () => renderUsers(document.getElementById('user-search').value.trim());
+window.setUserScope = (scope) => {
+  userScope = scope;
+  ['all', 'new', 'unassigned'].forEach(id => {
+    document.getElementById(`user-scope-${id}`)?.classList.toggle('on', id === scope);
+  });
+  renderUsers(document.getElementById('user-search').value.trim());
+};
 
 // ── 그룹 생성 ──
 window.openCreateGroup = () => {
