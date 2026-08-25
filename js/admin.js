@@ -1072,12 +1072,16 @@ function renderUsers(search='') {
     .sort((a, b) => createdAtMs(b) - createdAtMs(a));
   const formatJoinedAt = (u) => {
     const ms = createdAtMs(u);
-    if (!ms) return '-';
-    return new Intl.DateTimeFormat('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date(ms));
+    if (!ms) return '<div class="joined-date"><strong>-</strong><small>가입일 정보 없음</small></div>';
+    const days = Math.max(0, Math.floor((Date.now() - ms) / (24 * 60 * 60 * 1000)));
+    const relative = days === 0 ? '오늘' : days === 1 ? '어제' : `${days}일 전`;
+    const exact = new Intl.DateTimeFormat('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date(ms));
+    return `<div class="joined-date${isNewUser(u) ? ' is-new' : ''}"><strong>${relative}</strong><small>${exact}</small></div>`;
   };
   document.getElementById('user-count-all').textContent = allUsers.length;
   document.getElementById('user-count-new').textContent = allUsers.filter(isNewUser).length;
   document.getElementById('user-count-unassigned').textContent = allUsers.filter(u => groupIdsOf(u).length === 0).length;
+  document.getElementById('user-result-count').textContent = `${filtered.length}명`;
   const today = new Date().toISOString().split('T')[0];
   const lastRecMap = {};
   allRecords.forEach(r => {
@@ -1096,23 +1100,27 @@ function renderUsers(search='') {
   document.getElementById('user-table-body').innerHTML = filtered.map(u => `
     <tr>
       <td><div class="user-avatar">${u.photoURL ? `<img src="${u.photoURL}">` : (u.nickname?.[0]||'?')}</div></td>
-      <td style="font-weight:500;white-space:nowrap">${u.nickname||'-'}${isNewUser(u) ? '<span class="new-user-badge">NEW</span>' : ''}${userLeaderTagsHtml(u)}</td>
+      <td style="font-weight:500;white-space:nowrap">${u.nickname||'-'}${userLeaderTagsHtml(u)}</td>
       <td style="font-size:12px;color:#aaa">${u.email||'-'}</td>
-      <td style="font-size:12px;color:#777;white-space:nowrap">${formatJoinedAt(u)}</td>
+      <td>${formatJoinedAt(u)}</td>
       <td style="font-size:12px;color:#aaa;white-space:nowrap">${u.birthday || '-'}</td>
       <td>${groupChips(u)}</td>
       <td style="font-size:12px;color:#aaa">${u.startDate ? calcWeek(u.startDate)+'주차' : '-'}</td>
       <td style="font-size:12px;color:#aaa">${lastRecCell(u)}</td>
-      <td><button class="btn-sm btn-sm-primary" onclick="openUserDetail('${u.uid}')">상세보기</button></td>
-      <td><button class="btn-sm btn-sm-primary" onclick="openUserManage('${u.uid}')">관리</button></td>
-    </tr>`).join('') || '<tr><td colspan="10" style="text-align:center;padding:20px;color:#ccc">조건에 맞는 참여자가 없어요.</td></tr>';
+      <td class="participant-actions-cell"><div class="participant-actions">
+        <button class="participant-action-btn" onclick="openUserDetail('${u.uid}')">상세</button>
+        <button class="participant-action-btn primary" onclick="openUserManage('${u.uid}')">관리</button>
+      </div></td>
+    </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;padding:20px;color:#ccc">조건에 맞는 참여자가 없어요.</td></tr>';
 }
 
 window.filterUsers = () => renderUsers(document.getElementById('user-search').value.trim());
 window.setUserScope = (scope) => {
   userScope = scope;
   ['all', 'new', 'unassigned'].forEach(id => {
-    document.getElementById(`user-scope-${id}`)?.classList.toggle('on', id === scope);
+    const button = document.getElementById(`user-scope-${id}`);
+    button?.classList.toggle('selected', id === scope);
+    button?.setAttribute('aria-pressed', String(id === scope));
   });
   renderUsers(document.getElementById('user-search').value.trim());
 };
