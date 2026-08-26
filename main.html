@@ -257,27 +257,27 @@
 
     <!-- 클래스 수강 -->
     <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:8px">
-      <div style="font-size:12px;font-weight:600;color:var(--main);margin-bottom:8px">강의 수강 <span style="color:#aaa;font-weight:400">(분)</span></div>
+      <div style="font-size:12px;font-weight:600;color:var(--main);margin-bottom:8px">강의 수강</div>
 
       <!-- 단일 클래스: 직접 입력 -->
       <div class="row2" style="margin-bottom:6px">
         <div class="field" style="margin-bottom:0"><label>은행직무클래스</label>
-          <input type="number" id="f-class-bank" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+          <div class="duration-input"><input type="number" id="f-class-bank-hours" min="0" placeholder="0" oninput="updateTotalTime()"><span>시간</span><input type="number" id="f-class-bank" min="0" max="59" placeholder="0" oninput="updateTotalTime()"><span>분</span></div></div>
         <div class="field" style="margin-bottom:0"><label>생존자소서클래스</label>
-          <input type="number" id="f-class-jaso" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+          <div class="duration-input"><input type="number" id="f-class-jaso-hours" min="0" placeholder="0" oninput="updateTotalTime()"><span>시간</span><input type="number" id="f-class-jaso" min="0" max="59" placeholder="0" oninput="updateTotalTime()"><span>분</span></div></div>
       </div>
       <div class="row2" style="margin-bottom:12px">
         <div class="field" style="margin-bottom:0"><label>파이낸스프리젠터</label>
-          <input type="number" id="f-class-finance" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+          <div class="duration-input"><input type="number" id="f-class-finance-hours" min="0" placeholder="0" oninput="updateTotalTime()"><span>시간</span><input type="number" id="f-class-finance" min="0" max="59" placeholder="0" oninput="updateTotalTime()"><span>분</span></div></div>
         <div class="field" style="margin-bottom:0"><label>프레임 리부트 5050</label>
-          <input type="number" id="f-class-frame" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+          <div class="duration-input"><input type="number" id="f-class-frame-hours" min="0" placeholder="0" oninput="updateTotalTime()"><span>시간</span><input type="number" id="f-class-frame" min="0" max="59" placeholder="0" oninput="updateTotalTime()"><span>분</span></div></div>
       </div>
 
       <!-- 생존면접클래스: 드롭다운 + 추가 -->
       <div style="font-size:11px;font-weight:600;color:var(--main);margin-bottom:5px">생존면접클래스</div>
       <div class="class-add-row">
         <select id="f-interview-class-select" class="class-select"></select>
-        <input type="number" id="f-interview-class-min" min="0" placeholder="분" class="class-min-input">
+        <div class="duration-input duration-input-compact"><input type="number" id="f-interview-class-min-hours" min="0" placeholder="0" onkeydown="if(event.key==='Enter'){event.preventDefault();addClassEntry('interview')}"><span>시간</span><input type="number" id="f-interview-class-min" min="0" max="59" placeholder="0" onkeydown="if(event.key==='Enter'){event.preventDefault();addClassEntry('interview')}"><span>분</span></div>
         <button type="button" class="class-add-btn" onclick="addClassEntry('interview')">추가</button>
       </div>
       <div id="interview-class-list" class="class-entry-list"></div>
@@ -286,7 +286,7 @@
       <div style="font-size:11px;font-weight:600;color:var(--main);margin:12px 0 5px">기업분석자료</div>
       <div class="class-add-row">
         <select id="f-analysis-class-select" class="class-select"></select>
-        <input type="number" id="f-analysis-class-min" min="0" placeholder="분" class="class-min-input">
+        <div class="duration-input duration-input-compact"><input type="number" id="f-analysis-class-min-hours" min="0" placeholder="0" onkeydown="if(event.key==='Enter'){event.preventDefault();addClassEntry('analysis')}"><span>시간</span><input type="number" id="f-analysis-class-min" min="0" max="59" placeholder="0" onkeydown="if(event.key==='Enter'){event.preventDefault();addClassEntry('analysis')}"><span>분</span></div>
         <button type="button" class="class-add-btn" onclick="addClassEntry('analysis')">추가</button>
       </div>
       <div id="analysis-class-list" class="class-entry-list"></div>
@@ -298,8 +298,8 @@
       <div class="row2">
         <div class="field"><label>작성 문항 수</label>
           <input type="number" id="f-jasoseo-count" min="0" placeholder="0"></div>
-        <div class="field"><label>작성 시간 <span style="color:#aaa;font-weight:400">(분)</span></label>
-          <input type="number" id="f-jasoseo" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+        <div class="field"><label>작성 시간</label>
+          <div class="duration-input"><input type="number" id="f-jasoseo-hours" min="0" placeholder="0" oninput="updateTotalTime()"><span>시간</span><input type="number" id="f-jasoseo" min="0" max="59" placeholder="0" oninput="updateTotalTime()"><span>분</span></div></div>
       </div>
     </div>
 
@@ -307,13 +307,13 @@
     <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:8px">
       <div style="font-size:12px;font-weight:600;color:var(--main);margin-bottom:8px">FR5050</div>
       <div class="row2" style="margin-bottom:6px">
-        <div class="field" style="margin-bottom:0"><label>산업분석 <span style="color:#aaa;font-weight:400">(분)</span></label>
-          <input type="number" id="f-fa-industry" min="0" placeholder="0" oninput="updateTotalTime()"></div>
-        <div class="field" style="margin-bottom:0"><label>기업분석 <span style="color:#aaa;font-weight:400">(분)</span></label>
-          <input type="number" id="f-fa-company" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+        <div class="field" style="margin-bottom:0"><label>산업분석</label>
+          <div class="duration-input"><input type="number" id="f-fa-industry-hours" min="0" placeholder="0" oninput="updateTotalTime()"><span>시간</span><input type="number" id="f-fa-industry" min="0" max="59" placeholder="0" oninput="updateTotalTime()"><span>분</span></div></div>
+        <div class="field" style="margin-bottom:0"><label>기업분석</label>
+          <div class="duration-input"><input type="number" id="f-fa-company-hours" min="0" placeholder="0" oninput="updateTotalTime()"><span>시간</span><input type="number" id="f-fa-company" min="0" max="59" placeholder="0" oninput="updateTotalTime()"><span>분</span></div></div>
       </div>
-      <div class="field" style="margin-bottom:0"><label>현직자 인터뷰 <span style="color:#aaa;font-weight:400">(분)</span></label>
-        <input type="number" id="f-fa-interviewer" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+      <div class="field" style="margin-bottom:0"><label>현직자 인터뷰</label>
+        <div class="duration-input"><input type="number" id="f-fa-interviewer-hours" min="0" placeholder="0" oninput="updateTotalTime()"><span>시간</span><input type="number" id="f-fa-interviewer" min="0" max="59" placeholder="0" oninput="updateTotalTime()"><span>분</span></div></div>
     </div>
 
     <!-- 현장방문 -->
@@ -324,23 +324,22 @@
 
     <!-- 필기/인적성 + 면접 준비 + 자격증 준비 -->
     <div class="row2">
-      <div class="field"><label>필기/인적성 <span style="color:#aaa;font-weight:400">(분)</span></label>
-        <input type="number" id="f-pilgi" min="0" placeholder="0" oninput="updateTotalTime()"></div>
-      <div class="field"><label>면접 준비 <span style="color:#aaa;font-weight:400">(분)</span></label>
-        <input type="number" id="f-interview" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+      <div class="field"><label>필기/인적성</label>
+        <div class="duration-input"><input type="number" id="f-pilgi-hours" min="0" placeholder="0" oninput="updateTotalTime()"><span>시간</span><input type="number" id="f-pilgi" min="0" max="59" placeholder="0" oninput="updateTotalTime()"><span>분</span></div></div>
+      <div class="field"><label>면접 준비</label>
+        <div class="duration-input"><input type="number" id="f-interview-hours" min="0" placeholder="0" oninput="updateTotalTime()"><span>시간</span><input type="number" id="f-interview" min="0" max="59" placeholder="0" oninput="updateTotalTime()"><span>분</span></div></div>
     </div>
-    <div class="field"><label>자격증 준비 <span style="color:#aaa;font-weight:400">(분)</span></label>
-      <input type="number" id="f-cert" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+    <div class="field"><label>자격증 준비</label>
+      <div class="duration-input"><input type="number" id="f-cert-hours" min="0" placeholder="0" oninput="updateTotalTime()"><span>시간</span><input type="number" id="f-cert" min="0" max="59" placeholder="0" oninput="updateTotalTime()"><span>분</span></div></div>
 
-    <div class="field"><label>매십경 <span style="color:#aaa;font-weight:400">(분)</span></label>
-      <input type="number" id="f-gyeong-time" min="0" placeholder="0" oninput="updateTotalTime()"></div>
+    <div class="field"><label>매십경</label>
+      <div class="duration-input"><input type="number" id="f-gyeong-time-hours" min="0" placeholder="0" oninput="updateTotalTime()"><span>시간</span><input type="number" id="f-gyeong-time" min="0" max="59" placeholder="0" oninput="updateTotalTime()"><span>분</span></div></div>
     <div style="background:var(--main-xlight);border-radius:12px;padding:10px 14px;margin-bottom:14px">
       <div style="font-size:12px;font-weight:600;color:var(--main);margin-bottom:8px">직접 항목 추가</div>
       <div class="class-add-row">
         <input type="text" id="f-custom-activity-name" maxlength="30" placeholder="항목명 (예: 포트폴리오)" class="class-select"
           onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomActivityEntry()}">
-        <input type="number" id="f-custom-activity-min" min="1" placeholder="분" class="class-min-input"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomActivityEntry()}">
+        <div class="duration-input duration-input-compact"><input type="number" id="f-custom-activity-min-hours" min="0" placeholder="0" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomActivityEntry()}"><span>시간</span><input type="number" id="f-custom-activity-min" min="0" max="59" placeholder="0" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomActivityEntry()}"><span>분</span></div>
         <button type="button" class="class-add-btn" onclick="addCustomActivityEntry()">추가</button>
       </div>
       <div id="custom-activity-list" class="class-entry-list"></div>
@@ -354,9 +353,8 @@
           style="font-size:11px;color:var(--main);background:none;border:1px solid var(--main-mid);border-radius:6px;padding:2px 8px;cursor:pointer;font-family:inherit">직접 수정</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span id="total-time-display-wrap" style="font-size:20px;font-weight:700;color:var(--main)"><span id="total-time-display">0</span>분</span>
-        <input type="number" id="f-total-time-manual" min="0" placeholder="직접 입력"
-          style="display:none;width:100px;font-size:14px;padding:6px 10px;border:1.5px solid var(--main-mid);border-radius:8px;font-family:inherit;outline:none">
+        <span id="total-time-display-wrap" style="font-size:20px;font-weight:700;color:var(--main)"><span id="total-time-display">0시간 0분</span></span>
+        <div id="f-total-time-manual-wrap" class="duration-input" style="display:none"><input type="number" id="f-total-time-manual-hours" min="0" placeholder="0"><span>시간</span><input type="number" id="f-total-time-manual" min="0" max="59" placeholder="0"><span>분</span></div>
       </div>
       <div style="font-size:11px;color:#aaa;margin-top:4px" id="total-time-hint">수강+자소서+FR(산업/기업/인터뷰)+필기+면접+자격증+매십경+직접 추가 항목 자동 합산</div>
     </div>

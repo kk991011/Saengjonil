@@ -115,6 +115,14 @@
   .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--main); }
   .field textarea { height: 72px; resize: none; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .duration-input { display:flex; align-items:center; gap:5px; width:100%; }
+  .duration-input input, .field .duration-input input { width:54px; min-width:0; padding:10px 7px; text-align:center;
+    border:1.5px solid #e8e8e8; border-radius:10px; font-size:14px; color:#222; outline:none; font-family:inherit; }
+  .duration-input input:focus { border-color:var(--main); }
+  .duration-input span { flex-shrink:0; color:#888; font-size:12px; }
+  .duration-input-compact { width:auto; flex-shrink:0; gap:4px; }
+  .duration-input-compact input { width:43px; padding:8px 5px; font-size:13px; border:1.5px solid #e8e8e8; border-radius:8px; font-family:inherit; outline:none; }
+  .duration-input-compact input:focus { border-color:var(--main); }
 
   /* 루틴 행 */
   .routine-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px;

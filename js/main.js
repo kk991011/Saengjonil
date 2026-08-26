@@ -59,6 +59,25 @@ const CLASS_FAMILIES = {
 let familyEntries = { interview: {}, analysis: {} };  // { famId: { variant: 분 } }
 let customActivityEntries = []; // [{ name: 직접 입력한 항목명, minutes: 분 }]
 
+// 화면에서는 시간/분을 나눠 입력하지만 저장값은 기존 호환을 위해 분으로 유지한다.
+const durationMinutes = minuteInputId => {
+  const minutes = Number(document.getElementById(minuteInputId)?.value) || 0;
+  const hours = Number(document.getElementById(`${minuteInputId}-hours`)?.value) || 0;
+  return hours * 60 + minutes;
+};
+const setDuration = (minuteInputId, totalMinutes = 0) => {
+  const total = Math.max(0, Number(totalMinutes) || 0);
+  const minuteEl = document.getElementById(minuteInputId);
+  const hourEl = document.getElementById(`${minuteInputId}-hours`);
+  if (hourEl) hourEl.value = Math.floor(total / 60) || '';
+  if (minuteEl) minuteEl.value = total % 60 || '';
+};
+const clearDuration = minuteInputId => setDuration(minuteInputId, 0);
+const formatDuration = totalMinutes => {
+  const total = Math.max(0, Number(totalMinutes) || 0);
+  return `${Math.floor(total / 60)}시간 ${total % 60}분`;
+};
+
 // ── 인증 확인 ──
 onAuthStateChanged(auth, async u => {
   if (!u) { window.location.href = 'index.html'; return; }
@@ -461,7 +480,7 @@ function renderClassInputs() {
 // 전체 클래스 수강 시간 합계(분) = 단일 클래스 + 패밀리 추가분
 function calcLectureTotal() {
   let sum = 0;
-  SINGLE_CLASSES.forEach(s => { sum += Number(document.getElementById(s.id)?.value) || 0; });
+  SINGLE_CLASSES.forEach(s => { sum += durationMinutes(s.id); });
   Object.values(familyEntries).forEach(fam => Object.values(fam).forEach(m => sum += m));
   return sum;
 }
@@ -469,7 +488,7 @@ function calcLectureTotal() {
 // 저장용 클래스 내역 맵 { 전체클래스명: 분 } — 0분 초과만
 function buildLectureItems() {
   const items = {};
-  SINGLE_CLASSES.forEach(s => { const v = Number(document.getElementById(s.id)?.value) || 0; if (v > 0) items[s.name] = v; });
+  SINGLE_CLASSES.forEach(s => { const v = durationMinutes(s.id); if (v > 0) items[s.name] = v; });
   Object.entries(familyEntries).forEach(([famId, fam]) => {
     const prefix = CLASS_FAMILIES[famId].prefix;
     Object.entries(fam).forEach(([variant, min]) => { if (min > 0) items[`${prefix}(${variant})`] = min; });
@@ -480,13 +499,12 @@ function buildLectureItems() {
 window.addClassEntry = (famId) => {
   const fam = CLASS_FAMILIES[famId];
   const sel = document.getElementById(fam.selectId);
-  const minEl = document.getElementById(fam.minId);
   const variant = sel.value;
-  const min = Number(minEl.value) || 0;
+  const min = durationMinutes(fam.minId);
   if (!variant) { showToast('클래스를 선택해주세요'); return; }
-  if (min <= 0) { showToast('수강 시간(분)을 입력해주세요'); return; }
+  if (min <= 0) { showToast('수강 시간을 입력해주세요'); return; }
   familyEntries[famId][variant] = (familyEntries[famId][variant] || 0) + min;  // 같은 항목 추가 시 합산
-  sel.value = ''; minEl.value = '';
+  sel.value = ''; clearDuration(fam.minId);
   renderFamilyList(famId);
 };
 
@@ -503,7 +521,7 @@ function renderFamilyList(famId) {
   listEl.innerHTML = Object.keys(entries).map(v => `
     <div class="class-entry-row">
       <span class="class-entry-name">${fam.prefix}(${v})</span>
-      <span class="class-entry-min">${entries[v]}분</span>
+      <span class="class-entry-min">${formatDuration(entries[v])}</span>
       <button type="button" class="class-entry-del" onclick="removeClassEntry('${famId}','${v}')">✕</button>
     </div>`).join('');
   updateTotalTime();
@@ -512,16 +530,15 @@ function renderFamilyList(famId) {
 // ── 직접 추가 활동 ──
 window.addCustomActivityEntry = () => {
   const nameEl = document.getElementById('f-custom-activity-name');
-  const minEl = document.getElementById('f-custom-activity-min');
   const name = nameEl.value.trim();
-  const minutes = Number(minEl.value) || 0;
+  const minutes = durationMinutes('f-custom-activity-min');
   if (!name) { showToast('추가할 항목명을 입력해주세요'); nameEl.focus(); return; }
-  if (minutes <= 0) { showToast('활동 시간(분)을 입력해주세요'); minEl.focus(); return; }
+  if (minutes <= 0) { showToast('활동 시간을 입력해주세요'); document.getElementById('f-custom-activity-min-hours').focus(); return; }
   const existing = customActivityEntries.find(entry => entry.name === name);
   if (existing) existing.minutes += minutes;
   else customActivityEntries.push({ name, minutes });
   nameEl.value = '';
-  minEl.value = '';
+  clearDuration('f-custom-activity-min');
   renderCustomActivityList();
   nameEl.focus();
 };
@@ -537,7 +554,7 @@ function renderCustomActivityList() {
   listEl.innerHTML = customActivityEntries.map((entry, index) => `
     <div class="class-entry-row">
       <span class="class-entry-name">${couponEscape(entry.name)}</span>
-      <span class="class-entry-min">${entry.minutes}분</span>
+      <span class="class-entry-min">${formatDuration(entry.minutes)}</span>
       <button type="button" class="class-entry-del" onclick="removeCustomActivityEntry(${index})" aria-label="${couponEscape(entry.name)} 삭제">✕</button>
     </div>`).join('');
   updateTotalTime();
@@ -559,9 +576,9 @@ function additionalActivitiesOf(record) {
 
 // FR5050 세부(산업분석·기업분석·현직자 인터뷰) 합계(분)
 function calcFaTime() {
-  return (Number(document.getElementById('f-fa-industry')?.value) || 0)
-       + (Number(document.getElementById('f-fa-company')?.value) || 0)
-       + (Number(document.getElementById('f-fa-interviewer')?.value) || 0);
+  return durationMinutes('f-fa-industry')
+       + durationMinutes('f-fa-company')
+       + durationMinutes('f-fa-interviewer');
 }
 
 // FR5050은 활동 시간으로 판정하고, 구 fa5050(현장방문 여부)은 방문 1회로 호환한다.
@@ -575,42 +592,44 @@ const siteVisitCountOf = r => {
 
 // 취준 활동 총 시간 자동 합산
 window.updateTotalTime = () => {
-  const manualInput = document.getElementById('f-total-time-manual');
-  if (manualInput && manualInput.style.display !== 'none') return; // 수동 모드일 때는 합산 안 함
+  const manualWrap = document.getElementById('f-total-time-manual-wrap');
+  if (manualWrap && manualWrap.style.display !== 'none') return; // 수동 모드일 때는 합산 안 함
   const lecture = calcLectureTotal();
-  const jasoseo = Number(document.getElementById('f-jasoseo').value) || 0;
+  const jasoseo = durationMinutes('f-jasoseo');
   const faTime = calcFaTime();
-  const pilgi = Number(document.getElementById('f-pilgi').value) || 0;
-  const interview = Number(document.getElementById('f-interview').value) || 0;
-  const cert = Number(document.getElementById('f-cert').value) || 0;
-  const gyeongTime = Number(document.getElementById('f-gyeong-time').value) || 0;
+  const pilgi = durationMinutes('f-pilgi');
+  const interview = durationMinutes('f-interview');
+  const cert = durationMinutes('f-cert');
+  const gyeongTime = durationMinutes('f-gyeong-time');
   const additional = customActivityTotal();
   const total = lecture + jasoseo + faTime + pilgi + interview + cert + gyeongTime + additional;
-  document.getElementById('total-time-display').textContent = total;
+  document.getElementById('total-time-display').textContent = formatDuration(total);
 };
 
 // 총 취준 시간 직접 수정 토글
 window.toggleTotalTimeEdit = () => {
   const displayWrap = document.getElementById('total-time-display-wrap');
-  const manualInput = document.getElementById('f-total-time-manual');
+  const manualWrap = document.getElementById('f-total-time-manual-wrap');
   const btn = document.getElementById('total-time-edit-btn');
   const hint = document.getElementById('total-time-hint');
-  const isManual = manualInput.style.display !== 'none';
+  const isManual = manualWrap.style.display !== 'none';
   if (isManual) {
     // 자동 합산으로 복귀
-    manualInput.style.display = 'none';
+    manualWrap.style.display = 'none';
     displayWrap.style.display = '';
     btn.textContent = '직접 수정';
     hint.textContent = '수강+자소서+FR(산업/기업/인터뷰)+필기+면접+자격증+매십경+직접 추가 항목 자동 합산';
     updateTotalTime();
   } else {
     // 직접 수정 모드
-    const cur = document.getElementById('total-time-display').textContent;
-    manualInput.value = cur;
-    manualInput.style.display = '';
+    const automaticTotal = calcLectureTotal() + durationMinutes('f-jasoseo') + calcFaTime()
+      + durationMinutes('f-pilgi') + durationMinutes('f-interview') + durationMinutes('f-cert')
+      + durationMinutes('f-gyeong-time') + customActivityTotal();
+    setDuration('f-total-time-manual', automaticTotal);
+    manualWrap.style.display = '';
     displayWrap.style.display = 'none';
     btn.textContent = '자동 합산';
-    hint.textContent = '직접 총 시간을 입력해주세요 (분)';
+    hint.textContent = '직접 총 시간을 입력해주세요';
   }
 };
 
@@ -660,27 +679,29 @@ window.saveRecord = async () => {
       exercises:  getSelectedExercises(),
       lecture: lectureSum,
       lectureItems,
-      jasoseo: Number(document.getElementById('f-jasoseo').value) || 0,
+      jasoseo: durationMinutes('f-jasoseo'),
       jasoseoCount: Number(document.getElementById('f-jasoseo-count').value) || 0,
-      faIndustry: Number(document.getElementById('f-fa-industry').value) || 0,
-      faCompany: Number(document.getElementById('f-fa-company').value) || 0,
-      faInterviewer: Number(document.getElementById('f-fa-interviewer').value) || 0,
+      faIndustry: durationMinutes('f-fa-industry'),
+      faCompany: durationMinutes('f-fa-company'),
+      faInterviewer: durationMinutes('f-fa-interviewer'),
       faTime: calcFaTime(),
       fr5050: calcFaTime() > 0,
       siteVisitCount: Number(document.getElementById('f-site-visit-count').value) || 0,
-      pilgi: Number(document.getElementById('f-pilgi').value) || 0,
-      interview: Number(document.getElementById('f-interview').value) || 0,
-      cert: Number(document.getElementById('f-cert').value) || 0,
-      gyeongTime: Number(document.getElementById('f-gyeong-time').value) || 0,
+      pilgi: durationMinutes('f-pilgi'),
+      interview: durationMinutes('f-interview'),
+      cert: durationMinutes('f-cert'),
+      gyeongTime: durationMinutes('f-gyeong-time'),
       additionalActivities: customActivityEntries.map(entry => ({ name: entry.name, minutes: entry.minutes })),
       // 기존 통계·내보내기 코드와의 호환을 위해 직접 추가 시간 합계도 유지한다.
       etc: customActivityTotal(),
       totalTime: (() => {
-        const manualInput = document.getElementById('f-total-time-manual');
-        if (manualInput && manualInput.style.display !== 'none') {
-          return Number(manualInput.value) || 0;
+        const manualWrap = document.getElementById('f-total-time-manual-wrap');
+        if (manualWrap && manualWrap.style.display !== 'none') {
+          return durationMinutes('f-total-time-manual');
         }
-        return lectureSum + (Number(document.getElementById('f-jasoseo').value)||0) + calcFaTime() + (Number(document.getElementById('f-pilgi').value)||0) + (Number(document.getElementById('f-interview').value)||0) + (Number(document.getElementById('f-cert').value)||0) + (Number(document.getElementById('f-gyeong-time').value)||0) + customActivityTotal();
+        return lectureSum + durationMinutes('f-jasoseo') + calcFaTime() + durationMinutes('f-pilgi')
+          + durationMinutes('f-interview') + durationMinutes('f-cert') + durationMinutes('f-gyeong-time')
+          + customActivityTotal();
       })(),
       applications: Number(document.getElementById('f-applications').value) || 0,
       selfEsteem: scoreSelected || 0,
@@ -1170,11 +1191,11 @@ window.editTodayRecord = () => {
   updateExerciseStatus();
 
   // 클래스 수강 복원 — lectureItems 맵을 단일 클래스 입력칸 / 패밀리 목록으로 분배
-  SINGLE_CLASSES.forEach(s => { const el = document.getElementById(s.id); if (el) el.value = ''; });
+  SINGLE_CLASSES.forEach(s => clearDuration(s.id));
   familyEntries = { interview: {}, analysis: {} };
   Object.entries(r.lectureItems || {}).forEach(([name, min]) => {
     const single = SINGLE_CLASSES.find(s => s.name === name);
-    if (single) { const el = document.getElementById(single.id); if (el) el.value = min; return; }
+    if (single) { setDuration(single.id, min); return; }
     for (const [famId, fam] of Object.entries(CLASS_FAMILIES)) {
       if (name.startsWith(fam.prefix + '(') && name.endsWith(')')) {
         familyEntries[famId][name.slice(fam.prefix.length + 1, -1)] = min;
@@ -1184,15 +1205,15 @@ window.editTodayRecord = () => {
   });
   renderFamilyList('interview');
   renderFamilyList('analysis');
-  document.getElementById('f-jasoseo').value      = r.jasoseo || 0;
-  document.getElementById('f-fa-industry').value     = r.faIndustry || 0;
-  document.getElementById('f-fa-company').value      = r.faCompany || 0;
-  document.getElementById('f-fa-interviewer').value   = r.faInterviewer || 0;
+  setDuration('f-jasoseo', r.jasoseo);
+  setDuration('f-fa-industry', r.faIndustry);
+  setDuration('f-fa-company', r.faCompany);
+  setDuration('f-fa-interviewer', r.faInterviewer);
   document.getElementById('f-site-visit-count').value = siteVisitCountOf(r);
-  document.getElementById('f-pilgi').value        = r.pilgi || 0;
-  document.getElementById('f-interview').value    = r.interview || 0;
-  document.getElementById('f-cert').value         = r.cert || 0;
-  document.getElementById('f-gyeong-time').value  = r.gyeongTime || 0;
+  setDuration('f-pilgi', r.pilgi);
+  setDuration('f-interview', r.interview);
+  setDuration('f-cert', r.cert);
+  setDuration('f-gyeong-time', r.gyeongTime);
   customActivityEntries = additionalActivitiesOf(r);
   renderCustomActivityList();
   document.getElementById('f-applications').value = r.applications || 0;
