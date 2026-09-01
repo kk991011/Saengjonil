@@ -175,6 +175,7 @@
   .stat-card { background: white; border-radius: 12px; padding: 14px 16px; border: 1px solid #f0f0f0; }
   .stat-label { font-size: 11px; color: #aaa; margin-bottom: 6px; }
   .stat-value { font-size: 24px; font-weight: 700; color: var(--main); }
+  .summary-duration { display: inline-block; font-size: clamp(16px, 2vw, 20px); white-space: nowrap; }
   .stat-unit { font-size: 12px; color: #aaa; margin-left: 2px; }
 
   /* 프로그레스바 */
