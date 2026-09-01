@@ -741,7 +741,7 @@ async function loadSummary() {
     if (!n) { return; }
   document.getElementById('s-days').textContent = n;
   document.getElementById('s-apps').textContent = recs.reduce((a,r)=>a+(r.applications||0),0);
-  document.getElementById('s-lecture').textContent = Math.round(recs.reduce((a,r)=>a+(r.totalTime ?? ((r.lecture||0)+(r.jasoseo||0)+(r.pilgi||0)+(r.interview||0)+(r.cert||0))),0)/60);
+  document.getElementById('s-lecture').textContent = formatDuration(recs.reduce((a,r)=>a+(r.totalTime ?? ((r.lecture||0)+(r.jasoseo||0)+(r.pilgi||0)+(r.interview||0)+(r.cert||0))),0));
   const pct = k => Math.round(recs.filter(r=>r[k]).length/n*100);
   const setPct = (id,pb,v) => { document.getElementById(id).textContent=v+'%'; document.getElementById(pb).style.width=v+'%'; };
   // 매십경 세부
@@ -762,23 +762,23 @@ async function loadSummary() {
   const avg = k => n ? Math.round(recs.reduce((a,r)=>a+(r[k]||0),0)/n) : 0;
   const total = k => recs.reduce((a,r)=>a+(r[k]||0),0);
   // FR5050 세부 시간과 현장방문 횟수를 각각 누적
-  document.getElementById('p-fa-all').textContent = total('faTime') + '분';
-  document.getElementById('p-fa-industry').textContent = total('faIndustry') + '분';
-  document.getElementById('p-fa-company').textContent = total('faCompany') + '분';
-  document.getElementById('p-fa-interviewer').textContent = total('faInterviewer') + '분';
-  document.getElementById('s-lec-avg').textContent = avg('lecture');
-  document.getElementById('s-jas-avg').textContent = avg('jasoseo');
-  document.getElementById('s-fa-avg').textContent = avg('faTime');
-  document.getElementById('s-pil-avg').textContent = avg('pilgi');
-  document.getElementById('s-int-avg').textContent = avg('interview');
-  document.getElementById('s-cert-avg').textContent = avg('cert');
-  document.getElementById('s-lec-total').textContent = total('lecture');
-  document.getElementById('s-jas-total').textContent = total('jasoseo');
-  document.getElementById('s-fa-total').textContent = total('faTime');
+  document.getElementById('p-fa-all').textContent = formatDuration(total('faTime'));
+  document.getElementById('p-fa-industry').textContent = formatDuration(total('faIndustry'));
+  document.getElementById('p-fa-company').textContent = formatDuration(total('faCompany'));
+  document.getElementById('p-fa-interviewer').textContent = formatDuration(total('faInterviewer'));
+  document.getElementById('s-lec-avg').textContent = formatDuration(avg('lecture'));
+  document.getElementById('s-jas-avg').textContent = formatDuration(avg('jasoseo'));
+  document.getElementById('s-fa-avg').textContent = formatDuration(avg('faTime'));
+  document.getElementById('s-pil-avg').textContent = formatDuration(avg('pilgi'));
+  document.getElementById('s-int-avg').textContent = formatDuration(avg('interview'));
+  document.getElementById('s-cert-avg').textContent = formatDuration(avg('cert'));
+  document.getElementById('s-lec-total').textContent = formatDuration(total('lecture'));
+  document.getElementById('s-jas-total').textContent = formatDuration(total('jasoseo'));
+  document.getElementById('s-fa-total').textContent = formatDuration(total('faTime'));
   document.getElementById('s-site-visit-total').textContent = recs.reduce((a,r)=>a+siteVisitCountOf(r),0);
-  document.getElementById('s-pil-total').textContent = total('pilgi');
-  document.getElementById('s-int-total').textContent = total('interview');
-  document.getElementById('s-cert-total').textContent = total('cert');
+  document.getElementById('s-pil-total').textContent = formatDuration(total('pilgi'));
+  document.getElementById('s-int-total').textContent = formatDuration(total('interview'));
+  document.getElementById('s-cert-total').textContent = formatDuration(total('cert'));
 
   // 집중 활동 분포 도넛 차트
   const focusCount = { '자소서':0, '필기':0, '면접':0, '자격증':0, 'FR5050':0, '현장방문':0, '골고루':0 };
@@ -810,34 +810,13 @@ async function loadSummary() {
     new Chart(donutEl, {
       type: 'doughnut',
       data: { labels: focusLabels, datasets: [{ data: focusData, backgroundColor: palette, borderWidth: 1 }] },
-      options: { responsive: true, maintainAspectRatio: false, layout: { padding: 24 },
-        plugins: { legend: { display: false }, tooltip: { enabled: true } } },
-      plugins: [{ id: 'dl', afterDraw(chart) {
-        const { ctx, data } = chart;
-        const meta = chart.getDatasetMeta(0);
-        const total = data.datasets[0].data.reduce((a,b)=>a+b,0);
-        meta.data.forEach((arc, i) => {
-          const angle = (arc.startAngle + arc.endAngle) / 2;
-          const r = arc.outerRadius + 18;
-          const x = arc.x + Math.cos(angle) * r;
-          const y = arc.y + Math.sin(angle) * r;
-          const pct = Math.round(data.datasets[0].data[i] / total * 100);
-          ctx.save();
-          ctx.font = '500 11px sans-serif';
-          ctx.fillStyle = '#444';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(data.labels[i], x, y - 6);
-          ctx.font = '400 10px sans-serif';
-          ctx.fillStyle = '#888';
-          ctx.fillText(pct + '%', x, y + 7);
-          ctx.restore();
-        });
-      }}]
+      options: { responsive: true, maintainAspectRatio: false, layout: { padding: 8 },
+        plugins: { legend: { display: false }, tooltip: { enabled: true } } }
     });
+    const focusTotal = focusData.reduce((a,b) => a + b, 0);
     document.getElementById('focus-legend').innerHTML = focusLabels.map((l,i) =>
       `<span style="display:flex;align-items:center;gap:4px">
-        <span style="width:10px;height:10px;border-radius:2px;background:${palette[i]};display:inline-block"></span>${l}
+        <span style="width:10px;height:10px;border-radius:2px;background:${palette[i]};display:inline-block"></span>${l} ${Math.round(focusData[i] / focusTotal * 100)}%
       </span>`).join('');
   } else {
     donutWrap.style.display = 'none';
