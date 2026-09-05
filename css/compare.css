@@ -76,6 +76,21 @@
     padding: 1px 6px; border-radius: 6px; margin-right: 4px; vertical-align: middle; white-space: nowrap; }
 
   /* 항목 비교 테이블 */
+  .compare-column-picker { background: white; border: 1px solid #e8e8e8; border-radius: 10px;
+    margin-bottom: 10px; }
+  .compare-column-picker summary { padding: 9px 12px; cursor: pointer; font-size: 12px;
+    font-weight: 600; color: #555; user-select: none; }
+  .compare-column-picker summary span { color: var(--main); margin-left: 4px; }
+  .compare-column-actions { display: flex; align-items: center; gap: 6px; padding: 0 12px 8px;
+    flex-wrap: wrap; }
+  .compare-column-actions button { padding: 4px 9px; border: 1px solid #ddd; border-radius: 7px;
+    background: white; color: #666; font: inherit; font-size: 11px; cursor: pointer; }
+  .compare-column-actions button:hover { border-color: var(--main); color: var(--main); }
+  .compare-column-actions span { font-size: 10px; color: #aaa; margin-left: 2px; }
+  .compare-column-options { display: flex; flex-wrap: wrap; gap: 7px 12px; padding: 0 12px 12px; }
+  .compare-column-option { display: flex; align-items: center; gap: 5px; font-size: 11px;
+    color: #555; cursor: pointer; white-space: nowrap; }
+  .compare-column-option input { accent-color: var(--main); }
   .table-wrap { overflow-x: auto; overflow-y: auto; max-height: 480px; border-radius: 12px; border: 1px solid #f0f0f0; }
   /* table-layout:auto → 셀이 내용에 맞게 늘어나 값이 잘리지 않음(주차·%·헤더 모두 전체 표시) */
   .cmp-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 600px; table-layout: auto; }

@@ -467,6 +467,69 @@ function renderRank() {
 }
 
 // ── 항목 비교 렌더 ──
+const COMPARE_COLUMNS = [
+  { key:'subconAvg', label:'잠재의식', header:'잠재의식', csv:'잠재의식', format:v=>`${v}%` },
+  { key:'gyeongAvg', label:'매십경', header:'매십경', csv:'매십경', format:v=>`${v}%` },
+  { key:'myeonAvg', label:'매십면', header:'매십면', csv:'매십면', format:v=>`${v}%` },
+  { key:'dokAvg', label:'매십독', header:'매십독', csv:'매십독', format:v=>`${v}%` },
+  { key:'un', label:'매십운', header:'매십운', csv:'매십운', format:v=>`${v}%` },
+  { key:'fa', label:'FR5050', header:'FR5050<br>(분)', csv:'FR5050(분)', format:v=>`${v}분` },
+  { key:'siteVisits', label:'현장방문', header:'현장방문', csv:'현장방문(회)', format:v=>v },
+  { key:'jasoseo', label:'자소서(분)', header:'자소서(분)', csv:'자소서(분)', format:v=>v },
+  { key:'jasoseoCount', label:'자소서 문항 수', header:'자소서 문항 수<br>(개)', csv:'자소서 문항 수(개)', format:v=>v },
+  { key:'pilgi', label:'필기', header:'필기', csv:'필기', format:v=>v },
+  { key:'interview', label:'면접', header:'면접', csv:'면접', format:v=>v },
+  { key:'cert', label:'자격증', header:'자격증', csv:'자격증', format:v=>v },
+  { key:'apps', label:'지원', header:'지원', csv:'지원수', format:v=>v },
+];
+const PREV_KEYS = ['prevInterviewCount','prevInterviewHour','prevPilgiHour','prevApplications'];
+const selectedCompareColumns = new Set(COMPARE_COLUMNS.map(c => c.key));
+
+function selectedColumns() {
+  return COMPARE_COLUMNS.filter(c => selectedCompareColumns.has(c.key));
+}
+
+function renderCompareHead() {
+  const head = document.getElementById('cmp-head');
+  if (!head) return;
+  head.innerHTML = `<tr>
+    <th style="width:90px">닉네임</th><th style="width:36px">주차</th>
+    ${selectedColumns().map(c => `<th>${c.header}</th>`).join('')}
+    <th class="prev-col prev-first">면접경험</th><th class="prev-col">면접준비</th>
+    <th class="prev-col">필기준비</th><th class="prev-col">지원</th>
+  </tr>`;
+}
+
+function syncCompareColumnPicker() {
+  const options = document.getElementById('compare-column-options');
+  if (options) options.innerHTML = COMPARE_COLUMNS.map(c => `<label class="compare-column-option">
+    <input type="checkbox" ${selectedCompareColumns.has(c.key)?'checked':''} onchange="toggleCompareColumn('${c.key}',this.checked)">${c.label}
+  </label>`).join('');
+  const count = document.getElementById('compare-column-count');
+  if (count) count.textContent = `(${selectedCompareColumns.size}/${COMPARE_COLUMNS.length})`;
+}
+
+function refreshCompareColumns() {
+  syncCompareColumnPicker();
+  renderCompareHead();
+  if (user) renderCompare();
+}
+
+window.toggleCompareColumn = (key, checked) => {
+  if (checked) selectedCompareColumns.add(key);
+  else selectedCompareColumns.delete(key);
+  refreshCompareColumns();
+};
+
+window.setAllCompareColumns = checked => {
+  selectedCompareColumns.clear();
+  if (checked) COMPARE_COLUMNS.forEach(c => selectedCompareColumns.add(c.key));
+  refreshCompareColumns();
+};
+
+syncCompareColumnPicker();
+renderCompareHead();
+
 function renderCompare() {
   const users = getGroupUsers(filters.cscope, filters.progfilter);
   const period = filters.cperiod;
@@ -474,7 +537,7 @@ function renderCompare() {
   users.forEach(u => { statsMap[u.uid] = calcStats(u.uid, period); });
 
   // 전체 평균 계산
-  const keys = ['subconAvg','gyeongAvg','myeonAvg','dokAvg','un','fa','siteVisits','jasoseo','jasoseoCount','pilgi','interview','cert','apps'];
+  const keys = COMPARE_COLUMNS.map(c => c.key);
   const avg = {};
   keys.forEach(k => {
     avg[k] = users.length ? Math.round(users.reduce((a,u)=>a+(statsMap[u.uid]?.[k]||0),0)/users.length) : 0;
@@ -485,7 +548,6 @@ function renderCompare() {
   keys.forEach(k => { maxMap[k] = Math.max(...users.map(u=>statsMap[u.uid]?.[k]||0)); });
 
   // 이전 시즌 기록 — 프로필 고정값(기간 무관). 미입력(null)은 '-'로 표시, 평균은 입력한 사람만.
-  const PREV_KEYS = ['prevInterviewCount','prevInterviewHour','prevPilgiHour','prevApplications'];
   const prevAvg = {};
   PREV_KEYS.forEach(k => {
     const vals = users.map(u => u[k]).filter(v => v != null && v !== '');
@@ -505,21 +567,13 @@ function renderCompare() {
     const name = isAvg ? '전체 평균' : (data.nickname + (isMe ? ' 나' : ''));
     const wk = isAvg ? '—' : calcWeek(data.startDate)+'주';
     const s = isAvg ? avg : statsMap[data.uid];
+    const selectedCells = selectedColumns().map(c => {
+      const cls = !isAvg && s[c.key] === maxMap[c.key] ? 'hi' : '';
+      return `<td class="${cls}">${c.format(s[c.key])}</td>`;
+    }).join('');
     return `<tr class="${cls}">
       <td class="name-col" title="${name}">${name}</td><td>${wk}</td>
-      <td class="${!isAvg&&s.subconAvg===maxMap.subconAvg?'hi':''}">${s.subconAvg}%</td>
-      <td class="${!isAvg&&s.gyeongAvg===maxMap.gyeongAvg?'hi':''}">${s.gyeongAvg}%</td>
-      <td class="${!isAvg&&s.myeonAvg===maxMap.myeonAvg?'hi':''}">${s.myeonAvg}%</td>
-      <td class="${!isAvg&&s.dokAvg===maxMap.dokAvg?'hi':''}">${s.dokAvg}%</td>
-      <td class="${!isAvg&&s.un===maxMap.un?'hi':''}">${s.un}%</td>
-      <td class="${!isAvg&&s.fa===maxMap.fa?'hi':''}">${s.fa}분</td>
-      <td class="${!isAvg&&s.siteVisits===maxMap.siteVisits?'hi':''}">${s.siteVisits}</td>
-      <td class="${!isAvg&&s.jasoseo===maxMap.jasoseo?'hi':''}">${s.jasoseo}</td>
-      <td class="${!isAvg&&s.jasoseoCount===maxMap.jasoseoCount?'hi':''}">${s.jasoseoCount}</td>
-      <td class="${!isAvg&&s.pilgi===maxMap.pilgi?'hi':''}">${s.pilgi}</td>
-      <td class="${!isAvg&&s.interview===maxMap.interview?'hi':''}">${s.interview}</td>
-      <td class="${!isAvg&&s.cert===maxMap.cert?'hi':''}">${s.cert}</td>
-      <td class="${!isAvg&&s.apps===maxMap.apps?'hi':''}">${s.apps}</td>
+      ${selectedCells}
       ${prevCells(data, isAvg)}
     </tr>`;
   };
@@ -542,16 +596,16 @@ function renderCompare() {
 window.downloadExcel = () => {
   if (!window._compareData) { alert('먼저 항목 비교 탭을 열어주세요'); return; }
   const { users, statsMap, avg, prevAvg } = window._compareData;
-  const PREV_KEYS = ['prevInterviewCount','prevInterviewHour','prevPilgiHour','prevApplications'];
   const pv = v => (v == null || v === '' ? '-' : v);
-  const headers = ['닉네임','주차','잠재의식','매십경','매십면','매십독','매십운','FR5050(분)','현장방문(회)','자소서','자소서 문항 수(개)','필기','면접','자격증','지원수',
+  const columns = selectedColumns();
+  const headers = ['닉네임','주차',...columns.map(c => c.csv),
     '이전_면접경험(회)','이전_면접준비(시간)','이전_필기준비(시간)','이전_지원수(개)'];
   const rows = [
-    ['전체 평균','—',...['subconAvg','gyeongAvg','myeonAvg','dokAvg','un','fa','siteVisits','jasoseo','jasoseoCount','pilgi','interview','cert','apps'].map(k=>avg[k]),
+    ['전체 평균','—',...columns.map(c => c.format(avg[c.key])),
       ...PREV_KEYS.map(k => pv(prevAvg?.[k]))],
     ...users.map(u => {
       const s = statsMap[u.uid];
-      return [u.nickname, calcWeek(u.startDate)+'주', s.subconAvg+'%', s.gyeongAvg+'%', s.myeonAvg+'%', s.dokAvg+'%', s.un+'%', s.fa+'분', s.siteVisits, s.jasoseo, s.jasoseoCount, s.pilgi, s.interview, s.cert, s.apps,
+      return [u.nickname, calcWeek(u.startDate)+'주', ...columns.map(c => c.format(s[c.key])),
         ...PREV_KEYS.map(k => pv(u[k]))];
     })
   ];

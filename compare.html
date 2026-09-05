@@ -158,34 +158,19 @@
     <div class="filter-row" id="compare-month-picker" style="display:none">
       <input type="month" id="compare-month-input" onchange="setMonthFilter(this.value,'compare')" style="font-size:12px;padding:5px 10px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;outline:none;color:#333">
     </div>
-    <button class="dl-btn" onclick="downloadExcel()">
-      ↓ 엑셀 다운로드
-    </button>
+    <details class="compare-column-picker">
+      <summary>표시 항목 선택 <span id="compare-column-count"></span></summary>
+      <div class="compare-column-actions">
+        <button type="button" onclick="setAllCompareColumns(true)">전체 선택</button>
+        <button type="button" onclick="setAllCompareColumns(false)">모두 해제</button>
+        <span>닉네임·주차·이전 기록은 항상 표시돼요</span>
+      </div>
+      <div class="compare-column-options" id="compare-column-options"></div>
+    </details>
+    <button class="dl-btn" onclick="downloadExcel()">↓ 엑셀 다운로드</button>
     <div class="table-wrap">
       <table class="cmp-table" id="cmp-table">
-        <thead>
-          <tr>
-            <th style="width:90px">닉네임</th>
-            <th style="width:36px">주차</th>
-            <th style="width:44px">잠재의식</th>
-            <th style="width:44px">매십경</th>
-            <th style="width:44px">매십면</th>
-            <th style="width:44px">매십독</th>
-            <th style="width:44px">매십운</th>
-            <th style="width:54px">FR5050<br>(분)</th>
-            <th style="width:52px">현장방문</th>
-            <th style="width:50px">자소서</th>
-            <th style="width:64px">자소서 문항 수<br>(개)</th>
-            <th style="width:44px">필기</th>
-            <th style="width:44px">면접</th>
-            <th style="width:44px">자격증</th>
-            <th style="width:36px">지원</th>
-            <th class="prev-col prev-first" style="width:52px">면접경험</th>
-            <th class="prev-col" style="width:52px">면접준비</th>
-            <th class="prev-col" style="width:52px">필기준비</th>
-            <th class="prev-col" style="width:52px">지원</th>
-          </tr>
-        </thead>
+        <thead id="cmp-head"></thead>
         <tbody id="cmp-body">
           <tr><td colspan="19" style="text-align:center;padding:30px;color:#ccc">불러오는 중...</td></tr>
         </tbody>
