@@ -1,9 +1,11 @@
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, onAuthStateChanged, signOut }
+import { getAuth, onAuthStateChanged, signOut, GoogleAuthProvider,
+  reauthenticateWithPopup, deleteUser as deleteAuthUser }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, collection, query,
-  where, orderBy, getDocs, deleteDoc, documentId, getCountFromServer, runTransaction, serverTimestamp }
+  where, orderBy, getDocs, deleteDoc, documentId, getCountFromServer, runTransaction,
+  serverTimestamp, writeBatch }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 // Firebase 설정은 환경(운영/dev)에 따라 firebase-config.js에서 자동 선택됩니다.
@@ -1423,6 +1425,92 @@ window.downloadMyExcel = () => {
 // ── 로그아웃 ──
 window.doLogout = async () => {
   if (confirm('로그아웃 할까요?')) { await signOut(auth); window.location.href = 'index.html'; }
+};
+
+// ── 회원 탈퇴 ──
+// 인증 계정을 마지막에 삭제해야 Firestore 보안 규칙으로 본인 데이터만 안전하게 정리할 수 있다.
+// 재인증을 먼저 받아 데이터 삭제 후 인증 삭제가 실패할 가능성을 최소화한다.
+window.withdrawAccount = async () => {
+  if (!user || !userProfile) return;
+  if (userProfile.isAdmin === true) {
+    alert('관리자 계정은 서비스 운영 권한을 먼저 다른 관리자에게 넘긴 뒤 탈퇴해주세요.');
+    return;
+  }
+
+  const confirmed = confirm(
+    '회원 탈퇴 시 프로필, 활동 기록, 목표와 쿠폰 내역이 모두 영구 삭제됩니다.\n계속할까요?'
+  );
+  if (!confirmed) return;
+  if (prompt('확인을 위해 "탈퇴"를 입력해주세요.') !== '탈퇴') {
+    alert('입력이 일치하지 않아 탈퇴를 취소했어요.');
+    return;
+  }
+
+  const btn = document.getElementById('pm-withdraw-btn');
+  btn.disabled = true;
+  btn.textContent = '본인 확인 중...';
+
+  try {
+    await reauthenticateWithPopup(user, new GoogleAuthProvider());
+    btn.textContent = '데이터 삭제 중...';
+
+    const uid = user.uid;
+    const [recordSnap, goalSnap, issueSnap, usageSnap, historySnap] = await Promise.all([
+      getDocs(query(collection(db, 'records'), where('uid', '==', uid))),
+      getDocs(query(collection(db, 'weekly_goals'),
+        where(documentId(), '>=', `${uid}_`), where(documentId(), '<=', `${uid}_\uf8ff`))),
+      getDocs(query(collection(db, 'coupon_issues'), where('uid', '==', uid))),
+      getDocs(query(collection(db, 'coupon_usages'), where('uid', '==', uid))),
+      getDocs(query(collection(db, 'coupon_history'), where('uid', '==', uid))),
+    ]);
+
+    const ordinaryRefs = [
+      ...recordSnap.docs.map(d => d.ref),
+      ...goalSnap.docs.map(d => d.ref),
+    ];
+    const accountRefs = [
+      ...issueSnap.docs.map(d => d.ref),
+      ...usageSnap.docs.map(d => d.ref),
+      ...historySnap.docs.map(d => d.ref),
+      doc(db, 'coupon_stats', uid),
+      doc(db, 'users', uid),
+    ];
+
+    // 쿠폰 내역과 프로필, 탈퇴 표식은 한 번에 반영해야 보안 규칙상 임의 이력 삭제가 불가능하다.
+    if (accountRefs.length + 1 > 500) {
+      throw Object.assign(new Error('탈퇴 시 한 번에 정리할 쿠폰 내역이 너무 많습니다.'), {
+        code: 'account-deletion/too-many-coupon-documents',
+      });
+    }
+
+    // Firestore batch 한도(500)보다 여유 있게 나눠 많은 기록도 빠짐없이 삭제한다.
+    for (let i = 0; i < ordinaryRefs.length; i += 400) {
+      const batch = writeBatch(db);
+      ordinaryRefs.slice(i, i + 400).forEach(ref => batch.delete(ref));
+      await batch.commit();
+    }
+
+    const accountBatch = writeBatch(db);
+    accountRefs.forEach(ref => accountBatch.delete(ref));
+    accountBatch.set(doc(db, 'account_deletions', uid), { uid, deletedAt: serverTimestamp() });
+    await accountBatch.commit();
+
+    btn.textContent = '계정 삭제 중...';
+    await deleteAuthUser(user);
+    alert('회원 탈퇴가 완료됐어요. 그동안 함께해주셔서 감사합니다.');
+    window.location.href = 'index.html';
+  } catch (e) {
+    console.error('회원 탈퇴 오류:', e);
+    if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+      alert('본인 확인이 취소되어 탈퇴하지 않았어요.');
+    } else if (e.code === 'account-deletion/too-many-coupon-documents') {
+      alert('삭제할 쿠폰 내역이 많아 자동 탈퇴할 수 없어요. 관리자에게 탈퇴를 요청해주세요.');
+    } else {
+      alert('탈퇴 처리 중 문제가 발생했어요. 다시 시도하거나 관리자에게 문의해주세요.');
+    }
+    btn.disabled = false;
+    btn.textContent = '회원 탈퇴';
+  }
 };
 
 // ── 토스트 ──

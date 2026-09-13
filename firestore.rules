@@ -12,12 +12,21 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isAdmin', false) == true;
     }
 
+    // 본인 탈퇴 작업은 되돌릴 수 없는 탈퇴 표식과 같은 batch에서만 허용한다.
+    // 이 조건이 없으면 로그인 사용자가 탈퇴하지 않고 쿠폰 이력만 임의 삭제할 수 있다.
+    function isDeletingOwnAccount(userId) {
+      return isSignedIn()
+        && request.auth.uid == userId
+        && existsAfter(/databases/$(database)/documents/account_deletions/$(userId));
+    }
+
     // users — 로그인 사용자는 모두 읽기(랭킹/멤버수 집계).
     //   본인 문서만 생성/수정, 단 isAdmin 자가 변경 금지(권한 상승 방지). 관리자는 전체 쓰기/삭제.
     //   (own 체크를 먼저 둬 일반 쓰기 시 isAdmin() get() 호출을 피함 — 읽기비용 절약)
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create: if (isSignedIn() && request.auth.uid == userId
+                        && !existsAfter(/databases/$(database)/documents/account_deletions/$(userId))
                         && request.resource.data.get('isAdmin', false) == false
                         && request.resource.data.get('groupIds', []).size() == 0)
                     || isAdmin();
@@ -26,7 +35,21 @@ service cloud.firestore {
                         && request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false)
                         && request.resource.data.get('groupIds', []) == resource.data.get('groupIds', []))
                     || isAdmin();
-      allow delete: if isAdmin();
+      allow delete: if isDeletingOwnAccount(userId)
+                    || isAdmin();
+    }
+
+    // 탈퇴한 동일 Firebase uid가 프로필을 다시 만들어 쿠폰 이력을 초기화하지 못하게 하는 최소 표식.
+    // 개인정보는 저장하지 않으며 관리자는 콘솔/관리 도구에서만 정리할 수 있다.
+    match /account_deletions/{userId} {
+      allow read: if (isSignedIn() && request.auth.uid == userId) || isAdmin();
+      allow create: if isSignedIn()
+                    && request.auth.uid == userId
+                    && !existsAfter(/databases/$(database)/documents/users/$(userId))
+                    && request.resource.data.keys().hasOnly(['uid', 'deletedAt'])
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.deletedAt == request.time;
+      allow update, delete: if isAdmin();
     }
 
     // groups — 모두 읽기. 쓰기(생성/수정/삭제)는 관리자만.
@@ -54,7 +77,10 @@ service cloud.firestore {
     match /coupon_issues/{issueId} {
       allow read: if isAdmin()
                   || (isSignedIn() && resource.data.uid == request.auth.uid);
-      allow create, delete: if isAdmin();
+      allow create: if isAdmin();
+      allow delete: if isAdmin()
+                    || (resource.data.uid == request.auth.uid
+                        && isDeletingOwnAccount(request.auth.uid));
       allow update: if isAdmin()
                     || (isSignedIn()
                         && resource.data.uid == request.auth.uid
@@ -70,14 +96,19 @@ service cloud.firestore {
     match /coupon_stats/{recipientId} {
       allow read: if isAdmin()
                   || (isSignedIn() && recipientId == request.auth.uid);
-      allow write: if isAdmin();
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin()
+                    || isDeletingOwnAccount(recipientId);
     }
 
     // 만료된 실제 쿠폰 문서를 삭제해도 발급 이력은 별도로 보존한다.
     match /coupon_history/{historyId} {
       allow read: if isAdmin()
                   || (isSignedIn() && resource.data.uid == request.auth.uid);
-      allow write: if isAdmin();
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin()
+                    || (resource.data.uid == request.auth.uid
+                        && isDeletingOwnAccount(request.auth.uid));
     }
 
     // 회원은 본인의 사용 내역만 생성·조회. 수정·삭제와 전체 조회는 관리자만 가능.
@@ -102,7 +133,10 @@ service cloud.firestore {
                         && request.resource.data.allocations is list
                         && request.resource.data.allocations.size() > 0
                         && request.resource.data.usedAt == request.time);
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin()
+                    || (resource.data.uid == request.auth.uid
+                        && isDeletingOwnAccount(request.auth.uid));
     }
 
     // 생존일지 미가입 쿠폰 수령인 — 일반 회원 목록/통계와 완전히 분리.
