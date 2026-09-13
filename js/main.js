@@ -5,7 +5,7 @@ import { getAuth, onAuthStateChanged, signOut, GoogleAuthProvider,
   deleteUser as deleteAuthUser }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, collection, query,
-  where, orderBy, getDocs, deleteDoc, documentId, getCountFromServer, runTransaction,
+  where, orderBy, getDocs, deleteDoc, getCountFromServer, runTransaction,
   serverTimestamp, writeBatch }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
@@ -92,17 +92,22 @@ const formatDuration = totalMinutes => {
 onAuthStateChanged(auth, async u => {
   if (!u) { window.location.href = 'index.html'; return; }
   user = u;
-  userProfile = (await getDoc(doc(db, 'users', u.uid))).data();
-  if (!userProfile?.onboardingDone) { window.location.href = 'index.html'; return; }
+  const redirectResult = await withdrawRedirectResult;
+  const [userSnap, deletionSnap] = await Promise.all([
+    getDoc(doc(db, 'users', u.uid)),
+    getDoc(doc(db, 'account_deletions', u.uid)),
+  ]);
+  userProfile = userSnap.data();
 
   // 팝업이 차단돼 리다이렉트로 재인증한 경우, 돌아온 뒤 탈퇴 처리를 이어서 진행한다.
-  const redirectResult = await withdrawRedirectResult;
   const pendingWithdrawUid = sessionStorage.getItem(WITHDRAW_REDIRECT_KEY);
+  let withdrawalAttempted = false;
   if (pendingWithdrawUid) {
     sessionStorage.removeItem(WITHDRAW_REDIRECT_KEY);
     if (withdrawRedirectError) {
       alert('Google 본인 확인 중 문제가 발생했어요. 다시 시도해주세요.');
     } else if (pendingWithdrawUid === u.uid && redirectResult?.user?.uid === u.uid) {
+      withdrawalAttempted = true;
       const completed = await finishAccountDeletion();
       if (completed) return;
     } else {
@@ -110,13 +115,37 @@ onAuthStateChanged(auth, async u => {
     }
   }
 
+  // 데이터 삭제 후 인증 계정 삭제만 실패한 경우 다음 방문에서 마무리한다.
+  if (deletionSnap.exists() && !withdrawalAttempted) {
+    if (userProfile?.onboardingDone) {
+      const completed = await finishAccountDeletion();
+      if (completed) return;
+    } else {
+      try {
+        await deleteAuthUser(u);
+        alert('회원 탈퇴가 완료됐어요.');
+      } catch (e) {
+        console.error('탈퇴 인증 계정 마무리 오류:', e);
+        await signOut(auth);
+        alert('탈퇴 마무리를 위해 Google 계정으로 다시 로그인해주세요.');
+      }
+      window.location.href = 'index.html';
+      return;
+    }
+  }
+
+  if (!userProfile?.onboardingDone) { window.location.href = 'index.html'; return; }
+
   applyTheme(userProfile.themeColor || '#534AB7');
   initHeader();
   initInputForm();
-  loadGoals();
-  loadMyCoupons();
-  await loadAllRecords();
-  loadDashboard();
+  try {
+    await Promise.all([loadGoals(), loadMyCoupons(), loadAllRecords()]);
+    loadDashboard();
+  } catch (e) {
+    console.error('초기 데이터 로드 오류:', e);
+    showToast('일부 데이터를 불러오지 못했어요. 새로고침해주세요.');
+  }
 });
 
 const couponWon = value => `${Number(value || 0).toLocaleString('ko-KR')}원`;
@@ -750,10 +779,16 @@ async function loadAllRecords() {
   const snap = await getDocs(q);
   allRecords = snap.docs.map(d => d.data());
 
-  // 주간 목표도 같이 로드 (본인 것만 — 문서ID 접두 범위로 스코핑)
-  const goalSnap = await getDocs(query(collection(db, 'weekly_goals'),
-    where(documentId(), '>=', `${user.uid}_`), where(documentId(), '<=', `${user.uid}_\uf8ff`)));
-  allGoals = goalSnap.docs.map(d => ({ _id: d.id, ...d.data() }));
+  // 목표 차트에 필요한 최근 8주만 문서 ID로 직접 조회해 다른 회원의 목표를 노출하지 않는다.
+  const currentWeek = calcWeek(userProfile.startDate);
+  const goalKeys = [];
+  for (let w = Math.max(1, currentWeek - 7); w <= currentWeek; w++) {
+    goalKeys.push(`${user.uid}_week${w}`);
+  }
+  const goalSnaps = await Promise.all(goalKeys.map(key => getDoc(doc(db, 'weekly_goals', key))));
+  allGoals = goalSnaps
+    .filter(snap => snap.exists())
+    .map(snap => ({ _id: snap.id, ...snap.data() }));
 }
 
 // ── 누적 요약 ──
@@ -1503,43 +1538,103 @@ async function finishAccountDeletion() {
   const btn = document.getElementById('pm-withdraw-btn');
   btn.disabled = true;
   btn.textContent = '데이터 삭제 중...';
+  let deletionStage = '활동 기록 조회';
 
   try {
     const uid = user.uid;
-    const [recordSnap, goalSnap, issueSnap, usageSnap, historySnap] = await Promise.all([
-      getDocs(query(collection(db, 'records'), where('uid', '==', uid))),
-      getDocs(query(collection(db, 'weekly_goals'),
-        where(documentId(), '>=', `${uid}_`), where(documentId(), '<=', `${uid}_\uf8ff`))),
-      getDocs(query(collection(db, 'coupon_issues'), where('uid', '==', uid))),
-      getDocs(query(collection(db, 'coupon_usages'), where('uid', '==', uid))),
-      getDocs(query(collection(db, 'coupon_history'), where('uid', '==', uid))),
-    ]);
-
-    const refs = [
-      ...recordSnap.docs.map(d => d.ref),
-      ...goalSnap.docs.map(d => d.ref),
-      ...issueSnap.docs.map(d => d.ref),
-      ...usageSnap.docs.map(d => d.ref),
-      ...historySnap.docs.map(d => d.ref),
-      doc(db, 'coupon_stats', uid),
-      doc(db, 'users', uid),
-    ];
-
-    // Firestore batch 한도(500)보다 여유 있게 나눠 많은 기록도 빠짐없이 삭제한다.
-    for (let i = 0; i < refs.length; i += 400) {
-      const batch = writeBatch(db);
-      refs.slice(i, i + 400).forEach(ref => batch.delete(ref));
-      await batch.commit();
+    const deletionRef = doc(db, 'account_deletions', uid);
+    deletionStage = '탈퇴 상태 저장';
+    if (!(await getDoc(deletionRef)).exists()) {
+      await setDoc(deletionRef, { uid, deletedAt: serverTimestamp() });
     }
 
+    deletionStage = '활동 기록 조회';
+    const recordSnap = await getDocs(query(collection(db, 'records'), where('uid', '==', uid)));
+    deletionStage = '쿠폰 발급 내역 조회';
+    const issueSnap = await getDocs(query(collection(db, 'coupon_issues'), where('uid', '==', uid)));
+    deletionStage = '쿠폰 사용 내역 조회';
+    const usageSnap = await getDocs(query(collection(db, 'coupon_usages'), where('uid', '==', uid)));
+    deletionStage = '쿠폰 이력 조회';
+    const historySnap = await getDocs(query(collection(db, 'coupon_history'), where('uid', '==', uid)));
+
+    // 목표 문서 ID는 가입 주차와 월로 결정되므로 컬렉션 목록 권한 없이 전부 계산할 수 있다.
+    const goalRefs = [];
+    const createdAt = new Date(userProfile.createdAt || userProfile.startDate || new Date());
+    const weeksSinceJoin = Number.isNaN(createdAt.getTime())
+      ? 1
+      : Math.max(1, Math.floor((new Date() - createdAt) / 604800000) + 1);
+    const lastWeek = Math.max(1, calcWeek(userProfile.startDate), weeksSinceJoin);
+    for (let w = 1; w <= lastWeek; w++) {
+      goalRefs.push(doc(db, 'weekly_goals', `${uid}_week${w}`));
+    }
+    const knownDates = [userProfile.createdAt, userProfile.startDate]
+      .map(value => new Date(value))
+      .filter(value => !Number.isNaN(value.getTime()))
+      .sort((a, b) => a - b);
+    const start = knownDates[0] || new Date();
+    const now = new Date();
+    if (!Number.isNaN(start.getTime())) {
+      const month = new Date(start.getFullYear(), start.getMonth(), 1);
+      const lastMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      while (month <= lastMonth) {
+        const ym = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`;
+        goalRefs.push(doc(db, 'weekly_goals', `${uid}_month_${ym}`));
+        month.setMonth(month.getMonth() + 1);
+      }
+    }
+
+    // 탈퇴 회원이 조장이었다면 그룹 문서에 남은 uid도 정확히 제거한다.
+    const groupIds = Array.isArray(userProfile.groupIds)
+      ? userProfile.groupIds
+      : (userProfile.groupId ? [userProfile.groupId] : []);
+    deletionStage = '조장 정보 조회';
+    const groupSnaps = await Promise.all(groupIds.map(id => getDoc(doc(db, 'groups', id))));
+    deletionStage = '조장 정보 정리';
+    for (const groupSnap of groupSnaps) {
+      if (!groupSnap.exists()) continue;
+      const data = groupSnap.data();
+      const updates = {};
+      for (const field of ['leaderUids', 'leaderUidsGyeong', 'leaderUidsMyeon']) {
+        if (Array.isArray(data[field]) && data[field].includes(uid)) {
+          updates[field] = data[field].filter(id => id !== uid);
+        }
+      }
+      if (Object.keys(updates).length) {
+        const batch = writeBatch(db);
+        batch.update(groupSnap.ref, updates);
+        await batch.commit();
+      }
+    }
+
+    const deletionGroups = [
+      ['활동 기록 삭제', recordSnap.docs.map(d => d.ref)],
+      ['목표 삭제', goalRefs],
+      ['쿠폰 발급 내역 삭제', issueSnap.docs.map(d => d.ref)],
+      ['쿠폰 사용 내역 삭제', usageSnap.docs.map(d => d.ref)],
+      ['쿠폰 이력 삭제', historySnap.docs.map(d => d.ref)],
+      ['쿠폰 통계 삭제', [doc(db, 'coupon_stats', uid)]],
+      ['프로필 삭제', [doc(db, 'users', uid)]],
+    ];
+
+    // 컬렉션별로 나눠 처리해 규칙 평가 비용을 줄이고 실패 위치를 정확히 표시한다.
+    for (const [label, refs] of deletionGroups) {
+      deletionStage = label;
+      for (let i = 0; i < refs.length; i += 400) {
+        const batch = writeBatch(db);
+        refs.slice(i, i + 400).forEach(ref => batch.delete(ref));
+        await batch.commit();
+      }
+    }
+
+    deletionStage = '인증 계정 삭제';
     btn.textContent = '계정 삭제 중...';
     await deleteAuthUser(user);
     alert('회원 탈퇴가 완료됐어요. 그동안 함께해주셔서 감사합니다.');
     window.location.href = 'index.html';
     return true;
   } catch (e) {
-    console.error('회원 탈퇴 오류:', e);
-    alert(`탈퇴 처리 중 문제가 발생했어요. 다시 시도하거나 관리자에게 문의해주세요.\n(${e.code || e.message})`);
+    console.error(`회원 탈퇴 오류 (${deletionStage}):`, e);
+    alert(`탈퇴 처리 중 문제가 발생했어요.\n${deletionStage}: ${e.code || e.message}`);
     btn.disabled = false;
     btn.textContent = '회원 탈퇴';
     return false;

@@ -1,6 +1,7 @@
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
+  onAuthStateChanged, deleteUser as deleteAuthUser, signOut }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, getCountFromServer }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
@@ -52,7 +53,26 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById('loading').style.display = 'none';
   if (user) {
     currentUser = user;
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    const [userDoc, deletionDoc] = await Promise.all([
+      getDoc(doc(db, 'users', user.uid)),
+      getDoc(doc(db, 'account_deletions', user.uid)),
+    ]);
+    if (deletionDoc.exists()) {
+      if (userDoc.exists()) {
+        window.location.href = 'main.html';
+        return;
+      }
+      try {
+        await deleteAuthUser(user);
+        alert('회원 탈퇴가 완료됐어요.');
+      } catch (e) {
+        console.error('탈퇴 인증 계정 마무리 오류:', e);
+        await signOut(auth);
+        alert('탈퇴 마무리를 위해 Google 계정으로 다시 로그인해주세요.');
+      }
+      document.getElementById('login-section').style.display = 'block';
+      return;
+    }
     if (userDoc.exists() && userDoc.data().onboardingDone) {
       window.location.href = 'main.html';
     } else {

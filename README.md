@@ -67,7 +67,7 @@
 
 ## 데이터 모델 (Firestore)
 
-컬렉션은 7개이며 모두 **평면 구조**(서브컬렉션 없음)입니다. 문서 ID에 식별자를 넣는 **복합 키** 방식을 씁니다.
+컬렉션은 10개이며 모두 **평면 구조**(서브컬렉션 없음)입니다. 문서 ID에 식별자를 넣는 **복합 키** 방식을 씁니다.
 
 ### `users` — 문서 ID = **Firebase Auth UID**
 | 필드 | 타입 | 설명 |
@@ -85,6 +85,12 @@
 | `createdAt` | string(ISO) | 생성 시각 |
 
 > 구 필드 `groupId`(string)·`isLeader`(bool)는 **폐기**됐습니다. 코드는 `groupId`를 읽기 헬퍼로만 호환하고, `isLeader`는 `groups.leaderUids`로 이관됐습니다(마이그레이션 스크립트 참고).
+
+### `account_deletions` — 문서 ID = **Firebase Auth UID**
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `uid` | string | 탈퇴 처리 중인 Firebase Auth UID |
+| `deletedAt` | timestamp | 탈퇴 시작 시각. 데이터 삭제 후 인증 계정 삭제가 실패해도 재가입을 막고 다음 로그인에서 처리를 재개하는 표식 |
 
 ### `groups` — 문서 ID = **자동 생성 ID**
 | 필드 | 타입 | 설명 |
@@ -179,7 +185,7 @@ JOIN이 없으므로 `records`에 `nickname`·`jobProb`를 **복사(비정규화
 
 - `users`: 로그인 사용자는 모두 **읽기**(랭킹/집계용). **본인 문서만** 생성/수정하되, **본인은 `isAdmin`·`groupIds`를 못 바꿈**(권한 상승·자가 조 배정 방지). 관리자(`isAdmin()`)는 전체 쓰기/삭제.
   - 첫 관리자는 콘솔에서 수동으로 `isAdmin=true` 설정(규칙 우회) → 부트스트랩.
-- `groups`: 모두 읽기, **쓰기는 관리자만** → 조장(`leaderUids`)도 자동 보호.
+- `groups`: 모두 읽기, 쓰기는 관리자만. 단, 탈퇴 회원은 조장 필드에서 **자기 uid를 제거하는 변경만** 가능.
 - `records`: 모두 읽기, 본인(`uid` 일치)만 생성/수정/삭제, 관리자는 전체 삭제.
 - `weekly_goals`: 문서 ID 접두(`uid_...`)가 본인 것일 때만 읽기/쓰기.
 - 규칙은 **운영·스테이징 각 프로젝트에 따로 배포**해야 합니다: `firebase deploy --only firestore:rules [--project <프로젝트>]`.

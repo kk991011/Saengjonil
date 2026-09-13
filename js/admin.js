@@ -2,7 +2,8 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, addDoc, deleteDoc,
-  updateDoc, collection, getDocs, query, orderBy, where, runTransaction, writeBatch, Timestamp }
+  updateDoc, collection, getDocs, query, orderBy, where, documentId, runTransaction,
+  writeBatch, Timestamp, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 // Firebase 설정은 환경(운영/dev)에 따라 firebase-config.js에서 자동 선택됩니다.
@@ -1459,7 +1460,7 @@ window.resetOnboarding = async () => {
   } catch(e) { showToast('오류가 발생했어요'); console.error(e); }
 };
 
-// 회원 삭제 — users 문서 + 해당 유저의 records 전체 삭제
+// 회원 삭제 — 서비스 데이터 전체 삭제 + 동일 uid 재가입 차단
 window.deleteUser = async () => {
   const uid = document.getElementById('manage-user-uid').value;
   const u = allUsers.find(x=>x.uid===uid);
@@ -1472,6 +1473,9 @@ window.deleteUser = async () => {
   if (!ok2) return;
 
   try {
+    // 삭제 도중 실패하거나 Firebase Auth 계정이 남아도 같은 uid로 재가입하지 못하게 한다.
+    await setDoc(doc(db, 'account_deletions', uid), { uid, deletedAt: serverTimestamp() });
+
     // 1) 해당 유저의 모든 records 삭제
     const userRecords = allRecords.filter(r => r.uid === uid);
     for (const r of userRecords) {
@@ -1491,7 +1495,29 @@ window.deleteUser = async () => {
       await deleteDoc(doc(db, 'coupon_history', history.id));
     }
     await deleteDoc(doc(db, 'coupon_stats', uid));
-    // 3) users 문서 삭제
+
+    // 3) 주간·월간 목표 전체 삭제
+    const goalSnap = await getDocs(query(collection(db, 'weekly_goals'),
+      where(documentId(), '>=', `${uid}_`), where(documentId(), '<=', `${uid}_\uf8ff`)));
+    for (const goal of goalSnap.docs) await deleteDoc(goal.ref);
+
+    // 4) 조장 목록에 남은 uid 제거
+    for (const group of allGroups) {
+      const wasGyeongLeader = leaderUidsOf(group, 'gyeong').includes(uid);
+      const wasMyeonLeader = leaderUidsOf(group, 'myeon').includes(uid);
+      const wasLegacyLeader = Array.isArray(group.leaderUids) && group.leaderUids.includes(uid);
+      if (!wasGyeongLeader && !wasMyeonLeader && !wasLegacyLeader) continue;
+      const leaderUidsGyeong = leaderUidsOf(group, 'gyeong').filter(x => x !== uid);
+      const leaderUidsMyeon = leaderUidsOf(group, 'myeon').filter(x => x !== uid);
+      const updates = { leaderUidsGyeong, leaderUidsMyeon };
+      if (Array.isArray(group.leaderUids)) updates.leaderUids = group.leaderUids.filter(x => x !== uid);
+      await updateDoc(doc(db, 'groups', group.id), updates);
+      group.leaderUidsGyeong = leaderUidsGyeong;
+      group.leaderUidsMyeon = leaderUidsMyeon;
+      if (updates.leaderUids) group.leaderUids = updates.leaderUids;
+    }
+
+    // 5) users 문서 삭제
     await deleteDoc(doc(db, 'users', uid));
 
     allUsers = allUsers.filter(x => x.uid !== uid);

@@ -18,6 +18,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create: if (isSignedIn() && request.auth.uid == userId
+                        && !exists(/databases/$(database)/documents/account_deletions/$(userId))
                         && request.resource.data.get('isAdmin', false) == false
                         && request.resource.data.get('groupIds', []).size() == 0)
                     || isAdmin();
@@ -30,10 +31,33 @@ service cloud.firestore {
                     || isAdmin();
     }
 
-    // groups — 모두 읽기. 쓰기(생성/수정/삭제)는 관리자만.
+    // 탈퇴 시작 표식. 인증 계정 삭제가 네트워크 등으로 실패해도 동일 uid 재가입을 막고
+    // 다음 로그인에서 남은 탈퇴 처리를 안전하게 이어가기 위한 최소 정보만 저장한다.
+    match /account_deletions/{userId} {
+      allow read: if (isSignedIn() && request.auth.uid == userId) || isAdmin();
+      allow create: if (isSignedIn()
+                        && request.auth.uid == userId
+                        && request.resource.data.keys().hasOnly(['uid', 'deletedAt'])
+                        && request.resource.data.uid == request.auth.uid
+                        && request.resource.data.deletedAt == request.time)
+                    || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // groups — 일반 회원은 탈퇴 시 조장 목록에서 자기 uid를 제거하는 변경만 가능.
     match /groups/{groupId} {
       allow read: if isSignedIn();
-      allow write: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+                    || (isSignedIn()
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['leaderUids', 'leaderUidsGyeong', 'leaderUidsMyeon'])
+                        && request.resource.data.get('leaderUids', [])
+                             == resource.data.get('leaderUids', []).removeAll([request.auth.uid])
+                        && request.resource.data.get('leaderUidsGyeong', [])
+                             == resource.data.get('leaderUidsGyeong', []).removeAll([request.auth.uid])
+                        && request.resource.data.get('leaderUidsMyeon', [])
+                             == resource.data.get('leaderUidsMyeon', []).removeAll([request.auth.uid]));
     }
 
     // records — 모두 읽기(랭킹/비교). 본인 기록(uid 일치)만 생성/수정/삭제. 관리자는 전체 삭제.
@@ -45,7 +69,7 @@ service cloud.firestore {
                     || isAdmin();
     }
 
-    // weekly_goals — 문서ID 접두(uid_...)가 본인 것일 때만 읽기/쓰기. 관리자는 전체 허용.
+    // weekly_goals — 문서ID 접두(uid_...)가 본인 것일 때만 읽기/쓰기.
     match /weekly_goals/{goalId} {
       allow read, write: if (isSignedIn() && goalId.split('_')[0] == request.auth.uid)
                          || isAdmin();
@@ -56,8 +80,8 @@ service cloud.firestore {
       allow read: if isAdmin()
                   || (isSignedIn() && resource.data.uid == request.auth.uid);
       allow create: if isAdmin();
-      allow delete: if isAdmin()
-                    || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow delete: if (isSignedIn() && resource.data.uid == request.auth.uid)
+                    || isAdmin();
       allow update: if isAdmin()
                     || (isSignedIn()
                         && resource.data.uid == request.auth.uid
@@ -74,8 +98,8 @@ service cloud.firestore {
       allow read: if isAdmin()
                   || (isSignedIn() && recipientId == request.auth.uid);
       allow create, update: if isAdmin();
-      allow delete: if isAdmin()
-                    || (isSignedIn() && recipientId == request.auth.uid);
+      allow delete: if (isSignedIn() && recipientId == request.auth.uid)
+                    || isAdmin();
     }
 
     // 만료된 실제 쿠폰 문서를 삭제해도 발급 이력은 별도로 보존한다.
@@ -83,8 +107,8 @@ service cloud.firestore {
       allow read: if isAdmin()
                   || (isSignedIn() && resource.data.uid == request.auth.uid);
       allow create, update: if isAdmin();
-      allow delete: if isAdmin()
-                    || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow delete: if (isSignedIn() && resource.data.uid == request.auth.uid)
+                    || isAdmin();
     }
 
     // 회원은 본인의 사용 내역만 생성·조회. 수정·삭제와 전체 조회는 관리자만 가능.
@@ -110,8 +134,8 @@ service cloud.firestore {
                         && request.resource.data.allocations.size() > 0
                         && request.resource.data.usedAt == request.time);
       allow update: if isAdmin();
-      allow delete: if isAdmin()
-                    || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow delete: if (isSignedIn() && resource.data.uid == request.auth.uid)
+                    || isAdmin();
     }
 
     // 생존일지 미가입 쿠폰 수령인 — 일반 회원 목록/통계와 완전히 분리.
