@@ -103,7 +103,7 @@
 ### `records` — 문서 ID = **`{uid}_{YYYY-MM-DD}`** (하루 1문서)
 | 그룹 | 필드 |
 |---|---|
-| 식별 | `uid`, `nickname`(복사본), `date` |
+| 식별 | `uid`, `nickname`(복사본), `date`, `programType`(기록 당시 프로그램 유형) |
 | 매십경 | `gyeong_article` / `gyeong_opinion` / `gyeong_comment` (bool), `gyeongScore`(0–3) |
 | 매십면 | `myeon_am` / `myeon_pm` / `myeon_feedback` (bool), `myeonScore`(0–3) |
 | 루틴 | `routineGyeong` / `routineMyeon` / `routineDok` / `routinePilsa` (bool) |

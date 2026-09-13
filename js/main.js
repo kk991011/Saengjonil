@@ -707,49 +707,55 @@ window.saveRecord = async () => {
   try {
     const focusTags = [...document.querySelectorAll('.focus-tag.selected:not(.exercise-tag)')].map(t => t.textContent);
     const chk = id => document.getElementById(id).classList.contains('checked');
-    const lectureItems = buildLectureItems();
+    const programType = userProfile.programType || 'careerpt';
+    const isCareerPt = programType === 'careerpt';
+    const saveGyeong = isCareerPt || programType === 'maesipgyeong' || programType === 'maesipboth';
+    const saveMyeon = isCareerPt || programType === 'maesipmyeon' || programType === 'maesipboth';
+    const lectureItems = isCareerPt ? buildLectureItems() : {};
     const lectureSum = Object.values(lectureItems).reduce((a, b) => a + b, 0);
     const data = {
       uid: user.uid, nickname: userProfile.nickname, date,
+      programType,
       // 매십경 세부
-      gyeong_article: chk('r-gyeong-1'),
-      gyeong_opinion: chk('r-gyeong-2'),
-      gyeong_comment: chk('r-gyeong-3'),
-      gyeongScore: [chk('r-gyeong-1'),chk('r-gyeong-2'),chk('r-gyeong-3')].filter(Boolean).length,
+      gyeong_article: saveGyeong && chk('r-gyeong-1'),
+      gyeong_opinion: saveGyeong && chk('r-gyeong-2'),
+      gyeong_comment: saveGyeong && chk('r-gyeong-3'),
+      gyeongScore: saveGyeong ? [chk('r-gyeong-1'),chk('r-gyeong-2'),chk('r-gyeong-3')].filter(Boolean).length : 0,
       // 매십면 세부
-      myeon_am: chk('r-myeon-1'),
-      myeon_pm: chk('r-myeon-2'),
-      myeon_feedback: chk('r-myeon-3'),
-      myeonScore: [chk('r-myeon-1'),chk('r-myeon-2'),chk('r-myeon-3')].filter(Boolean).length,
+      myeon_am: saveMyeon && chk('r-myeon-1'),
+      myeon_pm: saveMyeon && chk('r-myeon-2'),
+      myeon_feedback: saveMyeon && chk('r-myeon-3'),
+      myeonScore: saveMyeon ? [chk('r-myeon-1'),chk('r-myeon-2'),chk('r-myeon-3')].filter(Boolean).length : 0,
       // 잠재의식 미션
-      subconGyeong: chk('r-subcon-gyeong'),
-      subconMyeon: chk('r-subcon-myeon'),
+      subconGyeong: saveGyeong && chk('r-subcon-gyeong'),
+      subconMyeon: saveMyeon && chk('r-subcon-myeon'),
       // 기존 호환성 유지
-      routineGyeong: chk('r-gyeong-1') && chk('r-gyeong-2') && chk('r-gyeong-3'),
-      routineMyeon:  chk('r-myeon-1')  && chk('r-myeon-2')  && chk('r-myeon-3'),
-      routineDok: chk('r-dok'),
-      routinePilsa: chk('r-pilsa'),
-      bookTitle:  document.getElementById('f-book-title').value.trim(),
-      routineUn:  getSelectedExercises().length > 0,
-      exercises:  getSelectedExercises(),
+      routineGyeong: saveGyeong && chk('r-gyeong-1') && chk('r-gyeong-2') && chk('r-gyeong-3'),
+      routineMyeon: saveMyeon && chk('r-myeon-1') && chk('r-myeon-2') && chk('r-myeon-3'),
+      routineDok: isCareerPt && chk('r-dok'),
+      routinePilsa: isCareerPt && chk('r-pilsa'),
+      bookTitle: isCareerPt ? document.getElementById('f-book-title').value.trim() : '',
+      routineUn: isCareerPt && getSelectedExercises().length > 0,
+      exercises: isCareerPt ? getSelectedExercises() : [],
       lecture: lectureSum,
       lectureItems,
-      jasoseo: durationMinutes('f-jasoseo'),
-      jasoseoCount: Number(document.getElementById('f-jasoseo-count').value) || 0,
-      faIndustry: durationMinutes('f-fa-industry'),
-      faCompany: durationMinutes('f-fa-company'),
-      faInterviewer: durationMinutes('f-fa-interviewer'),
-      faTime: calcFaTime(),
-      fr5050: calcFaTime() > 0,
-      siteVisitCount: Number(document.getElementById('f-site-visit-count').value) || 0,
-      pilgi: durationMinutes('f-pilgi'),
-      interview: durationMinutes('f-interview'),
-      cert: durationMinutes('f-cert'),
-      gyeongTime: durationMinutes('f-gyeong-time'),
-      additionalActivities: customActivityEntries.map(entry => ({ name: entry.name, minutes: entry.minutes })),
+      jasoseo: isCareerPt ? durationMinutes('f-jasoseo') : 0,
+      jasoseoCount: isCareerPt ? (Number(document.getElementById('f-jasoseo-count').value) || 0) : 0,
+      faIndustry: isCareerPt ? durationMinutes('f-fa-industry') : 0,
+      faCompany: isCareerPt ? durationMinutes('f-fa-company') : 0,
+      faInterviewer: isCareerPt ? durationMinutes('f-fa-interviewer') : 0,
+      faTime: isCareerPt ? calcFaTime() : 0,
+      fr5050: isCareerPt && calcFaTime() > 0,
+      siteVisitCount: isCareerPt ? (Number(document.getElementById('f-site-visit-count').value) || 0) : 0,
+      pilgi: isCareerPt ? durationMinutes('f-pilgi') : 0,
+      interview: isCareerPt ? durationMinutes('f-interview') : 0,
+      cert: isCareerPt ? durationMinutes('f-cert') : 0,
+      gyeongTime: isCareerPt ? durationMinutes('f-gyeong-time') : 0,
+      additionalActivities: isCareerPt ? customActivityEntries.map(entry => ({ name: entry.name, minutes: entry.minutes })) : [],
       // 기존 통계·내보내기 코드와의 호환을 위해 직접 추가 시간 합계도 유지한다.
-      etc: customActivityTotal(),
+      etc: isCareerPt ? customActivityTotal() : 0,
       totalTime: (() => {
+        if (!isCareerPt) return 0;
         const manualWrap = document.getElementById('f-total-time-manual-wrap');
         if (manualWrap && manualWrap.style.display !== 'none') {
           return durationMinutes('f-total-time-manual');
@@ -758,10 +764,10 @@ window.saveRecord = async () => {
           + durationMinutes('f-interview') + durationMinutes('f-cert') + durationMinutes('f-gyeong-time')
           + customActivityTotal();
       })(),
-      applications: Number(document.getElementById('f-applications').value) || 0,
+      applications: isCareerPt ? (Number(document.getElementById('f-applications').value) || 0) : 0,
       selfEsteem: scoreSelected || 0,
       jobProb: userProfile.jobProb || 0,
-      focusTags,
+      focusTags: isCareerPt ? focusTags : [],
       createdAt: new Date().toISOString(),
     };
     await setDoc(doc(db, 'records', `${user.uid}_${date}`), data);
@@ -1132,22 +1138,25 @@ window.loadRecords = async () => {
   const list = document.getElementById('records-list');
   if (!recs.length) { list.innerHTML = '<div class="empty-state"><p>아직 기록이 없어요.<br>오늘 입력 탭에서 첫 기록을 남겨보세요!</p></div>'; return; }
   list.innerHTML = recs.map(r => {
+    const programType = r.programType || userProfile.programType || 'careerpt';
+    const isCareerPt = programType === 'careerpt';
+    const showGyeong = isCareerPt || programType === 'maesipgyeong' || programType === 'maesipboth';
+    const showMyeon = isCareerPt || programType === 'maesipmyeon' || programType === 'maesipboth';
     const routineDone = [r.routineGyeong,r.routineMyeon,r.routineDok,r.routineUn].filter(Boolean).length;
     const gCnt = [r.gyeong_article,r.gyeong_opinion,r.gyeong_comment].filter(Boolean).length;  // 매십경 세부 3개 중
     const mCnt = [r.myeon_am,r.myeon_pm,r.myeon_feedback].filter(Boolean).length;              // 매십면 세부 3개 중
     const dateStr = new Date(r.date).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
     const isToday = r.date === today;
-    return `<div class="record-card" ${isToday ? 'style="border-color:var(--main-mid)"' : ''}>
-      <div class="record-header">
-        <div>
-          <div class="record-date">${dateStr}${isToday ? ' <span style="font-size:11px;background:var(--main);color:white;padding:1px 7px;border-radius:6px;margin-left:4px">오늘</span>' : ''}</div>
-        </div>
-        <div class="record-badges">
-          ${isFr5050Done(r) ? '<span class="badge badge-purple">FR완료 ✦</span>' : ''}
-          <span class="badge ${routineDone===4?'badge-purple':routineDone>=2?'badge-green':'badge-gray'}">루틴 ${routineDone}/4</span>
-        </div>
-      </div>
-      <div class="record-grid">
+    const badges = [];
+    if (isCareerPt) {
+      if (isFr5050Done(r)) badges.push('<span class="badge badge-purple">FR완료 ✦</span>');
+      const routineClass = routineDone === 4 ? 'badge-purple' : routineDone >= 2 ? 'badge-green' : 'badge-gray';
+      badges.push(`<span class="badge ${routineClass}">루틴 ${routineDone}/4</span>`);
+    } else {
+      if (showGyeong) badges.push(`<span class="badge ${gCnt===3?'badge-purple':gCnt>0?'badge-green':'badge-gray'}">매십경 ${gCnt}/3</span>`);
+      if (showMyeon) badges.push(`<span class="badge ${mCnt===3?'badge-purple':mCnt>0?'badge-green':'badge-gray'}">매십면 ${mCnt}/3</span>`);
+    }
+    const careerGrid = isCareerPt ? `<div class="record-grid">
         <div class="record-item">강의 <span>${r.lecture||0}분</span></div>
         <div class="record-item">자소서 <span>${r.jasoseo||0}분</span></div>
         <div class="record-item">FR5050 <span>${r.faTime||0}분</span></div>
@@ -1158,14 +1167,27 @@ window.loadRecords = async () => {
         <div class="record-item">매십경 <span>${r.gyeongTime||0}분</span></div>
         ${additionalActivitiesOf(r).map(entry => `<div class="record-item">${couponEscape(entry.name)} <span>${entry.minutes}분</span></div>`).join('')}
         <div class="record-item">지원 <span>${r.applications||0}개</span></div>
+      </div>` : '';
+    const routineTags = [
+      showGyeong ? `<span class="rtag ${gCnt>0?'rtag-done':'rtag-miss'}">매십경${gCnt===3?' ✓':''}</span>` : '',
+      showMyeon ? `<span class="rtag ${mCnt>0?'rtag-done':'rtag-miss'}">매십면${mCnt===3?' ✓':''}</span>` : '',
+      isCareerPt ? `<span class="rtag ${r.routineDok?'rtag-done':'rtag-miss'}">매십독${r.bookTitle?' · '+couponEscape(r.bookTitle):''}</span>` : '',
+      isCareerPt ? `<span class="rtag ${r.routineUn?'rtag-done':'rtag-miss'}">매십운${r.routineUn?' ✓':''}</span>` : '',
+    ].join('');
+    return `<div class="record-card" ${isToday ? 'style="border-color:var(--main-mid)"' : ''}>
+      <div class="record-header">
+        <div>
+          <div class="record-date">${dateStr}${isToday ? ' <span style="font-size:11px;background:var(--main);color:white;padding:1px 7px;border-radius:6px;margin-left:4px">오늘</span>' : ''}</div>
+        </div>
+        <div class="record-badges">
+          ${badges.join('')}
+        </div>
       </div>
+      ${careerGrid}
       <div class="routine-tags">
-        <span class="rtag ${gCnt>0?'rtag-done':'rtag-miss'}">매십경${gCnt===3?' ✓':''}</span>
-        <span class="rtag ${mCnt>0?'rtag-done':'rtag-miss'}">매십면${mCnt===3?' ✓':''}</span>
-        <span class="rtag ${r.routineDok?'rtag-done':'rtag-miss'}">매십독${r.bookTitle?' · '+r.bookTitle:''}</span>
-        <span class="rtag ${r.routineUn?'rtag-done':'rtag-miss'}">매십운${r.routineUn?' ✓':''}</span>
+        ${routineTags}
       </div>
-      ${r.focusTags?.length ? `<div style="font-size:12px;color:#aaa;margin-bottom:8px">집중: <span style="color:var(--main)">${r.focusTags.join(', ')}</span></div>` : ''}
+      ${isCareerPt && r.focusTags?.length ? `<div style="font-size:12px;color:#aaa;margin-bottom:8px">집중: <span style="color:var(--main)">${r.focusTags.map(couponEscape).join(', ')}</span></div>` : ''}
       ${isToday ? `
       <div class="record-actions">
         <button class="btn-sm btn-sm-primary" onclick="editTodayRecord()">수정</button>
@@ -1433,36 +1455,44 @@ window.downloadMyExcel = () => {
   const recs = filter ? allRecords.filter(r => r.date.startsWith(filter)) : allRecords;
   if (!recs.length) { showToast('선택한 기간에 기록이 없어요'); return; }
 
-  const headers = [
-    '날짜', '매십경', '매십면', '매십독(책제목)', '매십운(운동종류)',
-    '강의(분)', '자소서(분)', '필기(분)', '면접(분)', '자격증(분)', '매십경(분)', '직접 추가 항목', '직접 추가 시간(분)', '총취준시간(분)', '지원개수',
-    '자존감(1-5)', '취업확률(%)', 'FR5050', '현장방문(회)', '집중활동'
-  ];
-
   // 세부 항목 완료 정도: 전부=O, 일부=△, 없음=X
   const mark3 = arr => { const c = arr.filter(Boolean).length; return c === 0 ? 'X' : c === arr.length ? 'O' : '△'; };
-  const rows = [...recs].reverse().map(r => [
-    r.date,
-    mark3([r.gyeong_article, r.gyeong_opinion, r.gyeong_comment]),
-    mark3([r.myeon_am, r.myeon_pm, r.myeon_feedback]),
-    r.bookTitle     || (r.routineDok ? 'O' : 'X'),
-    (r.exercises && r.exercises.length) ? r.exercises.join('/') : (r.routineUn ? 'O' : 'X'),
-    r.lecture       || 0,
-    r.jasoseo       || 0,
-    r.pilgi         || 0,
-    r.interview     || 0,
-    r.cert          || 0,
-    r.gyeongTime    || 0,
-    additionalActivitiesOf(r).map(entry => `${entry.name}:${entry.minutes}분`).join('/'),
-    additionalActivitiesOf(r).reduce((sum, entry) => sum + entry.minutes, 0),
-    r.totalTime || ((r.lecture||0)+(r.jasoseo||0)+(r.pilgi||0)+(r.interview||0)+(r.cert||0)+(r.gyeongTime||0)+(r.etc||0)),
-    r.applications  || 0,
-    r.selfEsteem    || '',
-    r.jobProb       || '',
-    isFr5050Done(r) ? 'O' : 'X',
-    siteVisitCountOf(r),
-    (r.focusTags || []).join('/'),
-  ]);
+  const exportType = userProfile.programType || 'careerpt';
+  const exportGyeong = exportType === 'careerpt' || exportType === 'maesipgyeong' || exportType === 'maesipboth';
+  const exportMyeon = exportType === 'careerpt' || exportType === 'maesipmyeon' || exportType === 'maesipboth';
+  let headers, rows;
+  if (exportType === 'careerpt') {
+    headers = [
+      '날짜', '매십경', '매십면', '매십독(책제목)', '매십운(운동종류)',
+      '강의(분)', '자소서(분)', '필기(분)', '면접(분)', '자격증(분)', '매십경(분)', '직접 추가 항목', '직접 추가 시간(분)', '총취준시간(분)', '지원개수',
+      '자존감(1-5)', '취업확률(%)', 'FR5050', '현장방문(회)', '집중활동'
+    ];
+    rows = [...recs].reverse().map(r => [
+      r.date,
+      mark3([r.gyeong_article, r.gyeong_opinion, r.gyeong_comment]),
+      mark3([r.myeon_am, r.myeon_pm, r.myeon_feedback]),
+      r.bookTitle || (r.routineDok ? 'O' : 'X'),
+      (r.exercises && r.exercises.length) ? r.exercises.join('/') : (r.routineUn ? 'O' : 'X'),
+      r.lecture || 0, r.jasoseo || 0, r.pilgi || 0, r.interview || 0, r.cert || 0, r.gyeongTime || 0,
+      additionalActivitiesOf(r).map(entry => `${entry.name}:${entry.minutes}분`).join('/'),
+      additionalActivitiesOf(r).reduce((sum, entry) => sum + entry.minutes, 0),
+      r.totalTime || ((r.lecture||0)+(r.jasoseo||0)+(r.pilgi||0)+(r.interview||0)+(r.cert||0)+(r.gyeongTime||0)+(r.etc||0)),
+      r.applications || 0, r.selfEsteem || '', r.jobProb || '',
+      isFr5050Done(r) ? 'O' : 'X', siteVisitCountOf(r), (r.focusTags || []).join('/'),
+    ]);
+  } else {
+    headers = ['날짜'];
+    if (exportGyeong) headers.push('매십경');
+    if (exportMyeon) headers.push('매십면');
+    headers.push('자존감(1-5)', '취업확률(%)');
+    rows = [...recs].reverse().map(r => {
+      const row = [r.date];
+      if (exportGyeong) row.push(mark3([r.gyeong_article, r.gyeong_opinion, r.gyeong_comment]));
+      if (exportMyeon) row.push(mark3([r.myeon_am, r.myeon_pm, r.myeon_feedback]));
+      row.push(r.selfEsteem || '', r.jobProb || '');
+      return row;
+    });
+  }
 
   const nickname = userProfile.nickname || '기록';
   const filename = filter
