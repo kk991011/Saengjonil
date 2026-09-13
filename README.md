@@ -80,7 +80,6 @@
 | `isAdmin` | boolean | 관리자 여부. **관리자 판정은 이 필드**(과거 `ADMIN_UIDS` 배열 방식은 폐기). 본인이 못 바꿈(규칙) |
 | `jobProb` | number | 예상 취업 확률 (%) |
 | `prevInterviewCount` / `prevInterviewHour` / `prevPilgiHour` / `prevApplications` | number \| null | 이전 시즌 기록 — 면접 경험(회)·면접 준비(시간)·필기 준비(시간)·지원 개수(개). 프로필에서 입력, 미입력은 `null`(비교표에 `-`). `compare` 항목 비교 표/엑셀에 표시(기간 무관) |
-| `account_deletions/{uid}` | document | 본인 탈퇴 시 생성되는 최소 표식(`uid`, `deletedAt`). 탈퇴하지 않은 회원의 쿠폰 이력 임의 삭제와 동일 uid 재온보딩을 차단 |
 | `themeColor` | string | 테마 색상 (hex) |
 | `onboardingDone` | boolean | 온보딩 완료 여부 |
 | `createdAt` | string(ISO) | 생성 시각 |

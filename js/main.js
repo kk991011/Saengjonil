@@ -1515,11 +1515,9 @@ async function finishAccountDeletion() {
       getDocs(query(collection(db, 'coupon_history'), where('uid', '==', uid))),
     ]);
 
-    const ordinaryRefs = [
+    const refs = [
       ...recordSnap.docs.map(d => d.ref),
       ...goalSnap.docs.map(d => d.ref),
-    ];
-    const accountRefs = [
       ...issueSnap.docs.map(d => d.ref),
       ...usageSnap.docs.map(d => d.ref),
       ...historySnap.docs.map(d => d.ref),
@@ -1527,24 +1525,12 @@ async function finishAccountDeletion() {
       doc(db, 'users', uid),
     ];
 
-    // 쿠폰 내역과 프로필, 탈퇴 표식은 한 번에 반영해야 보안 규칙상 임의 이력 삭제가 불가능하다.
-    if (accountRefs.length + 1 > 500) {
-      throw Object.assign(new Error('탈퇴 시 한 번에 정리할 쿠폰 내역이 너무 많습니다.'), {
-        code: 'account-deletion/too-many-coupon-documents',
-      });
-    }
-
     // Firestore batch 한도(500)보다 여유 있게 나눠 많은 기록도 빠짐없이 삭제한다.
-    for (let i = 0; i < ordinaryRefs.length; i += 400) {
+    for (let i = 0; i < refs.length; i += 400) {
       const batch = writeBatch(db);
-      ordinaryRefs.slice(i, i + 400).forEach(ref => batch.delete(ref));
+      refs.slice(i, i + 400).forEach(ref => batch.delete(ref));
       await batch.commit();
     }
-
-    const accountBatch = writeBatch(db);
-    accountRefs.forEach(ref => accountBatch.delete(ref));
-    accountBatch.set(doc(db, 'account_deletions', uid), { uid, deletedAt: serverTimestamp() });
-    await accountBatch.commit();
 
     btn.textContent = '계정 삭제 중...';
     await deleteAuthUser(user);
@@ -1553,11 +1539,7 @@ async function finishAccountDeletion() {
     return true;
   } catch (e) {
     console.error('회원 탈퇴 오류:', e);
-    if (e.code === 'account-deletion/too-many-coupon-documents') {
-      alert('삭제할 쿠폰 내역이 많아 자동 탈퇴할 수 없어요. 관리자에게 탈퇴를 요청해주세요.');
-    } else {
-      alert(`탈퇴 처리 중 문제가 발생했어요. 다시 시도하거나 관리자에게 문의해주세요.\n(${e.code || e.message})`);
-    }
+    alert(`탈퇴 처리 중 문제가 발생했어요. 다시 시도하거나 관리자에게 문의해주세요.\n(${e.code || e.message})`);
     btn.disabled = false;
     btn.textContent = '회원 탈퇴';
     return false;
