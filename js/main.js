@@ -1,7 +1,8 @@
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut, GoogleAuthProvider,
-  reauthenticateWithPopup, deleteUser as deleteAuthUser }
+  reauthenticateWithPopup, reauthenticateWithRedirect, getRedirectResult,
+  deleteUser as deleteAuthUser }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, collection, query,
   where, orderBy, getDocs, deleteDoc, documentId, getCountFromServer, runTransaction,
@@ -14,6 +15,13 @@ import { firebaseConfig } from '../firebase-config.js';
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const WITHDRAW_REDIRECT_KEY = 'saengjonil-withdraw-redirect';
+let withdrawRedirectError = null;
+const withdrawRedirectResult = getRedirectResult(auth).catch(e => {
+  withdrawRedirectError = e;
+  console.error('탈퇴 재인증 리다이렉트 오류:', e);
+  return null;
+});
 
 // 오늘 날짜(로컬, YYYY-MM-DD) — 미래 날짜 선택 방지에 사용
 const _todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
@@ -86,6 +94,22 @@ onAuthStateChanged(auth, async u => {
   user = u;
   userProfile = (await getDoc(doc(db, 'users', u.uid))).data();
   if (!userProfile?.onboardingDone) { window.location.href = 'index.html'; return; }
+
+  // 팝업이 차단돼 리다이렉트로 재인증한 경우, 돌아온 뒤 탈퇴 처리를 이어서 진행한다.
+  const redirectResult = await withdrawRedirectResult;
+  const pendingWithdrawUid = sessionStorage.getItem(WITHDRAW_REDIRECT_KEY);
+  if (pendingWithdrawUid) {
+    sessionStorage.removeItem(WITHDRAW_REDIRECT_KEY);
+    if (withdrawRedirectError) {
+      alert('Google 본인 확인 중 문제가 발생했어요. 다시 시도해주세요.');
+    } else if (pendingWithdrawUid === u.uid && redirectResult?.user?.uid === u.uid) {
+      const completed = await finishAccountDeletion();
+      if (completed) return;
+    } else {
+      alert('Google 본인 확인이 완료되지 않아 탈퇴하지 않았어요.');
+    }
+  }
+
   applyTheme(userProfile.themeColor || '#534AB7');
   initHeader();
   initInputForm();
@@ -1452,8 +1476,35 @@ window.withdrawAccount = async () => {
 
   try {
     await reauthenticateWithPopup(user, new GoogleAuthProvider());
-    btn.textContent = '데이터 삭제 중...';
+    await finishAccountDeletion();
+  } catch (e) {
+    console.error('회원 탈퇴 재인증 오류:', e);
+    if (e.code === 'auth/popup-blocked') {
+      try {
+        sessionStorage.setItem(WITHDRAW_REDIRECT_KEY, user.uid);
+        await reauthenticateWithRedirect(user, new GoogleAuthProvider());
+        return;
+      } catch (redirectError) {
+        sessionStorage.removeItem(WITHDRAW_REDIRECT_KEY);
+        console.error('회원 탈퇴 리다이렉트 시작 오류:', redirectError);
+        alert('Google 본인 확인 화면을 열지 못했어요. 다시 시도해주세요.');
+      }
+    } else if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+      alert('본인 확인이 취소되어 탈퇴하지 않았어요.');
+    } else {
+      alert(`본인 확인 중 문제가 발생했어요. 다시 시도해주세요.\n(${e.code || e.message})`);
+    }
+    btn.disabled = false;
+    btn.textContent = '회원 탈퇴';
+  }
+};
 
+async function finishAccountDeletion() {
+  const btn = document.getElementById('pm-withdraw-btn');
+  btn.disabled = true;
+  btn.textContent = '데이터 삭제 중...';
+
+  try {
     const uid = user.uid;
     const [recordSnap, goalSnap, issueSnap, usageSnap, historySnap] = await Promise.all([
       getDocs(query(collection(db, 'records'), where('uid', '==', uid))),
@@ -1499,19 +1550,19 @@ window.withdrawAccount = async () => {
     await deleteAuthUser(user);
     alert('회원 탈퇴가 완료됐어요. 그동안 함께해주셔서 감사합니다.');
     window.location.href = 'index.html';
+    return true;
   } catch (e) {
     console.error('회원 탈퇴 오류:', e);
-    if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
-      alert('본인 확인이 취소되어 탈퇴하지 않았어요.');
-    } else if (e.code === 'account-deletion/too-many-coupon-documents') {
+    if (e.code === 'account-deletion/too-many-coupon-documents') {
       alert('삭제할 쿠폰 내역이 많아 자동 탈퇴할 수 없어요. 관리자에게 탈퇴를 요청해주세요.');
     } else {
-      alert('탈퇴 처리 중 문제가 발생했어요. 다시 시도하거나 관리자에게 문의해주세요.');
+      alert(`탈퇴 처리 중 문제가 발생했어요. 다시 시도하거나 관리자에게 문의해주세요.\n(${e.code || e.message})`);
     }
     btn.disabled = false;
     btn.textContent = '회원 탈퇴';
+    return false;
   }
-};
+}
 
 // ── 토스트 ──
 function showToast(msg) {
