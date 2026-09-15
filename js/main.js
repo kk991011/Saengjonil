@@ -141,6 +141,9 @@ onAuthStateChanged(auth, async u => {
   initInputForm();
   try {
     await Promise.all([loadGoals(), loadMyCoupons(), loadAllRecords()]);
+    // 오늘 기록이 이미 있으면 새로고침 후에도 입력 폼에 저장값을 복원한다.
+    // 기록 탭의 "수정"과 같은 복원 경로를 사용해 두 화면의 상태가 어긋나지 않게 한다.
+    window.editTodayRecord({ switchToInput: false, notify: false });
     loadDashboard();
   } catch (e) {
     console.error('초기 데이터 로드 오류:', e);
@@ -1208,14 +1211,16 @@ window.deleteRecord = async (date) => {
 };
 
 // 오늘 기록 수정
-window.editTodayRecord = () => {
+window.editTodayRecord = ({ switchToInput = true, notify = true } = {}) => {
   const today = localDate();
   const r = allRecords.find(rec => rec.date === today);
   if (!r) return;
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-input').classList.add('active');
-  document.querySelectorAll('.tab-btn')[0].classList.add('active');
+  if (switchToInput) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-input').classList.add('active');
+    document.querySelectorAll('.tab-btn')[0].classList.add('active');
+  }
   ['r-gyeong-1','r-gyeong-2','r-gyeong-3','r-myeon-1','r-myeon-2','r-myeon-3','r-dok','r-pilsa','r-subcon-gyeong','r-subcon-myeon'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.classList.remove('checked'); el.closest('.routine-row')?.classList.remove('checked'); }
@@ -1284,8 +1289,8 @@ window.editTodayRecord = () => {
   document.querySelectorAll('.score-btn').forEach((btn,i) => btn.classList.toggle('selected', i+1 === r.selfEsteem));
   const editFocusTags = (r.focusTags||[]).map(t => t === 'FA5050/현장방문' ? 'FR5050' : t);
   document.querySelectorAll('.tag-row:last-of-type .focus-tag').forEach(tag => tag.classList.toggle('selected', editFocusTags.includes(tag.textContent)));
-  showToast('오늘 기록을 불러왔어요. 수정 후 저장해주세요! ✏️');
-  window.scrollTo(0, 0);
+  if (notify) showToast('오늘 기록을 불러왔어요. 수정 후 저장해주세요! ✏️');
+  if (switchToInput) window.scrollTo(0, 0);
 };
 
 // ── 주간 목표 ──

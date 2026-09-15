@@ -1,0 +1,347 @@
+{"kind":"deck","id":"pr/5wikhl","name":"Deck"}
+{"kind":"layout","layoutId":"49cc0c71-ebd2-41b3-8de5-78e0184c71f9","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"309f9f0c-5f80-4c0b-8e85-d42a1bb03831","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/3uxss6","slide":1,"title":"2026년","textShapes":7}
+{"kind":"shape","id":"sh/exgrm54f","slide":1,"bbox":[0,0,812,720]}
+{"kind":"shape","id":"sh/107ax036","slide":1,"bbox":[72,105,76,20]}
+{"kind":"textbox","id":"sh/0zy9ovml","slide":1,"text":"2026년","textPreview":"2026년","textChars":5,"textLines":1,"bbox":[72,107,76,16]}
+{"kind":"textbox","id":"sh/rupsrql4","slide":1,"text":"LG생활건강","textPreview":"LG생활건강","textChars":6,"textLines":1,"bbox":[72,170,440,30]}
+{"kind":"textbox","id":"sh/qtwril4j","slide":1,"text":"Home Care & Daily Beauty","textPreview":"Home Care & Daily Beauty","textChars":24,"textLines":1,"bbox":[72,215,620,44]}
+{"kind":"textbox","id":"sh/dw7at03u","slide":1,"text":"국내영업 Experience Map","textPreview":"국내영업 Experience Map","textChars":19,"textLines":1,"bbox":[72,265,650,58]}
+{"kind":"shape","id":"sh/cvy9kvmp","slide":1,"bbox":[72,345,95,5]}
+{"kind":"textbox","id":"sh/3q5snqls","slide":1,"text":"고객의 행동을 읽고,\n데이터로 판단하며,\n실행으로 연결하는 사람","textPreview":"고객의 행동을 읽고, | 데이터로 판단하며, | 실행으로 연결하는 사람","textChars":35,"textLines":3,"bbox":[72,382,550,148]}
+{"kind":"textbox","id":"sh/25wrel47","slide":1,"text":"김가영  |  Home Care & Daily Beauty 국내영업 지원","textPreview":"김가영  |  Home Care & Daily Beauty 국내영업 지원","textChars":40,"textLines":1,"bbox":[72,652,560,22]}
+{"kind":"textbox","id":"sh/cfap4vip","slide":1,"text":"P\nO\nR\nT\nF\nO\nL\nI\nO","textPreview":"P | O | R | T | F | O | L | I | O","textChars":17,"textLines":9,"bbox":[1030,185,70,350]}
+{"kind":"notes","id":"nt/3uxss6","slide":1,"text":""}
+{"kind":"slide","id":"sl/v1z3ax","slide":2,"title":"02","textShapes":24}
+{"kind":"shape","id":"sh/ny5o7u1w","slide":2,"bbox":[0,0,325,720]}
+{"kind":"textbox","id":"sh/ojep0zih","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[72,80,90,50]}
+{"kind":"textbox","id":"sh/9k7q94j2","slide":2,"text":"가영의 포트폴리오 | Gayoung’s Portfolio","textPreview":"가영의 포트폴리오 | Gayoung’s Portfolio","textChars":31,"textLines":1,"bbox":[72,178,230,18]}
+{"kind":"textbox","id":"sh/alg72907","slide":2,"text":"Experience\nMap","textPreview":"Experience | Map","textChars":14,"textLines":2,"bbox":[72,215,220,90]}
+{"kind":"shape","id":"sh/bmp8bu1s","slide":2,"bbox":[72,330,122,5]}
+{"kind":"textbox","id":"sh/xo7qd4jy","slide":2,"text":"김가영","textPreview":"김가영","textChars":3,"textLines":1,"bbox":[97,592,122,24]}
+{"kind":"textbox","id":"sh/qpc7q503","slide":2,"text":"고객 이해에서 실행까지","textPreview":"고객 이해에서 실행까지","textChars":12,"textLines":1,"bbox":[380,75,600,38]}
+{"kind":"textbox","id":"sh/rqloza1o","slide":2,"text":"국내영업을 준비해온 경험","textPreview":"국내영업을 준비해온 경험","textChars":13,"textLines":1,"bbox":[380,112,660,45]}
+{"kind":"shape","id":"sh/jehgzi9c","slide":2,"bbox":[380,200,48,32]}
+{"kind":"textbox","id":"sh/id8z6dsr","slide":2,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[380,205,48,22]}
+{"kind":"textbox","id":"sh/5gzy18ri","slide":2,"text":"고객 관찰","textPreview":"고객 관찰","textChars":5,"textLines":1,"bbox":[455,203,155,26]}
+{"kind":"textbox","id":"sh/4fqh83ax","slide":2,"text":"취업일지","textPreview":"취업일지","textChars":4,"textLines":1,"bbox":[625,203,175,26]}
+{"kind":"textbox","id":"sh/vaxgvyt0","slide":2,"text":"약 50명 사용자의 이용 흐름과 요구를 반영해 서비스 구조 개선","textPreview":"약 50명 사용자의 이용 흐름과 요구를 반영해 서비스 구조 개선","textChars":35,"textLines":1,"bbox":[805,198,390,38]}
+{"kind":"shape","id":"sh/u9of2tsv","slide":2,"bbox":[455,256,740,1]}
+{"kind":"shape","id":"sh/hczyx8b6","slide":2,"bbox":[380,292,48,32]}
+{"kind":"textbox","id":"sh/wbqx43al","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[380,297,48,22]}
+{"kind":"textbox","id":"sh/76xgryt4","slide":2,"text":"데이터 기반 판단","textPreview":"데이터 기반 판단","textChars":9,"textLines":1,"bbox":[455,295,155,26]}
+{"kind":"textbox","id":"sh/mlofytsj","slide":2,"text":"웹툰 소비자 분석","textPreview":"웹툰 소비자 분석","textChars":9,"textLines":1,"bbox":[625,295,175,26]}
+{"kind":"textbox","id":"sh/ah4zatcb","slide":2,"text":"해외 소비자를 5개 유형으로 구분하고 유형별 전략 근거 도출","textPreview":"해외 소비자를 5개 유형으로 구분하고 유형별 전략 근거 도출","textChars":33,"textLines":1,"bbox":[805,290,390,38]}
+{"kind":"shape","id":"sh/bidgjedw","slide":2,"bbox":[455,348,740,1]}
+{"kind":"shape","id":"sh/cjmhcjuh","slide":2,"bbox":[380,384,48,32]}
+{"kind":"textbox","id":"sh/x4filov2","slide":2,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[380,389,48,22]}
+{"kind":"textbox","id":"sh/y5ozetcn","slide":2,"text":"전략 기획·실행","textPreview":"전략 기획·실행","textChars":8,"textLines":1,"bbox":[455,387,155,26]}
+{"kind":"textbox","id":"sh/z6x0nyd8","slide":2,"text":"제주항공 IMC","textPreview":"제주항공 IMC","textChars":8,"textLines":1,"bbox":[625,387,175,26]}
+{"kind":"textbox","id":"sh/k76hg3ut","slide":2,"text":"2030 구매행동 분석을 기반으로 온·오프라인 캠페인 기획","textPreview":"2030 구매행동 분석을 기반으로 온·오프라인 캠페인 기획","textChars":32,"textLines":1,"bbox":[805,382,390,38]}
+{"kind":"shape","id":"sh/l8fip8vy","slide":2,"bbox":[455,440,740,1]}
+{"kind":"shape","id":"sh/m9ozidcj","slide":2,"bbox":[380,476,48,32]}
+{"kind":"textbox","id":"sh/7ax0ryd4","slide":2,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[380,481,48,22]}
+{"kind":"textbox","id":"sh/hg3axwji","slide":2,"text":"고객 커뮤니케이션","textPreview":"고객 커뮤니케이션","textChars":9,"textLines":1,"bbox":[455,479,155,26]}
+{"kind":"textbox","id":"sh/gfat4rix","slide":2,"text":"입학팀","textPreview":"입학팀","textChars":3,"textLines":1,"bbox":[625,479,175,26]}
+{"kind":"textbox","id":"sh/ve1svm1c","slide":2,"text":"약 3년간 문의·민원에 대응하고 고객별 맞춤 정보 제공","textPreview":"약 3년간 문의·민원에 대응하고 고객별 맞춤 정보 제공","textChars":30,"textLines":1,"bbox":[805,474,390,38]}
+{"kind":"shape","id":"sh/udsb2h07","slide":2,"bbox":[455,532,740,1]}
+{"kind":"shape","id":"sh/pk3u1gju","slide":2,"bbox":[380,607,815,52]}
+{"kind":"textbox","id":"sh/4jut8bi9","slide":2,"text":"관찰   분석   실행   개선","textPreview":"관찰   분석   실행   개선","textChars":17,"textLines":1,"bbox":[405,620,270,24]}
+{"kind":"textbox","id":"sh/3ilsz61o","slide":2,"text":"고객의 선택을 이해하고 실행 가능한 전략으로 연결","textPreview":"고객의 선택을 이해하고 실행 가능한 전략으로 연결","textChars":27,"textLines":1,"bbox":[700,621,450,22]}
+{"kind":"image","id":"im/5w3ixgvm","slide":2,"name":"","alt":"김가영 증명사진","bbox":[97,420,122,164]}
+{"kind":"notes","id":"nt/v1z3ax","slide":2,"text":""}
+{"kind":"slide","id":"sl/8wthvp","slide":3,"title":"가영의 포트폴리오 | Gayoung’s Portfolio","textShapes":27}
+{"kind":"textbox","id":"sh/nix8jids","slide":3,"text":"가영의 포트폴리오 | Gayoung’s Portfolio","textPreview":"가영의 포트폴리오 | Gayoung’s Portfolio","textChars":31,"textLines":1,"bbox":[78,25,380,18]}
+{"kind":"shape","id":"sh/oj6pcned","slide":3,"bbox":[1160,26,54,22]}
+{"kind":"textbox","id":"sh/pkfql8vy","slide":3,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[1160,27,54,18]}
+{"kind":"textbox","id":"sh/aloredwj","slide":3,"text":"프로젝트 상세 정보 (1/7)","textPreview":"프로젝트 상세 정보 (1/7)","textChars":16,"textLines":1,"bbox":[78,58,560,50]}
+{"kind":"textbox","id":"sh/bmx8nid4","slide":3,"text":"01.","textPreview":"01.","textChars":3,"textLines":1,"bbox":[78,150,58,34]}
+{"kind":"textbox","id":"sh/cn69gnep","slide":3,"text":"취업일지","textPreview":"취업일지","textChars":4,"textLines":1,"bbox":[140,150,990,38]}
+{"kind":"textbox","id":"sh/xozqpsva","slide":3,"text":": 50명의 취업준비생, 기록을 지속하게 만드는 방법","textPreview":": 50명의 취업준비생, 기록을 지속하게 만드는 방법","textChars":29,"textLines":1,"bbox":[78,188,1080,34]}
+{"kind":"shape","id":"sh/yp8rixwv","slide":3,"bbox":[78,251,19,19]}
+{"kind":"textbox","id":"sh/zah8r2d0","slide":3,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,249,18,20]}
+{"kind":"textbox","id":"sh/jmp8z2ps","slide":3,"text":"프로젝트 개요","textPreview":"프로젝트 개요","textChars":7,"textLines":1,"bbox":[108,248,460,27]}
+{"kind":"textbox","id":"sh/ilgrqx8n","slide":3,"text":"취업 준비 활동과 목표를 기록하고 공유하는 서비스입니다. 참여자는 함께 준비하는 사람들의 활동을 확인하며 자신의 성장 과정을 볼 수 있습니다.","textPreview":"취업 준비 활동과 목표를 기록하고 공유하는 서비스입니다. 참여자는 함께 준비하는 사람들의 활동을 확인하며 자신의 성장 과정을 볼 수 있습니다.","textChars":79,"textLines":1,"bbox":[78,286,548,74]}
+{"kind":"shape","id":"sh/5o7q1c7y","slide":3,"bbox":[78,386,19,19]}
+{"kind":"textbox","id":"sh/kny9s7qd","slide":3,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,384,18,20]}
+{"kind":"textbox","id":"sh/bi58v2pw","slide":3,"text":"고객과 나의 역할","textPreview":"고객과 나의 역할","textChars":9,"textLines":1,"bbox":[108,383,460,27]}
+{"kind":"textbox","id":"sh/ahwrmx8b","slide":3,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,425,18,22]}
+{"kind":"textbox","id":"sh/xknqxs72","slide":3,"text":"약 50명 규모 취업 커뮤니티의 참여자와 운영자","textPreview":"약 50명 규모 취업 커뮤니티의 참여자와 운영자","textChars":26,"textLines":1,"bbox":[103,425,523,26]}
+{"kind":"textbox","id":"sh/wje9o7qh","slide":3,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,456,18,22]}
+{"kind":"textbox","id":"sh/fe987mp0","slide":3,"text":"사용자와 운영자의 이용 흐름과 필요한 정보 정의","textPreview":"사용자와 운영자의 이용 흐름과 필요한 정보 정의","textChars":26,"textLines":1,"bbox":[103,456,523,26]}
+{"kind":"textbox","id":"sh/ud0ryh8f","slide":3,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,487,18,22]}
+{"kind":"textbox","id":"sh/q9kb6lsn","slide":3,"text":"기능 우선순위와 운영 정책 설계","textPreview":"기능 우선순위와 운영 정책 설계","textChars":17,"textLines":1,"bbox":[103,487,523,26]}
+{"kind":"textbox","id":"sh/ratczq98","slide":3,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,518,18,22]}
+{"kind":"textbox","id":"sh/cb2tsvat","slide":3,"text":"구현 검증과 배포 후 사용자 피드백 반영","textPreview":"구현 검증과 배포 후 사용자 피드백 반영","textChars":22,"textLines":1,"bbox":[103,518,523,26]}
+{"kind":"shape","id":"sh/ed4bu5sz","slide":3,"bbox":[78,630,548,1]}
+{"kind":"textbox","id":"sh/zydc3a9k","slide":3,"text":"기간","textPreview":"기간","textChars":2,"textLines":1,"bbox":[90,642,48,22]}
+{"kind":"textbox","id":"sh/0zmtwva5","slide":3,"text":"운영 경험","textPreview":"운영 경험","textChars":5,"textLines":1,"bbox":[160,642,220,22]}
+{"kind":"textbox","id":"sh/10vu50rq","slide":3,"text":"형태","textPreview":"형태","textChars":2,"textLines":1,"bbox":[396,642,48,22]}
+{"kind":"textbox","id":"sh/uh0by1sv","slide":3,"text":"개인 기획·운영","textPreview":"개인 기획·운영","textChars":8,"textLines":1,"bbox":[460,642,170,22]}
+{"kind":"textbox","id":"sh/fi9sr690","slide":3,"text":"역할","textPreview":"역할","textChars":2,"textLines":1,"bbox":[90,671,48,22]}
+{"kind":"textbox","id":"sh/xwzex4by","slide":3,"text":"문제 정의 · 요구사항/정책 설계 · 구현 검증 · 배포/운영","textPreview":"문제 정의 · 요구사항/정책 설계 · 구현 검증 · 배포/운영","textChars":34,"textLines":1,"bbox":[160,668,466,30]}
+{"kind":"shape","id":"sh/wvqx4zud","slide":3,"bbox":[78,707,548,1]}
+{"kind":"shape","id":"sh/buxwvets","slide":3,"bbox":[690,635,500,62]}
+{"kind":"textbox","id":"sh/atof29c7","slide":3,"text":"LG SALES POINT","textPreview":"LG SALES POINT","textChars":14,"textLines":1,"bbox":[713,648,170,20]}
+{"kind":"textbox","id":"sh/l0ze1obu","slide":3,"text":"사용자의 행동을 관찰하고 실제 이용 흐름을 기준으로 서비스를 설계했습니다.","textPreview":"사용자의 행동을 관찰하고 실제 이용 흐름을 기준으로 서비스를 설계했습니다.","textChars":41,"textLines":1,"bbox":[713,670,450,22]}
+{"kind":"image","id":"im/29orylwf","slide":3,"name":"","alt":"취업일지 실제 서비스 화면 전체","bbox":[670,235,540,360]}
+{"kind":"notes","id":"nt/8wthvp","slide":3,"text":""}
+{"kind":"slide","id":"sl/hmof24","slide":4,"title":"가영의 포트폴리오 | Gayoung’s Portfolio","textShapes":21}
+{"kind":"textbox","id":"sh/6xknmlkv","slide":4,"text":"가영의 포트폴리오 | Gayoung’s Portfolio","textPreview":"가영의 포트폴리오 | Gayoung’s Portfolio","textChars":31,"textLines":1,"bbox":[78,25,380,18]}
+{"kind":"shape","id":"sh/tkb6xgj6","slide":4,"bbox":[1160,26,54,22]}
+{"kind":"textbox","id":"sh/sj25ob21","slide":4,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[1160,27,54,18]}
+{"kind":"textbox","id":"sh/jutor614","slide":4,"text":"프로젝트 상세 정보 (2/7)","textPreview":"프로젝트 상세 정보 (2/7)","textChars":16,"textLines":1,"bbox":[78,58,560,50]}
+{"kind":"textbox","id":"sh/itkni1kj","slide":4,"text":"02.","textPreview":"02.","textChars":3,"textLines":1,"bbox":[78,150,58,34]}
+{"kind":"textbox","id":"sh/5wb6tgja","slide":4,"text":"사용자 요구와 서비스 구조 개선","textPreview":"사용자 요구와 서비스 구조 개선","textChars":17,"textLines":1,"bbox":[140,150,990,38]}
+{"kind":"textbox","id":"sh/kv25kb2p","slide":4,"text":": 기록 방식과 참여 구조를 실제 이용 방식에 맞게 수정","textPreview":": 기록 방식과 참여 구조를 실제 이용 방식에 맞게 수정","textChars":31,"textLines":1,"bbox":[78,188,1080,34]}
+{"kind":"shape","id":"sh/bq9on618","slide":4,"bbox":[78,251,19,19]}
+{"kind":"textbox","id":"sh/ap0ne1kn","slide":4,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,249,18,20]}
+{"kind":"textbox","id":"sh/8fu1s3ah","slide":4,"text":"활동 기록 개선","textPreview":"활동 기록 개선","textChars":8,"textLines":1,"bbox":[108,248,460,27]}
+{"kind":"textbox","id":"sh/9g32l8b2","slide":4,"text":"총 활동시간만 입력하던 구조에서 활동별 시간을 확인하고 싶다는 요구를 반영했습니다.","textPreview":"총 활동시간만 입력하던 구조에서 활동별 시간을 확인하고 싶다는 요구를 반영했습니다.","textChars":46,"textLines":1,"bbox":[78,286,548,58]}
+{"kind":"shape","id":"sh/mdcjqtsb","slide":4,"bbox":[78,350,548,42]}
+{"kind":"textbox","id":"sh/nelkjytw","slide":4,"text":"활동별 시간을 입력하고 확인하도록 기록 항목을 세분화","textPreview":"활동별 시간을 입력하고 확인하도록 기록 항목을 세분화","textChars":29,"textLines":1,"bbox":[94,358,510,26]}
+{"kind":"shape","id":"sh/0bu1oja5","slide":4,"bbox":[78,421,19,19]}
+{"kind":"textbox","id":"sh/lc32hobq","slide":4,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,419,18,20]}
+{"kind":"textbox","id":"sh/ypsjm9sf","slide":4,"text":"다중 그룹 구조","textPreview":"다중 그룹 구조","textChars":8,"textLines":1,"bbox":[108,418,460,27]}
+{"kind":"textbox","id":"sh/zql0fet0","slide":4,"text":"한 사용자가 여러 프로그램에 참여하는 실제 운영을 확인했습니다. 기존 데이터 호환과 관리자 배정, 사용자 선택 흐름까지 함께 수정했습니다.","textPreview":"한 사용자가 여러 프로그램에 참여하는 실제 운영을 확인했습니다. 기존 데이터 호환과 관리자 배정, 사용자 선택 흐름까지 함께 수정했습니다.","textChars":77,"textLines":1,"bbox":[78,456,548,76]}
+{"kind":"shape","id":"sh/t432d8je","slide":4,"bbox":[78,630,548,1]}
+{"kind":"textbox","id":"sh/s3a1k32t","slide":4,"text":"기간","textPreview":"기간","textChars":2,"textLines":1,"bbox":[90,642,48,22]}
+{"kind":"textbox","id":"sh/r21kbi18","slide":4,"text":"운영 경험","textPreview":"운영 경험","textChars":5,"textLines":1,"bbox":[160,642,220,22]}
+{"kind":"textbox","id":"sh/61sjidkn","slide":4,"text":"형태","textPreview":"형태","textChars":2,"textLines":1,"bbox":[396,642,48,22]}
+{"kind":"textbox","id":"sh/50ji9832","slide":4,"text":"개인 기획·운영","textPreview":"개인 기획·운영","textChars":8,"textLines":1,"bbox":[460,642,170,22]}
+{"kind":"textbox","id":"sh/4za1g32h","slide":4,"text":"역할","textPreview":"역할","textChars":2,"textLines":1,"bbox":[90,671,48,22]}
+{"kind":"textbox","id":"sh/jy107ylc","slide":4,"text":"사용자 요구 반영 · 활동별 입력 개선 · 다중 그룹 구조 전환","textPreview":"사용자 요구 반영 · 활동별 입력 개선 · 다중 그룹 구조 전환","textChars":35,"textLines":1,"bbox":[160,668,466,30]}
+{"kind":"shape","id":"sh/ixsjetkr","slide":4,"bbox":[78,707,548,1]}
+{"kind":"shape","id":"sh/hwji5o36","slide":4,"bbox":[690,635,500,62]}
+{"kind":"textbox","id":"sh/wvq1cj2l","slide":4,"text":"LG SALES POINT","textPreview":"LG SALES POINT","textChars":14,"textLines":1,"bbox":[713,648,170,20]}
+{"kind":"textbox","id":"sh/m547q5w7","slide":4,"text":"실제 행동과 반응을 확인하고 실행 이후의 개선까지 연결했습니다.","textPreview":"실제 행동과 반응을 확인하고 실행 이후의 개선까지 연결했습니다.","textChars":35,"textLines":1,"bbox":[713,670,450,22]}
+{"kind":"image","id":"im/v694fep0","slide":4,"name":"","alt":"활동별 기록과 조별 비교 화면 전체","bbox":[685,220,505,215]}
+{"kind":"image","id":"im/u50n69of","slide":4,"name":"","alt":"운영 현황 대시보드 전체","bbox":[685,440,505,165]}
+{"kind":"notes","id":"nt/hmof24","slide":4,"text":""}
+{"kind":"slide","id":"sl/fu41f0","slide":5,"title":"가영의 포트폴리오 | Gayoung’s Portfolio","textShapes":28}
+{"kind":"textbox","id":"sh/ex0nepw3","slide":5,"text":"가영의 포트폴리오 | Gayoung’s Portfolio","textPreview":"가영의 포트폴리오 | Gayoung’s Portfolio","textChars":31,"textLines":1,"bbox":[78,25,380,18]}
+{"kind":"shape","id":"sh/1kbmp4vu","slide":5,"bbox":[1160,26,54,22]}
+{"kind":"textbox","id":"sh/gj25gze9","slide":5,"text":"5","textPreview":"5","textChars":1,"textLines":1,"bbox":[1160,27,54,18]}
+{"kind":"textbox","id":"sh/3mt4redk","slide":5,"text":"프로젝트 상세 정보 (3/7)","textPreview":"프로젝트 상세 정보 (3/7)","textChars":16,"textLines":1,"bbox":[78,58,560,50]}
+{"kind":"textbox","id":"sh/2lkni9wz","slide":5,"text":"03.","textPreview":"03.","textChars":3,"textLines":1,"bbox":[78,150,58,34]}
+{"kind":"textbox","id":"sh/pob6t4vq","slide":5,"text":"제주항공 리프레시 포인트","textPreview":"제주항공 리프레시 포인트","textChars":13,"textLines":1,"bbox":[140,150,990,38]}
+{"kind":"textbox","id":"sh/on25kje5","slide":5,"text":": 2030의 구매행동에서 포인트 활성화의 실마리를 찾다","textPreview":": 2030의 구매행동에서 포인트 활성화의 실마리를 찾다","textChars":31,"textLines":1,"bbox":[78,188,1080,34]}
+{"kind":"shape","id":"sh/jqp4fadg","slide":5,"bbox":[78,251,19,19]}
+{"kind":"textbox","id":"sh/ipg365wv","slide":5,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,249,18,20]}
+{"kind":"textbox","id":"sh/s3qtkf6h","slide":5,"text":"프로젝트 개요","textPreview":"프로젝트 개요","textChars":7,"textLines":1,"bbox":[108,248,460,27]}
+{"kind":"textbox","id":"sh/t4zutkn2","slide":5,"text":"2030 고객의 포인트 인지도와 사용을 높이기 위해 콘텐츠를 만들기 전에 고객이 포인트를 어떻게 인식하고 사용하는지 확인했습니다.","textPreview":"2030 고객의 포인트 인지도와 사용을 높이기 위해 콘텐츠를 만들기 전에 고객이 포인트를 어떻게 인식하고 사용하는지 확인했습니다.","textChars":72,"textLines":1,"bbox":[78,286,548,78]}
+{"kind":"shape","id":"sh/61obi5or","slide":5,"bbox":[78,396,19,19]}
+{"kind":"textbox","id":"sh/72hcra5w","slide":5,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,394,18,20]}
+{"kind":"textbox","id":"sh/g7qdof6t","slide":5,"text":"고객 조사와 판단","textPreview":"고객 조사와 판단","textChars":9,"textLines":1,"bbox":[108,393,460,27]}
+{"kind":"textbox","id":"sh/h8zuxkne","slide":5,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,435,18,22]}
+{"kind":"textbox","id":"sh/u58bmpon","slide":5,"text":"2030 대상 설문조사를 직접 설계하고 배포","textPreview":"2030 대상 설문조사를 직접 설계하고 배포","textChars":24,"textLines":1,"bbox":[103,435,523,26]}
+{"kind":"textbox","id":"sh/f6hcva58","slide":5,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,469,18,22]}
+{"kind":"textbox","id":"sh/wb6tcv69","slide":5,"text":"포인트 인지도와 구매행동, 소비자 반응 분석","textPreview":"포인트 인지도와 구매행동, 소비자 반응 분석","textChars":24,"textLines":1,"bbox":[103,469,523,26]}
+{"kind":"textbox","id":"sh/xcful0nu","slide":5,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,503,18,22]}
+{"kind":"textbox","id":"sh/dwnitsvm","slide":5,"text":"조사 결과를 온·오프라인 전략 방향의 근거로 활용","textPreview":"조사 결과를 온·오프라인 전략 방향의 근거로 활용","textChars":27,"textLines":1,"bbox":[103,503,523,26]}
+{"kind":"shape","id":"sh/cve10nu1","slide":5,"bbox":[78,556,19,19]}
+{"kind":"textbox","id":"sh/ru50ridg","slide":5,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,554,18,20]}
+{"kind":"textbox","id":"sh/qtwjydcv","slide":5,"text":"나의 역할","textPreview":"나의 역할","textChars":5,"textLines":1,"bbox":[108,553,460,27]}
+{"kind":"textbox","id":"sh/1knixsvi","slide":5,"text":"조장 · 전략 기획 총괄 · 콘텐츠 기획 및 제작","textPreview":"조장 · 전략 기획 총괄 · 콘텐츠 기획 및 제작","textChars":27,"textLines":1,"bbox":[78,590,548,28]}
+{"kind":"shape","id":"sh/zi50v2ds","slide":5,"bbox":[78,630,548,1]}
+{"kind":"textbox","id":"sh/ehwj2xc7","slide":5,"text":"기간","textPreview":"기간","textChars":2,"textLines":1,"bbox":[90,642,48,22]}
+{"kind":"textbox","id":"sh/9o721cbu","slide":5,"text":"2024.10.12 ~ 2025.02.07","textPreview":"2024.10.12 ~ 2025.02.07","textChars":23,"textLines":1,"bbox":[160,642,220,22]}
+{"kind":"textbox","id":"sh/ony187u9","slide":5,"text":"형태","textPreview":"형태","textChars":2,"textLines":1,"bbox":[396,642,48,22]}
+{"kind":"textbox","id":"sh/6t8f29sr","slide":5,"text":"10인 프로젝트","textPreview":"10인 프로젝트","textChars":8,"textLines":1,"bbox":[460,642,170,22]}
+{"kind":"textbox","id":"sh/7u1gvetc","slide":5,"text":"역할","textPreview":"역할","textChars":2,"textLines":1,"bbox":[90,671,48,22]}
+{"kind":"textbox","id":"sh/svax4jax","slide":5,"text":"조장 · 기획 총괄 · 콘텐츠 기획 및 제작","textPreview":"조장 · 기획 총괄 · 콘텐츠 기획 및 제작","textChars":24,"textLines":1,"bbox":[160,668,466,30]}
+{"kind":"shape","id":"sh/twjyx4b2","slide":5,"bbox":[78,707,548,1]}
+{"kind":"shape","id":"sh/uxsf69sn","slide":5,"bbox":[690,635,500,62]}
+{"kind":"textbox","id":"sh/fy1gzet8","slide":5,"text":"LG SALES POINT","textPreview":"LG SALES POINT","textChars":14,"textLines":1,"bbox":[713,648,170,20]}
+{"kind":"textbox","id":"sh/gzax8jat","slide":5,"text":"구매행동을 먼저 확인한 뒤 프로모션 방향을 설계했습니다.","textPreview":"구매행동을 먼저 확인한 뒤 프로모션 방향을 설계했습니다.","textChars":31,"textLines":1,"bbox":[713,670,450,22]}
+{"kind":"image","id":"im/repg7a1c","slide":5,"name":"","alt":"제주항공 프로젝트 원본 전체 페이지","bbox":[670,220,540,385]}
+{"kind":"notes","id":"nt/fu41f0","slide":5,"text":""}
+{"kind":"slide","id":"sl/j3x76b","slide":6,"title":"가영의 포트폴리오 | Gayoung’s Portfolio","textShapes":31}
+{"kind":"textbox","id":"sh/cr694jq1","slide":6,"text":"가영의 포트폴리오 | Gayoung’s Portfolio","textPreview":"가영의 포트폴리오 | Gayoung’s Portfolio","textChars":31,"textLines":1,"bbox":[78,25,380,18]}
+{"kind":"shape","id":"sh/bqx8bepg","slide":6,"bbox":[1160,26,54,22]}
+{"kind":"textbox","id":"sh/qpor298v","slide":6,"text":"6","textPreview":"6","textChars":1,"textLines":1,"bbox":[1160,27,54,18]}
+{"kind":"textbox","id":"sh/lgzaho7i","slide":6,"text":"프로젝트 상세 정보 (4/7)","textPreview":"프로젝트 상세 정보 (4/7)","textChars":16,"textLines":1,"bbox":[78,58,560,50]}
+{"kind":"textbox","id":"sh/0fq98j6x","slide":6,"text":"04.","textPreview":"04.","textChars":3,"textLines":1,"bbox":[78,150,58,34]}
+{"kind":"textbox","id":"sh/zeh8fepc","slide":6,"text":"온·오프라인 고객 경험","textPreview":"온·오프라인 고객 경험","textChars":12,"textLines":1,"bbox":[140,150,990,38]}
+{"kind":"textbox","id":"sh/yd8r69o7","slide":6,"text":": 조사 결과를 고객 접점의 실행안으로 구체화","textPreview":": 조사 결과를 고객 접점의 실행안으로 구체화","textChars":25,"textLines":1,"bbox":[78,188,1080,34]}
+{"kind":"shape","id":"sh/9kjal87u","slide":6,"bbox":[78,251,19,19]}
+{"kind":"textbox","id":"sh/8ja9c369","slide":6,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,249,18,20]}
+{"kind":"textbox","id":"sh/q9kzmh0z","slide":6,"text":"온라인 실행","textPreview":"온라인 실행","textChars":6,"textLines":1,"bbox":[108,248,460,27]}
+{"kind":"textbox","id":"sh/rat0fm1k","slide":6,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,290,18,22]}
+{"kind":"textbox","id":"sh/cbmhori5","slide":6,"text":"포인트 적립률을 전달하는 인포머셜 숏폼","textPreview":"포인트 적립률을 전달하는 인포머셜 숏폼","textChars":21,"textLines":1,"bbox":[103,290,523,26]}
+{"kind":"textbox","id":"sh/dcvihwjq","slide":6,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,323,18,22]}
+{"kind":"textbox","id":"sh/ed4zq10b","slide":6,"text":"오징어게임 패러디 바이럴 영상","textPreview":"오징어게임 패러디 바이럴 영상","textChars":16,"textLines":1,"bbox":[103,323,523,26]}
+{"kind":"textbox","id":"sh/zed0j61w","slide":6,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,356,18,22]}
+{"kind":"textbox","id":"sh/0zmhsbih","slide":6,"text":"앱 기반 고객 참여 이벤트 아이디어","textPreview":"앱 기반 고객 참여 이벤트 아이디어","textChars":19,"textLines":1,"bbox":[103,356,523,26]}
+{"kind":"shape","id":"sh/10vilgjm","slide":6,"bbox":[78,421,19,19]}
+{"kind":"textbox","id":"sh/uh0zex0r","slide":6,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,419,18,20]}
+{"kind":"textbox","id":"sh/fi9g721c","slide":6,"text":"오프라인 실행","textPreview":"오프라인 실행","textChars":7,"textLines":1,"bbox":[108,418,460,27]}
+{"kind":"textbox","id":"sh/ja5ozed8","slide":6,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,460,18,22]}
+{"kind":"textbox","id":"sh/y9wnq9cn","slide":6,"text":"대학 대항전과 간식차","textPreview":"대학 대항전과 간식차","textChars":11,"textLines":1,"bbox":[103,460,523,26]}
+{"kind":"textbox","id":"sh/lcn61ovy","slide":6,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,493,18,22]}
+{"kind":"textbox","id":"sh/kbe5sjud","slide":6,"text":"럭키드로우 등 고객 참여 아이디어","textPreview":"럭키드로우 등 고객 참여 아이디어","textChars":18,"textLines":1,"bbox":[103,493,523,26]}
+{"kind":"shape","id":"sh/b6lovudw","slide":6,"bbox":[78,556,19,19]}
+{"kind":"textbox","id":"sh/a5cnmpcb","slide":6,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,554,18,20]}
+{"kind":"textbox","id":"sh/x8n6x4v2","slide":6,"text":"결과","textPreview":"결과","textChars":2,"textLines":1,"bbox":[108,553,460,27]}
+{"kind":"shape","id":"sh/w7e5ozuh","slide":6,"bbox":[78,590,548,34]}
+{"kind":"textbox","id":"sh/v2po7yd0","slide":6,"text":"매경비즈 직무스펙 프로젝트 대상","textPreview":"매경비즈 직무스펙 프로젝트 대상","textChars":17,"textLines":1,"bbox":[96,595,500,24]}
+{"kind":"shape","id":"sh/snqlsvad","slide":6,"bbox":[78,630,548,1]}
+{"kind":"textbox","id":"sh/d8j210bi","slide":6,"text":"기간","textPreview":"기간","textChars":2,"textLines":1,"bbox":[90,642,48,22]}
+{"kind":"textbox","id":"sh/ql83qls7","slide":6,"text":"2024.10.12 ~ 2025.02.07","textPreview":"2024.10.12 ~ 2025.02.07","textChars":23,"textLines":1,"bbox":[160,642,220,22]}
+{"kind":"textbox","id":"sh/rmhkzqts","slide":6,"text":"형태","textPreview":"형태","textChars":2,"textLines":1,"bbox":[396,642,48,22]}
+{"kind":"textbox","id":"sh/0balwva9","slide":6,"text":"10인 프로젝트","textPreview":"10인 프로젝트","textChars":8,"textLines":1,"bbox":[460,642,170,22]}
+{"kind":"textbox","id":"sh/1cj250bu","slide":6,"text":"역할","textPreview":"역할","textChars":2,"textLines":1,"bbox":[90,671,48,22]}
+{"kind":"textbox","id":"sh/e9s3u5s3","slide":6,"text":"소비자 조사 기반 IMC 전략 · 온·오프라인 콘텐츠 기획/제작","textPreview":"소비자 조사 기반 IMC 전략 · 온·오프라인 콘텐츠 기획/제작","textChars":35,"textLines":1,"bbox":[160,668,466,30]}
+{"kind":"shape","id":"sh/fa1k3qto","slide":6,"bbox":[78,707,548,1]}
+{"kind":"shape","id":"sh/oful0fa5","slide":6,"bbox":[690,635,500,62]}
+{"kind":"textbox","id":"sh/pg3m9kbq","slide":6,"text":"LG SALES POINT","textPreview":"LG SALES POINT","textChars":14,"textLines":1,"bbox":[713,648,170,20]}
+{"kind":"textbox","id":"sh/9ob290f6","slide":6,"text":"분석을 프로모션과 고객 접점의 실행안으로 구체화했습니다.","textPreview":"분석을 프로모션과 고객 접점의 실행안으로 구체화했습니다.","textChars":31,"textLines":1,"bbox":[713,670,450,22]}
+{"kind":"image","id":"im/9sj2lwn2","slide":6,"name":"","alt":"제주항공 기획안과 콘텐츠 이미지 전체","bbox":[670,220,540,385]}
+{"kind":"notes","id":"nt/j3x76b","slide":6,"text":""}
+{"kind":"slide","id":"sl/jt1o3b","slide":7,"title":"가영의 포트폴리오 | Gayoung’s Portfolio","textShapes":28}
+{"kind":"textbox","id":"sh/nuhk7mpg","slide":7,"text":"가영의 포트폴리오 | Gayoung’s Portfolio","textPreview":"가영의 포트폴리오 | Gayoung’s Portfolio","textChars":31,"textLines":1,"bbox":[78,25,380,18]}
+{"kind":"shape","id":"sh/ovql07q1","slide":7,"bbox":[1160,26,54,22]}
+{"kind":"textbox","id":"sh/pwz29c76","slide":7,"text":"7","textPreview":"7","textChars":1,"textLines":1,"bbox":[1160,27,54,18]}
+{"kind":"textbox","id":"sh/ax832hor","slide":7,"text":"프로젝트 상세 정보 (5/7)","textPreview":"프로젝트 상세 정보 (5/7)","textChars":16,"textLines":1,"bbox":[78,58,560,50]}
+{"kind":"textbox","id":"sh/by1kbmpc","slide":7,"text":"05.","textPreview":"05.","textChars":3,"textLines":1,"bbox":[78,150,58,34]}
+{"kind":"textbox","id":"sh/czal4r6x","slide":7,"text":"한국 웹툰 소비자 분석","textPreview":"한국 웹툰 소비자 분석","textChars":12,"textLines":1,"bbox":[140,150,990,38]}
+{"kind":"textbox","id":"sh/x0j2dw7i","slide":7,"text":": 고객마다 다른 선택 기준을 유형별 전략으로 연결","textPreview":": 고객마다 다른 선택 기준을 유형별 전략으로 연결","textChars":28,"textLines":1,"bbox":[78,188,1080,34]}
+{"kind":"shape","id":"sh/q1ojqx8n","slide":7,"bbox":[78,251,19,19]}
+{"kind":"textbox","id":"sh/r2xkzip8","slide":7,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,249,18,20]}
+{"kind":"textbox","id":"sh/fud03yhs","slide":7,"text":"프로젝트 개요","textPreview":"프로젝트 개요","textChars":7,"textLines":1,"bbox":[108,248,460,27]}
+{"kind":"textbox","id":"sh/ut4jat07","slide":7,"text":"한국 웹툰의 글로벌 진출을 위해 여러 데이터 소스를 활용해 해외 소비자의 반응과 흥행 요인을 분석했습니다.","textPreview":"한국 웹툰의 글로벌 진출을 위해 여러 데이터 소스를 활용해 해외 소비자의 반응과 흥행 요인을 분석했습니다.","textChars":59,"textLines":1,"bbox":[78,286,548,64]}
+{"kind":"shape","id":"sh/hwf258zi","slide":7,"bbox":[78,386,19,19]}
+{"kind":"textbox","id":"sh/gv61c3id","slide":7,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,384,18,20]}
+{"kind":"textbox","id":"sh/7qd0zyhg","slide":7,"text":"고객 세분화와 전략","textPreview":"고객 세분화와 전략","textChars":10,"textLines":1,"bbox":[108,383,460,27]}
+{"kind":"textbox","id":"sh/6p4j6t0v","slide":7,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,425,18,22]}
+{"kind":"textbox","id":"sh/tsvi1ozm","slide":7,"text":"팀: 해외 소비자 반응을 5개 유형으로 구분","textPreview":"팀: 해외 소비자 반응을 5개 유형으로 구분","textChars":24,"textLines":1,"bbox":[103,425,523,26]}
+{"kind":"textbox","id":"sh/srm183i1","slide":7,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,456,18,22]}
+{"kind":"textbox","id":"sh/jmt0vehk","slide":7,"text":"팀: 소비자 유형별 마케팅과 해외 진출 전략 제안","textPreview":"팀: 소비자 유형별 마케팅과 해외 진출 전략 제안","textChars":27,"textLines":1,"bbox":[103,456,523,26]}
+{"kind":"textbox","id":"sh/ilkj290z","slide":7,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,487,18,22]}
+{"kind":"textbox","id":"sh/mxkje9kr","slide":7,"text":"본인: 댓글 수집과 전처리, 로지스틱 회귀분석","textPreview":"본인: 댓글 수집과 전처리, 로지스틱 회귀분석","textChars":25,"textLines":1,"bbox":[103,487,523,26]}
+{"kind":"textbox","id":"sh/nytknelc","slide":7,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,518,18,22]}
+{"kind":"textbox","id":"sh/8j21gj2x","slide":7,"text":"본인: 구독자 예측모델과 SHAP 영향요인 해석","textPreview":"본인: 구독자 예측모델과 SHAP 영향요인 해석","textChars":26,"textLines":1,"bbox":[103,518,523,26]}
+{"kind":"shape","id":"sh/9kb2po3i","slide":7,"bbox":[78,566,548,40]}
+{"kind":"textbox","id":"sh/alkjitk3","slide":7,"text":"문화데이터 공모전 데이터분석 부문 대상","textPreview":"문화데이터 공모전 데이터분석 부문 대상","textChars":21,"textLines":1,"bbox":[96,574,500,26]}
+{"kind":"shape","id":"sh/wn2lkj2t","slide":7,"bbox":[78,630,548,1]}
+{"kind":"textbox","id":"sh/xov2toje","slide":7,"text":"기간","textPreview":"기간","textChars":2,"textLines":1,"bbox":[90,642,48,22]}
+{"kind":"textbox","id":"sh/ip43mtkz","slide":7,"text":"2024.07","textPreview":"2024.07","textChars":7,"textLines":1,"bbox":[160,642,220,22]}
+{"kind":"textbox","id":"sh/jqdkfy1k","slide":7,"text":"형태","textPreview":"형태","textChars":2,"textLines":1,"bbox":[396,642,48,22]}
+{"kind":"textbox","id":"sh/tkfmlsnm","slide":7,"text":"4인 팀 프로젝트","textPreview":"4인 팀 프로젝트","textChars":9,"textLines":1,"bbox":[460,642,170,22]}
+{"kind":"textbox","id":"sh/sj65cnm1","slide":7,"text":"역할","textPreview":"역할","textChars":2,"textLines":1,"bbox":[90,671,48,22]}
+{"kind":"textbox","id":"sh/7ix4ji5w","slide":7,"text":"댓글 수집·전처리 · 로지스틱 회귀 · 구독자 예측모델 · SHAP","textPreview":"댓글 수집·전처리 · 로지스틱 회귀 · 구독자 예측모델 · SHAP","textChars":37,"textLines":1,"bbox":[160,668,466,30]}
+{"kind":"shape","id":"sh/6honax4b","slide":7,"bbox":[78,707,548,1]}
+{"kind":"shape","id":"sh/hozmpc3y","slide":7,"bbox":[690,635,500,62]}
+{"kind":"textbox","id":"sh/gnq5g7md","slide":7,"text":"LG SALES POINT","textPreview":"LG SALES POINT","textChars":14,"textLines":1,"bbox":[713,648,170,20]}
+{"kind":"textbox","id":"sh/fmx4n2ls","slide":7,"text":"고객군에 따라 선택 기준이 달라 채널별 전략도 달라야 함을 배웠습니다.","textPreview":"고객군에 따라 선택 기준이 달라 채널별 전략도 달라야 함을 배웠습니다.","textChars":39,"textLines":1,"bbox":[713,670,450,22]}
+{"kind":"image","id":"im/kfmtovih","slide":7,"name":"","alt":"웹툰 소비자 분석 원본 전체 페이지","bbox":[670,220,540,385]}
+{"kind":"notes","id":"nt/jt1o3b","slide":7,"text":""}
+{"kind":"slide","id":"sl/spd8kl","slide":8,"title":"가영의 포트폴리오 | Gayoung’s Portfolio","textShapes":42}
+{"kind":"textbox","id":"sh/6p4ryhwr","slide":8,"text":"가영의 포트폴리오 | Gayoung’s Portfolio","textPreview":"가영의 포트폴리오 | Gayoung’s Portfolio","textChars":31,"textLines":1,"bbox":[78,25,380,18]}
+{"kind":"shape","id":"sh/tsfqtwv2","slide":8,"bbox":[1160,26,54,22]}
+{"kind":"textbox","id":"sh/8r690reh","slide":8,"text":"8","textPreview":"8","textChars":1,"textLines":1,"bbox":[1160,27,54,18]}
+{"kind":"textbox","id":"sh/vexsv6d8","slide":8,"text":"프로젝트 상세 정보 (6/7)","textPreview":"프로젝트 상세 정보 (6/7)","textChars":16,"textLines":1,"bbox":[78,58,560,50]}
+{"kind":"textbox","id":"sh/udor21wn","slide":8,"text":"06.","textPreview":"06.","textChars":3,"textLines":1,"bbox":[78,150,58,34]}
+{"kind":"textbox","id":"sh/hgfaxgve","slide":8,"text":"고객 커뮤니케이션","textPreview":"고객 커뮤니케이션","textChars":9,"textLines":1,"bbox":[140,150,990,38]}
+{"kind":"textbox","id":"sh/gf694bet","slide":8,"text":": 고객의 질문을 필요한 해결책으로 바꾸다","textPreview":": 고객의 질문을 필요한 해결책으로 바꾸다","textChars":23,"textLines":1,"bbox":[78,188,1080,34]}
+{"kind":"shape","id":"sh/bid8j2d4","slide":8,"bbox":[78,251,19,19]}
+{"kind":"textbox","id":"sh/ahkrqxwj","slide":8,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,249,18,20]}
+{"kind":"textbox","id":"sh/cv2hoj6l","slide":8,"text":"약 3년의 고객 접점","textPreview":"약 3년의 고객 접점","textChars":11,"textLines":1,"bbox":[108,248,460,27]}
+{"kind":"textbox","id":"sh/xwbihon6","slide":8,"text":"대학 입학팀에서 입학전형과 제출서류, 일정, 학교생활 문의와 민원에 대응했습니다.","textPreview":"대학 입학팀에서 입학전형과 제출서류, 일정, 학교생활 문의와 민원에 대응했습니다.","textChars":45,"textLines":1,"bbox":[78,286,548,58]}
+{"kind":"shape","id":"sh/atkzm9ov","slide":8,"bbox":[78,386,19,19]}
+{"kind":"textbox","id":"sh/but0ve50","slide":8,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,384,18,20]}
+{"kind":"textbox","id":"sh/kj21s36x","slide":8,"text":"내가 한 일","textPreview":"내가 한 일","textChars":6,"textLines":1,"bbox":[108,383,460,27]}
+{"kind":"textbox","id":"sh/lkbiloni","slide":8,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,425,18,22]}
+{"kind":"textbox","id":"sh/yhkjqtor","slide":8,"text":"문의 유형과 고객의 상황을 파악해 맞춤 정보 제공","textPreview":"문의 유형과 고객의 상황을 파악해 맞춤 정보 제공","textChars":27,"textLines":1,"bbox":[103,425,523,26]}
+{"kind":"textbox","id":"sh/zit0jy5c","slide":8,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,456,18,22]}
+{"kind":"textbox","id":"sh/0nihgz6d","slide":8,"text":"상담 내용을 문서화하고 유사 사례 대응 자료 관리","textPreview":"상담 내용을 문서화하고 유사 사례 대응 자료 관리","textChars":27,"textLines":1,"bbox":[103,456,523,26]}
+{"kind":"textbox","id":"sh/1orip47y","slide":8,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,487,18,22]}
+{"kind":"textbox","id":"sh/hkjyd0z2","slide":8,"text":"FAQ와 안내문 정비","textPreview":"FAQ와 안내문 정비","textChars":11,"textLines":1,"bbox":[103,487,523,26]}
+{"kind":"textbox","id":"sh/gjaxkvyh","slide":8,"text":"○","textPreview":"○","textChars":1,"textLines":1,"bbox":[78,518,18,22]}
+{"kind":"textbox","id":"sh/vi1gbqhw","slide":8,"text":"신규 인턴의 업무 이해 지원","textPreview":"신규 인턴의 업무 이해 지원","textChars":15,"textLines":1,"bbox":[103,518,523,26]}
+{"kind":"shape","id":"sh/uh8filgb","slide":8,"bbox":[78,561,19,19]}
+{"kind":"textbox","id":"sh/5ojyh0zy","slide":8,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,559,18,20]}
+{"kind":"textbox","id":"sh/4naxovyd","slide":8,"text":"배운 점","textPreview":"배운 점","textChars":4,"textLines":1,"bbox":[108,558,460,27]}
+{"kind":"textbox","id":"sh/3m1gfqhs","slide":8,"text":"질문 뒤에 있는 실제 필요를 파악해야 정확한 해결책을 제공할 수 있었습니다.","textPreview":"질문 뒤에 있는 실제 필요를 파악해야 정확한 해결책을 제공할 수 있었습니다.","textChars":42,"textLines":1,"bbox":[78,596,548,30]}
+{"kind":"shape","id":"sh/ilsfmlg7","slide":8,"bbox":[690,245,500,345]}
+{"kind":"shape","id":"sh/dc3ylkzu","slide":8,"bbox":[720,285,38,38]}
+{"kind":"textbox","id":"sh/sbuhsfyp","slide":8,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[720,293,38,22]}
+{"kind":"textbox","id":"sh/ax4vmhw7","slide":8,"text":"문의 파악","textPreview":"문의 파악","textChars":5,"textLines":1,"bbox":[785,285,135,25]}
+{"kind":"textbox","id":"sh/bydcf2xc","slide":8,"text":"질문의 상황과 필요한 정보 구분","textPreview":"질문의 상황과 필요한 정보 구분","textChars":17,"textLines":1,"bbox":[785,312,340,24]}
+{"kind":"shape","id":"sh/wz6do7ex","slide":8,"bbox":[720,357,38,38]}
+{"kind":"textbox","id":"sh/x0fuhcfi","slide":8,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[720,365,38,22]}
+{"kind":"textbox","id":"sh/ylovqhw3","slide":8,"text":"맞춤 안내","textPreview":"맞춤 안내","textChars":5,"textLines":1,"bbox":[785,357,135,25]}
+{"kind":"textbox","id":"sh/jmxcjmxo","slide":8,"text":"고객별로 정확한 정보 전달","textPreview":"고객별로 정확한 정보 전달","textChars":14,"textLines":1,"bbox":[785,384,340,24]}
+{"kind":"shape","id":"sh/kn6dsre9","slide":8,"bbox":[720,429,38,38]}
+{"kind":"textbox","id":"sh/lofelwfu","slide":8,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[720,437,38,22]}
+{"kind":"textbox","id":"sh/6povu1wz","slide":8,"text":"기록과 관리","textPreview":"기록과 관리","textChars":6,"textLines":1,"bbox":[785,429,135,25]}
+{"kind":"textbox","id":"sh/7qhwnmxk","slide":8,"text":"상담 내용과 유사 사례 축적","textPreview":"상담 내용과 유사 사례 축적","textChars":15,"textLines":1,"bbox":[785,456,340,24]}
+{"kind":"shape","id":"sh/vut4r2ls","slide":8,"bbox":[720,501,38,38]}
+{"kind":"textbox","id":"sh/u9k3ixk7","slide":8,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[720,509,38,22]}
+{"kind":"textbox","id":"sh/hwbmts3i","slide":8,"text":"안내 개선","textPreview":"안내 개선","textChars":5,"textLines":1,"bbox":[785,501,135,25]}
+{"kind":"textbox","id":"sh/gv2lk72x","slide":8,"text":"FAQ와 안내문 정비","textPreview":"FAQ와 안내문 정비","textChars":11,"textLines":1,"bbox":[785,528,340,24]}
+{"kind":"shape","id":"sh/3yt4v2lo","slide":8,"bbox":[78,630,548,1]}
+{"kind":"textbox","id":"sh/ixk3mxk3","slide":8,"text":"기간","textPreview":"기간","textChars":2,"textLines":1,"bbox":[90,642,48,22]}
+{"kind":"textbox","id":"sh/50vmxcju","slide":8,"text":"약 3년","textPreview":"약 3년","textChars":4,"textLines":1,"bbox":[160,642,220,22]}
+{"kind":"textbox","id":"sh/4zmlo729","slide":8,"text":"형태","textPreview":"형태","textChars":2,"textLines":1,"bbox":[396,642,48,22]}
+{"kind":"textbox","id":"sh/j294jilk","slide":8,"text":"입학팀 근무","textPreview":"입학팀 근무","textChars":6,"textLines":1,"bbox":[460,642,170,22]}
+{"kind":"textbox","id":"sh/y103adkz","slide":8,"text":"역할","textPreview":"역할","textChars":2,"textLines":1,"bbox":[90,671,48,22]}
+{"kind":"textbox","id":"sh/o7e1kjix","slide":8,"text":"고객 문의·민원 응대 · 문서화 · FAQ/안내문 정비","textPreview":"고객 문의·민원 응대 · 문서화 · FAQ/안내문 정비","textChars":30,"textLines":1,"bbox":[160,668,466,30]}
+{"kind":"shape","id":"sh/98nitoj2","slide":8,"bbox":[78,707,548,1]}
+{"kind":"shape","id":"sh/m5wji90r","slide":8,"bbox":[690,635,500,62]}
+{"kind":"textbox","id":"sh/n650re1c","slide":8,"text":"LG SALES POINT","textPreview":"LG SALES POINT","textChars":14,"textLines":1,"bbox":[713,648,170,20]}
+{"kind":"textbox","id":"sh/0je1gzil","slide":8,"text":"내·외부 고객의 요구를 파악하고 필요한 정보를 정확히 전달하는 경험입니다.","textPreview":"내·외부 고객의 요구를 파악하고 필요한 정보를 정확히 전달하는 경험입니다.","textChars":41,"textLines":1,"bbox":[713,670,450,22]}
+{"kind":"notes","id":"nt/spd8kl","slide":8,"text":""}
+{"kind":"slide","id":"sl/dlnp8g","slide":9,"title":"가영의 포트폴리오 | Gayoung’s Portfolio","textShapes":20}
+{"kind":"textbox","id":"sh/76lgve9k","slide":9,"text":"가영의 포트폴리오 | Gayoung’s Portfolio","textPreview":"가영의 포트폴리오 | Gayoung’s Portfolio","textChars":31,"textLines":1,"bbox":[78,25,380,18]}
+{"kind":"shape","id":"sh/8ruhoja5","slide":9,"bbox":[1160,26,54,22]}
+{"kind":"textbox","id":"sh/ts3yx4rq","slide":9,"text":"9","textPreview":"9","textChars":1,"textLines":1,"bbox":[1160,27,54,18]}
+{"kind":"textbox","id":"sh/utczq9sb","slide":9,"text":"프로젝트 상세 정보 (7/7)","textPreview":"프로젝트 상세 정보 (7/7)","textChars":16,"textLines":1,"bbox":[78,58,560,50]}
+{"kind":"textbox","id":"sh/vul0ze9w","slide":9,"text":"07.","textPreview":"07.","textChars":3,"textLines":1,"bbox":[78,150,58,34]}
+{"kind":"textbox","id":"sh/gvehsja1","slide":9,"text":"LG생활건강 Home Care & Daily Beauty 국내영업","textPreview":"LG생활건강 Home Care & Daily Beauty 국내영업","textChars":36,"textLines":1,"bbox":[140,150,990,38]}
+{"kind":"textbox","id":"sh/hwni1orm","slide":9,"text":": 지원자 경험과 국내영업 업무의 연결","textPreview":": 지원자 경험과 국내영업 업무의 연결","textChars":21,"textLines":1,"bbox":[78,188,1080,34]}
+{"kind":"shape","id":"sh/ixwzuts7","slide":9,"bbox":[78,251,19,19]}
+{"kind":"textbox","id":"sh/3y503y9s","slide":9,"text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[79,249,18,20]}
+{"kind":"textbox","id":"sh/zapcfu90","slide":9,"text":"경험과 업무","textPreview":"경험과 업무","textChars":6,"textLines":1,"bbox":[108,248,460,27]}
+{"kind":"shape","id":"sh/e9gb6p8f","slide":9,"bbox":[78,300,440,38]}
+{"kind":"textbox","id":"sh/1c7uh4rq","slide":9,"text":"사용자 행동 관찰","textPreview":"사용자 행동 관찰","textChars":9,"textLines":1,"bbox":[96,307,400,24]}
+{"kind":"shape","id":"sh/0byt8zq5","slide":9,"bbox":[530,319,55,2]}
+{"kind":"shape","id":"sh/r65cbu9o","slide":9,"bbox":[600,300,590,38]}
+{"kind":"textbox","id":"sh/q5wb2p83","slide":9,"text":"소비자 구매패턴 분석","textPreview":"소비자 구매패턴 분석","textChars":11,"textLines":1,"bbox":[618,307,550,24]}
+{"kind":"shape","id":"sh/d87ud4ru","slide":9,"bbox":[78,358,440,38]}
+{"kind":"textbox","id":"sh/c7et4zq9","slide":9,"text":"고객 세분화와 데이터 분석","textPreview":"고객 세분화와 데이터 분석","textChars":14,"textLines":1,"bbox":[96,365,400,24]}
+{"kind":"shape","id":"sh/b29cnep8","slide":9,"bbox":[530,377,55,2]}
+{"kind":"shape","id":"sh/a10vet8n","slide":9,"bbox":[600,358,590,38]}
+{"kind":"textbox","id":"sh/6xkf6dsv","slide":9,"text":"채널별 영업전략과 상품 운영","textPreview":"채널별 영업전략과 상품 운영","textChars":15,"textLines":1,"bbox":[618,365,550,24]}
+{"kind":"shape","id":"sh/7ytwfi9g","slide":9,"bbox":[78,416,440,38]}
+{"kind":"textbox","id":"sh/szmx8nal","slide":9,"text":"제주항공 IMC 기획","textPreview":"제주항공 IMC 기획","textChars":11,"textLines":1,"bbox":[96,423,400,24]}
+{"kind":"shape","id":"sh/t0vehsr6","slide":9,"bbox":[530,435,55,2]}
+{"kind":"shape","id":"sh/u14faxsr","slide":9,"bbox":[600,416,590,38]}
+{"kind":"textbox","id":"sh/f2dgj29c","slide":9,"text":"프로모션과 캠페인 기획","textPreview":"프로모션과 캠페인 기획","textChars":12,"textLines":1,"bbox":[618,423,550,24]}
+{"kind":"shape","id":"sh/gnmxc7ax","slide":9,"bbox":[78,474,440,38]}
+{"kind":"textbox","id":"sh/hovylcri","slide":9,"text":"서비스 운영 후 개선","textPreview":"서비스 운영 후 개선","textChars":11,"textLines":1,"bbox":[96,481,400,24]}
+{"kind":"shape","id":"sh/a50fytsn","slide":9,"bbox":[530,493,55,2]}
+{"kind":"shape","id":"sh/v69w7yt8","slide":9,"bbox":[600,474,590,38]}
+{"kind":"textbox","id":"sh/dkzidwbq","slide":9,"text":"영업정책 사후분석과 고도화","textPreview":"영업정책 사후분석과 고도화","textChars":14,"textLines":1,"bbox":[618,481,550,24]}
+{"kind":"shape","id":"sh/cjqh4bu5","slide":9,"bbox":[78,532,440,38]}
+{"kind":"textbox","id":"sh/rih0b6tk","slide":9,"text":"약 3년 고객 상담","textPreview":"약 3년 고객 상담","textChars":10,"textLines":1,"bbox":[96,539,400,24]}
+{"kind":"shape","id":"sh/qhoz21cz","slide":9,"bbox":[530,551,55,2]}
+{"kind":"shape","id":"sh/1ozihgbm","slide":9,"bbox":[600,532,590,38]}
+{"kind":"textbox","id":"sh/0nqh8bu1","slide":9,"text":"내·외부 고객 커뮤니케이션","textPreview":"내·외부 고객 커뮤니케이션","textChars":14,"textLines":1,"bbox":[618,539,550,24]}
+{"kind":"shape","id":"sh/zmh0f6tg","slide":9,"bbox":[78,610,1112,70]}
+{"kind":"textbox","id":"sh/el8z61cb","slide":9,"text":"고객의 작은 구매 변화를 기회로 읽고","textPreview":"고객의 작은 구매 변화를 기회로 읽고","textChars":20,"textLines":1,"bbox":[100,620,1068,28]}
+{"kind":"textbox","id":"sh/hsfi5cvi","slide":9,"text":"채널별 실행으로 연결하는 LG생활건강의 ‘뛰어난 장사꾼’이 되겠습니다.","textPreview":"채널별 실행으로 연결하는 LG생활건강의 ‘뛰어난 장사꾼’이 되겠습니다.","textChars":39,"textLines":1,"bbox":[100,650,1068,24]}
+{"kind":"notes","id":"nt/dlnp8g","slide":9,"text":""}
+{"kind":"slide","id":"sl/oy7m98","slide":10,"title":"가영의 포트폴리오 | Gayoung’s Portfolio","textShapes":7}
+{"kind":"shape","id":"sh/9srm9snm","slide":10,"bbox":[205,150,690,425]}
+{"kind":"shape","id":"sh/mpg3yd4b","slide":10,"bbox":[255,192,235,28]}
+{"kind":"textbox","id":"sh/7qp47i5w","slide":10,"text":"가영의 포트폴리오 | Gayoung’s Portfolio","textPreview":"가영의 포트폴리오 | Gayoung’s Portfolio","textChars":31,"textLines":1,"bbox":[255,198,235,16]}
+{"kind":"textbox","id":"sh/gvi54nmd","slide":10,"text":"감사합니다.","textPreview":"감사합니다.","textChars":6,"textLines":1,"bbox":[255,252,280,50]}
+{"kind":"shape","id":"sh/hwrmdsny","slide":10,"bbox":[255,316,235,2]}
+{"kind":"textbox","id":"sh/ut0n2x47","slide":10,"text":"고객의 선택을 읽고,\n데이터로 기회를 발견하며,\n실행으로 성과를 만드는\n영업사원이 되겠습니다.","textPreview":"고객의 선택을 읽고, | 데이터로 기회를 발견하며, | 실행으로 성과를 만드는 | 영업사원이 되겠습니다.","textChars":52,"textLines":4,"bbox":[255,345,550,145]}
+{"kind":"textbox","id":"sh/vu94bi5s","slide":10,"text":"김가영입니다.","textPreview":"김가영입니다.","textChars":7,"textLines":1,"bbox":[255,510,220,32]}
+{"kind":"textbox","id":"sh/4j2587m9","slide":10,"text":"LG생활건강 Home Care & Daily Beauty 국내영업 지원","textPreview":"LG생활건강 Home Care & Daily Beauty 국내영업 지원","textChars":39,"textLines":1,"bbox":[255,545,530,22]}
+{"kind":"textbox","id":"sh/5kbmhcnu","slide":10,"text":"Thank you","textPreview":"Thank you","textChars":9,"textLines":1,"bbox":[1040,560,150,22]}
+{"kind":"textbox","id":"sh/ts3e50bi","slide":10,"text":"김가영 | 010-2923-3450 | kk991011@gmail.com","textPreview":"김가영 | 010-2923-3450 | kk991011@gmail.com","textChars":40,"textLines":1,"bbox":[78,660,430,20]}
+{"kind":"notes","id":"nt/oy7m98","slide":10,"text":""}
