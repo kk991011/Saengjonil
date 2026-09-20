@@ -109,6 +109,8 @@ function renderStats() {
   document.getElementById('st-groups').textContent = allGroups.length;
   document.getElementById('st-records').textContent = allRecords.length;
   document.getElementById('st-today').textContent = allRecords.filter(r=>r.date===today).length;
+  document.getElementById('st-jasoseo-count').textContent = allRecords.reduce((sum, r) => sum + (Number(r.jasoseoCount) || 0), 0);
+  document.getElementById('st-applications').textContent = allRecords.reduce((sum, r) => sum + (Number(r.applications) || 0), 0);
 }
 
 // ── 오늘의 생일 ──
@@ -248,7 +250,8 @@ function dashUserStats(uid, periodRecs) {
   return {
     routineTotal, gyeongAvg, myeonAvg, dokAvg, un, fa,
     lecture: avg('lecture'), jasoseo: avg('jasoseo'), pilgi: avg('pilgi'), interview: avg('interview'), cert: avg('cert'),
-    apps: recs.reduce((a,r)=>a+(r.applications||0),0),
+    jasoseoCount: recs.reduce((a,r)=>a+(Number(r.jasoseoCount)||0),0),
+    apps: recs.reduce((a,r)=>a+(Number(r.applications)||0),0),
     active: recs.length > 0,
   };
 }
@@ -805,6 +808,7 @@ function renderDashboard() {
   const activeCount = users.filter(u => statsMap[u.uid].active).length;
   const participRate = Math.round(activeCount/users.length*100);
   const avgOf = k => Math.round(users.reduce((a,u)=>a+(statsMap[u.uid][k]||0),0)/users.length);
+  const totalJasoseoCount = users.reduce((a,u)=>a+(statsMap[u.uid].jasoseoCount||0),0);
   const totalApps = users.reduce((a,u)=>a+(statsMap[u.uid].apps||0),0);
 
   // MVP — 이 기간에 실제 기록을 남긴 사람 중 루틴 종합 달성률 1~3위
@@ -842,12 +846,13 @@ function renderDashboard() {
   // 이전 기간(전주/전월) 비교 — specific_week/specific_month에서 미선택이면 null
   const prevRecs = getPrevDashPeriodRecords();
   let prevAvgOf = () => null;
-  let prevActiveCount = null, prevTotalApps = null;
+  let prevActiveCount = null, prevTotalJasoseoCount = null, prevTotalApps = null;
   if (prevRecs !== null) {
     const prevStatsMap = {};
     users.forEach(u => { prevStatsMap[u.uid] = dashUserStats(u.uid, prevRecs); });
     prevAvgOf = k => Math.round(users.reduce((a,u)=>a+(prevStatsMap[u.uid][k]||0),0)/users.length);
     prevActiveCount = users.filter(u => prevStatsMap[u.uid].active).length;
+    prevTotalJasoseoCount = users.reduce((a,u)=>a+(prevStatsMap[u.uid].jasoseoCount||0),0);
     prevTotalApps = users.reduce((a,u)=>a+(prevStatsMap[u.uid].apps||0),0);
   }
   const pLabel = prevPeriodLabel();
@@ -879,7 +884,8 @@ function renderDashboard() {
     <div class="stat-row">
       <div class="stat-box"><div class="num">${activeCount}/${users.length}</div><div class="lbl">기록 참여율 (${participRate}%)${deltaBadge(activeCount, prevActiveCount, '명')}</div></div>
       <div class="stat-box"><div class="num">${avgOf('routineTotal')}%</div><div class="lbl">루틴 종합 달성률${deltaBadge(avgOf('routineTotal'), prevAvgOf('routineTotal'), '%p')}</div></div>
-      <div class="stat-box"><div class="num">${totalApps}</div><div class="lbl">총 지원수${deltaBadge(totalApps, prevTotalApps, '개')}</div></div>
+      <div class="stat-box"><div class="num">${totalJasoseoCount}</div><div class="lbl">자소서 문항 작성 수${deltaBadge(totalJasoseoCount, prevTotalJasoseoCount, '개')}</div></div>
+      <div class="stat-box"><div class="num">${totalApps}</div><div class="lbl">지원 개수${deltaBadge(totalApps, prevTotalApps, '개')}</div></div>
       <div class="stat-box"><div class="num">${avgOf('lecture')}분</div><div class="lbl">강의(일평균)${deltaBadge(avgOf('lecture'), prevAvgOf('lecture'), '분')}</div></div>
     </div>
     <div class="sec-label">루틴 항목별 평균 달성률 ${prevRecs !== null ? `<span style="text-transform:none;font-weight:400;color:#ccc">— 회색 선 = ${pLabel}</span>` : ''}</div>
@@ -920,7 +926,8 @@ function getWeeklyTrendData(weeksBack) {
       label: `${d.getMonth()+1}/${d.getDate()}`,
       routineTotal: avgOf('routineTotal'), gyeongAvg: avgOf('gyeongAvg'), myeonAvg: avgOf('myeonAvg'),
       dokAvg: avgOf('dokAvg'), un: avgOf('un'), fa: avgOf('fa'),
-      jasoseo: avgOf('jasoseo'), pilgi: avgOf('pilgi'), interview: avgOf('interview'), cert: avgOf('cert'),
+      jasoseo: avgOf('jasoseo'), jasoseoCount: users.reduce((a,u)=>a+(statsMap[u.uid].jasoseoCount||0),0),
+      pilgi: avgOf('pilgi'), interview: avgOf('interview'), cert: avgOf('cert'),
       apps: users.reduce((a,u)=>a+(statsMap[u.uid].apps||0),0),
       participRate: users.length ? Math.round(activeCount/users.length*100) : 0,
     };
@@ -932,7 +939,8 @@ window.renderDashTrend = () => {
   if (!canvas || typeof Chart === 'undefined') return;
   const metricSel = document.getElementById('dash-trend-metric');
   const metric = metricSel ? metricSel.value : 'routineTotal';
-  const unit = ['jasoseo','pilgi','interview','cert'].includes(metric) ? '분' : metric === 'apps' ? '개' : '%';
+  const unit = ['jasoseo','pilgi','interview','cert'].includes(metric) ? '분'
+    : ['jasoseoCount','apps'].includes(metric) ? '개' : '%';
   const weeks = getWeeklyTrendData(8);
   const color = getComputedStyle(document.documentElement).getPropertyValue('--main').trim() || '#534AB7';
 
