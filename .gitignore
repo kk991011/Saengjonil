@@ -1,5 +1,8 @@
 .firebase/
 node_modules/
+dist/
+firebase-debug.log
+/tmp/site-migration/
 
 # service account keys — 절대 커밋 금지 (비밀값)
 *serviceAccount*.json

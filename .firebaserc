@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "saengjonil-dev"
+    "default": "saengjonil-dev",
+    "dev": "saengjonil-dev",
+    "prod": "saengjonil"
   }
 }

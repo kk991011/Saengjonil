@@ -22,7 +22,7 @@
 | DB | Cloud Firestore (NoSQL 문서 DB) |
 | 차트 | Chart.js 4.4.1 (CDN) — `main.html`에서 사용 (`compare.html`은 로드하나 미사용 → 정리 후보) |
 | SDK | Firebase JS SDK 10.12.2 (gstatic CDN import) |
-| 호스팅 | GitHub Pages(운영) · Firebase Hosting(스테이징) |
+| 호스팅 | Firebase Hosting(운영·스테이징) · GitHub Pages(기존 링크 자동 이동) |
 
 ## 프로젝트 구조
 
@@ -37,10 +37,10 @@
 ├── css/                  페이지별 스타일 (index / main / compare / admin .css)
 ├── js/                   페이지별 로직  (index / main / compare / admin .js)
 │
-├── firebase.json         Firebase Hosting · Firestore 설정 (scripts/·docs 등 배포 제외)
+├── firebase.json         Firebase Hosting · Firestore 설정 (공개 앱 파일만 dist/에서 배포)
 ├── firestore.rules       Firestore 보안 규칙
 ├── firestore.indexes.json  Firestore 복합 인덱스 정의
-├── .firebaserc           기본 프로젝트(saengjonil-dev) 지정
+├── .firebaserc           기본 프로젝트(saengjonil-dev) 및 prod/dev 별칭 지정
 ├── .nojekyll             GitHub Pages: Jekyll 끄고 파일을 그대로 서빙
 │
 ├── package.json          개발 도구 의존성(firebase-admin) + 스크립트
@@ -194,17 +194,20 @@ JOIN이 없으므로 `records`에 `nickname`·`jobProb`를 **복사(비정규화
 
 | | 🟢 운영(production) | 🟡 스테이징(staging) |
 |---|---|---|
-| 호스팅 | GitHub Pages | Firebase Hosting |
-| URL | `https://kk991011.github.io/Saengjonil/` | `https://saengjonil-dev.web.app` |
-| 브랜치/트리거 | `master` push | 수동 |
+| 호스팅 | Firebase Hosting (기존 GitHub Pages는 새 주소로 이동) | Firebase Hosting |
+| URL | `https://saengjonil.web.app/` | `https://saengjonil-dev.web.app` |
+| 브랜치/트리거 | 수동 (GitHub Pages의 이동 설정은 `master` push) | 수동 |
 | Firebase 프로젝트 | `saengjonil` | `saengjonil-dev` |
-| 코드 배포 | `git push origin master` (GitHub Pages 자동) | `firebase deploy --only hosting` |
+| 코드 배포 | `firebase deploy --only hosting --project saengjonil` | `firebase deploy --only hosting --project saengjonil-dev` |
 | 규칙 배포 | `firebase deploy --only firestore:rules --project saengjonil` | `firebase deploy --only firestore:rules` |
 
-- **환경 자동 전환:** `firebase-config.js`가 `location.hostname`으로 프로젝트 선택 (`kk991011.github.io` → 운영, 그 외/localhost/`*.web.app` → dev).
-- **개발 흐름:** dev에 배포·확인 → `master` push로 운영 반영. (푸시는 사람이 직접)
+- **환경 자동 전환:** `firebase-config.js`가 `location.hostname`으로 프로젝트 선택. `saengjonil.web.app`, `saengjonil.firebaseapp.com`, `kk991011.github.io`는 운영이고, localhost와 `saengjonil-dev.web.app` 등 나머지는 dev.
+- **개발 흐름:** dev에 배포·확인 → 운영에 `firebase deploy --only hosting --project saengjonil`로 배포. GitHub push만으로는 새 운영 사이트가 갱신되지 않습니다.
+- **배포 파일:** Hosting의 predeploy에서 `scripts/build-hosting.mjs`가 HTML 4개, `firebase-config.js`, `css/`, `js/`만 `dist/`로 복사합니다. 로컬 문서·스크립트·키를 사이트에 올리지 않습니다. `dist/`는 커밋하지 않습니다.
+- **기존 공유 링크:** `js/site-redirect.js`가 GitHub Pages의 `/Saengjonil/` 경로만 새 주소로 이동시킵니다. 페이지 경로, 쿼리, 해시를 유지하며 새 주소와 dev에서는 이동하지 않습니다. 새 사이트를 배포하고 로그인까지 확인한 뒤 이 변경을 GitHub Pages에 반영해야 합니다. 새 도메인에서는 첫 방문 시 다시 로그인해야 할 수 있습니다.
+- **로그인:** 운영 Firebase Authentication의 승인된 도메인에 `saengjonil.web.app`과 `saengjonil.firebaseapp.com`이 있는지 확인합니다.
 - **복합 인덱스:** `records`의 `where uid== + orderBy date`에 인덱스 필요 → `firebase deploy --only firestore:indexes`. `array-contains`(groupIds)·`where date >=`는 단일 필드라 자동 인덱스로 충분.
-- **캐시:** 스테이징(Firebase Hosting)은 `firebase.json`에서 html/js/css를 `no-cache`로 서빙(재배포 즉시 반영). 운영(GitHub Pages)은 기본 캐시 → 안 바뀌면 강력 새로고침(Cmd/Ctrl+Shift+R).
+- **캐시:** 운영·스테이징(Firebase Hosting)은 `firebase.json`에서 html/js/css를 `no-cache`로 서빙합니다. 기존 GitHub Pages 이동 설정은 기본 캐시 → 안 바뀌면 강력 새로고침(Cmd/Ctrl+Shift+R).
 
 ### GitHub Pages 배포 방식 & 문제 해결
 - 의도한 설정은 **"Deploy from a branch"**(브랜치 파일 verbatim 서빙, `.nojekyll`). 그러나 현재 Pages API 상 **`build_type: "workflow"`**(Source = GitHub Actions)인데 **워크플로 파일이 없는 불일치 상태**입니다. 이 때문에 `master` push 시 GitHub 관리형 `pages-build-deployment`가 **간헐 실패/멈춤(stuck)** 이 납니다.

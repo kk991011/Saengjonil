@@ -3,7 +3,7 @@
 // 각 HTML은 이 파일에서 firebaseConfig 하나만 import 하면 됩니다.
 //   import { firebaseConfig } from './firebase-config.js';
 
-// 운영(prod) — https://kk991011.github.io/Saengjonil/
+// 운영(prod) — https://saengjonil.web.app/ (기존 GitHub Pages 주소도 운영으로 유지)
 const PROD = {
   apiKey: "AIzaSyDxt2OyXE_ZkYo6NSIHf_AJf2-8IOP5yFk",
   authDomain: "saengjonil.firebaseapp.com",
@@ -25,7 +25,7 @@ const DEV = {
 };
 
 // 운영으로 취급할 호스트 목록. 커스텀 도메인을 붙이면 여기에 추가하세요.
-const PROD_HOSTS = ["kk991011.github.io"];
+const PROD_HOSTS = ["kk991011.github.io", "saengjonil.web.app", "saengjonil.firebaseapp.com"];
 
 export const isProd = PROD_HOSTS.includes(location.hostname);
 

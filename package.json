@@ -5,6 +5,9 @@
   "description": "Dev-only tooling (Firestore seed scripts) for saengjonil-dev. Not part of the deployed static site.",
   "type": "module",
   "scripts": {
+    "build:hosting": "node scripts/build-hosting.mjs",
+    "deploy:prod": "firebase deploy --only hosting --project saengjonil",
+    "deploy:dev": "firebase deploy --only hosting --project saengjonil-dev",
     "seed:groups": "node scripts/seed-dev-groups.mjs",
     "seed:dev": "node scripts/seed-dev-data.mjs",
     "seed:user": "node scripts/seed-dev-user.mjs",
